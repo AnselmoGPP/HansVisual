@@ -1,16 +1,27 @@
 #ifndef CONTROLS_HPP
 #define CONTROLS_HPP
 
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+using namespace glm;
+
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <mutex>
+
 // Window size
-#define WINDOW_WIDTH    1024
-#define WINDOW_HEIGHT   768
+#define WINDOW_WIDTH    1920/2      //1024
+#define WINDOW_HEIGHT   1080/2      //768
 
 // Camera system
 #define FPS     1
 #define SPHERE  2
 
 class controls;
-extern controls camera;
+extern controls *camera;
+extern std::mutex cam_mut;
 
 class controls {
 	// Time
@@ -21,7 +32,7 @@ class controls {
 	// Mouse
 	double xpos, ypos;
 	double xpos0, ypos0;
-	bool L_pressed, R_pressed, scroll_pressed;
+    bool L_pressed, R_pressed, scroll_pressed;
 
 	// camera parameters
 	float horizontalAngle;

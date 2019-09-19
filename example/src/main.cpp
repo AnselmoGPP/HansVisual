@@ -652,7 +652,7 @@ void test_2() {
 
 	buffers dat;
 
-	myclass obj;
+    myclass obj;
 	obj.visual.open_window();
 
 	obj.send_data();

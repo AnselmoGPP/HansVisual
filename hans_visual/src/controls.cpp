@@ -1,13 +1,8 @@
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-using namespace glm;
-#include "controls.hpp"
-#include <iostream>
-#include <cmath>
-#include <iomanip>
 
-controls camera(SPHERE);
+#include "controls.hpp"
+
+controls *camera;
+std::mutex cam_mut;
 
 controls::controls(int mode) : camera_mode(mode) {
 
@@ -29,11 +24,11 @@ controls::controls(int mode) : camera_mode(mode) {
 
 		sphere_center = glm::vec3(0, 0, 0);
 		radius = 15;
-		L_pressed = false;   R_pressed = false;
+        L_pressed = false;  R_pressed = false;  scroll_pressed = false;
 		scroll_speed = 1;
 		minimum_radius = 1;
         right_speed = 0.001;
-	}
+    }
 }
 
 glm::mat4 controls::getViewMatrix() { return ViewMatrix; }
@@ -122,7 +117,7 @@ void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
 		Scroll click: Normal translation
 	*/
 
-	// >>> Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+    // >>> Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	float FoV = initialFoV;    //float FoV = - 5 * glfwGetMouseWheel();
 	ProjectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 1000.0f);
 
@@ -180,13 +175,13 @@ void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
 
 		sphere_center += right_speed * radius * ((-right * float(xpos - xpos0)) + (up * float(ypos - ypos0)));
 	}
-	
+
 	// >>> View matrix
 		ViewMatrix = glm::lookAt(position, sphere_center, up);
 
 	//lastTime = currentTime;
 	xpos0 = xpos;
-	ypos0 = ypos;
+    ypos0 = ypos;
 }
 
 void controls::adjustments(GLFWwindow *window) {
@@ -206,40 +201,40 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 
 	if		(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		camera.L_pressed = false;
+        camera->L_pressed = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		camera.L_pressed = true;
-		glfwGetCursorPos(window, &camera.xpos0, &camera.ypos0);
-		camera.ypos = camera.ypos0;
-		camera.xpos = camera.xpos0;
+        camera->L_pressed = true;
+        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
+        camera->ypos = camera->ypos0;
+        camera->xpos = camera->xpos0;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
-		camera.R_pressed = false;
+        camera->R_pressed = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
-		camera.R_pressed = true;
-		glfwGetCursorPos(window, &camera.xpos0, &camera.ypos0);
-		camera.ypos = camera.ypos0;
-		camera.xpos = camera.xpos0;
+        camera->R_pressed = true;
+        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
+        camera->ypos = camera->ypos0;
+        camera->xpos = camera->xpos0;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
 	{
-		camera.scroll_pressed = false;
+        camera->scroll_pressed = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
 	{
-		camera.scroll_pressed = true;
-		glfwGetCursorPos(window, &camera.xpos0, &camera.ypos0);
-		camera.ypos = camera.ypos0;
-		camera.xpos = camera.xpos0;
+        camera->scroll_pressed = true;
+        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
+        camera->ypos = camera->ypos0;
+        camera->xpos = camera->xpos0;
 	}
 }
 
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
-	camera.radius -= yOffset * camera.scroll_speed;
-	if (camera.radius < camera.minimum_radius) camera.radius = camera.minimum_radius;
+    camera->radius -= yOffset * camera->scroll_speed;
+    if (camera->radius < camera->minimum_radius) camera->radius = camera->minimum_radius;
 }

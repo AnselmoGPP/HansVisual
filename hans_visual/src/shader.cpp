@@ -26,6 +26,7 @@ GLuint LoadShaders(){
 
 		"uniform mat4 MVP; \n"
 		"uniform vec3 Cam_pos; \n"
+        "uniform float Pnt_siz; \n"
 
 		"void main() { \n"
 
@@ -33,7 +34,7 @@ GLuint LoadShaders(){
 
 		"	fragmentColor = vertexColor; \n"
 
-        "	gl_PointSize = 100 / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) ); \n"
+        "	gl_PointSize = Pnt_siz / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) ); \n"
 		"} \n";
 
 	

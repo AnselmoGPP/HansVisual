@@ -187,7 +187,7 @@ visualizerClass::visualizerClass(
 
 	// Others
 	data_window_size = 1;
-	data_window = new std::string[data_window_size];
+    data_window = new std::string[data_window_size];
 }
 
 visualizerClass::~visualizerClass(){ 
@@ -501,7 +501,6 @@ int visualizerClass::open_window() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);			// To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 
 
     std::thread running(&visualizerClass::run_thread, this);
@@ -1466,7 +1465,7 @@ void visualizerClass::fill_data_window(const std::string *data_strings, int num_
 
 	if (data_window_size != num_strings)
 	{
-		delete [] data_window;				// <<<<<<<<<<<<<<<<<< EXCEPTION
+        delete [] data_window;
 		data_window_size = num_strings;
 		data_window = new std::string[num_strings];
 	}
@@ -1616,13 +1615,13 @@ int visualizerClass::run_thread() {
 
     glEnable(GL_PROGRAM_POINT_SIZE);			// Enable GL_POINTS
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);		// Enable gl_PointSize in the vertex shader
-	glEnable(GL_POINT_SMOOTH);					// For circular points (doesn't work)
-	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);	// For circular points (doesn't work)
+    glEnable(GL_POINT_SMOOTH);					// For circular points (GPU implementation dependent)
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);	// For circular points (GPU implementation dependent)
     glPointSize(5.0);							// GL_POINT_SIZE_MAX is GPU implementation dependent
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glLineWidth(2.0);
-    GLfloat lineWidthRange[2];
+    GLfloat lineWidthRange[2];                  // GPU implementation dependent
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
 
 
@@ -1639,55 +1638,20 @@ int visualizerClass::run_thread() {
     // Get a handle for our "MVP" uniform and the camera position coordinates
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 	GLuint Cam_position = glGetUniformLocation(programID, "Cam_pos");
+    GLuint Pnt_size_ID = glGetUniformLocation(programID, "Pnt_siz");
 
-    // GL_STATIC_DRAW ---------------------------------------------------
+    // GL_STATIC_DRAW example -------------------------------------------
     /*
         // Vertex buffer objects (VBO)
         static const GLfloat g_vertex_buffer_data[] = {
              0.0f,  0.0f,  0.0f,
              1.0f,  0.0f,  0.0f,
              2.0f,  0.0f,  0.0f,
-             3.0f,  0.0f,  0.0f,
-             4.0f,  0.0f,  0.0f,
-             5.0f,  0.0f,  0.0f,
-             6.0f,  0.0f,  0.0f,
-             7.0f,  0.0f,  0.0f,
-             8.0f,  0.0f,  0.0f,
-             9.0f,  0.0f,  0.0f,
-             10.0f,  0.0f,  0.0f,
-             11.0f,  0.0f,  0.0f,
-             12.0f,  0.0f,  0.0f,
-             13.0f,  0.0f,  0.0f,
-             14.0f,  0.0f,  0.0f,
-             15.0f,  0.0f,  0.0f,
-             16.0f,  0.0f,  0.0f,
-             17.0f,  0.0f,  0.0f,
-             18.0f,  0.0f,  0.0f,
-             19.0f,  0.0f,  0.0f,
-             20.0f,  0.0f,  0.0f
         };
         static const GLfloat g_color_buffer_data[] = {
              1.0f,  0.0f,  0.0f,
              0.0f,  1.0f,  0.0f,
              0.0f,  0.0f,  1.0f,
-             1.0f,  0.0f,  1.0f,
-             1.0f,  1.0f,  0.0f,
-             0.0f,  1.0f,  1.0f,
-             0.5f,  0.0f,  0.0f,
-             0.0f,  0.5f,  0.0f,
-             0.0f,  0.0f,  0.5f,
-             0.5f,  0.5f,  0.0f,
-             0.5f,  0.0f,  0.5f,
-             0.0f,  0.5f,  0.5f,
-             0.75f,  0.25f,  0.25f,
-             0.25f,  0.75f,  0.25f,
-             0.25f,  0.25f,  0.75f,
-             0.25f,  0.25f,  0.0f,
-             0.25f,  0.0f,  0.25f,
-             0.0f,  0.25f,  0.25f,
-             0.75f,  0.75f,  0.0f,
-             0.0f,  0.75f,  0.75f,
-             0.75f, 0.0f,  0.75f
         };
         GLuint vertexbuffer;
         glGenBuffers(1, &vertexbuffer);
@@ -1721,19 +1685,25 @@ int visualizerClass::run_thread() {
 	glGenBuffers(layer_data.cube_layers, cubecolorsIDs);
 
     // Main loop --------------------------------------------------------
-	do {
+    do {
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
         glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
 
         // Use our shader
         glUseProgram(programID);
 
         // Compute the MVP matrix from keyboard and mouse input
-        // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
-        if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(window);
-        glm::mat4 ProjectionMatrix = cam.getProjectionMatrix();
-        glm::mat4 ViewMatrix = cam.getViewMatrix();
-        glm::mat4 ModelMatrix = glm::mat4(1.0);                     // Identity matrix
-        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+        {
+            std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions put the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from differente visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
+            camera = &cam;
+            if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
+        }
+        ProjectionMatrix = cam.getProjectionMatrix();
+        ViewMatrix = cam.getViewMatrix();
+        ModelMatrix = glm::mat4(1.0);                     // Identity matrix
+        MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
         // Send our transformation to the currently bound shader, in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -1741,8 +1711,10 @@ int visualizerClass::run_thread() {
 		// Send the position of the camera. Useful for adjusting the size of each point
 		glUniform3fv(Cam_position, 1, &cam.position[0]);
 
-        // Clear the screen and the depth test
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Send the size of the points
+        glUniform1fv(Pnt_size_ID, 1, &point_siz);
+
+
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -1766,12 +1738,6 @@ int visualizerClass::run_thread() {
         create_windows();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        //int display_w, display_h;
-        //glfwGetFramebufferSize(window, &display_w, &display_h);
-        //glViewport(0, 0, display_w, display_h);
-        //glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        //glClear(GL_COLOR_BUFFER_BIT);
 
 
 
@@ -1884,7 +1850,10 @@ void visualizerClass::create_windows() {
     if (show_options)
     {
         ImGui::Begin("Configuration", &show_options);
+
 			ImGui::ColorEdit3("Background", backg_color);
+
+            ImGui::SliderFloat("Point size", &point_siz, 1.0f, 500.0f);
 			ImGui::Separator;
 			for(int i = 0; i < layer_data.point_layers; i++)
                 ImGui::SliderFloat(layer_data.point_layers_names[i].c_str(), &alpha_channels[points][i], 0.0f, 1.0f);
@@ -1907,7 +1876,7 @@ void visualizerClass::create_windows() {
 }
 
 void visualizerClass::create_demo_windows() {
-
+/*
     static bool show_demo_window = true;
     static bool show_another_window = false;
     static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -1938,7 +1907,7 @@ void visualizerClass::create_demo_windows() {
             if (ImGui::Button("Close Me")) show_another_window = false;
         ImGui::End();
     }
-
+*/
 }
 
 void visualizerClass::change_alpha_channel(object_type object, std::string layer_name) {
@@ -2180,10 +2149,6 @@ void visualizerClass::load_triangles(GLuint *trianglebuffIDs, GLuint *triangleco
 }
 
 void visualizerClass::load_cubes(GLuint *cubebuffIDs, GLuint *cubecolorbuffIDs){
-
-	//for (int a = 0; a < cubes_to_print[1]; a++) 
-	//	for(int b = 0; b < 12*3; b++)
-	//		std::cout << cube_buffers[1][a][b][0] << ' ' << cube_buffers[1][a][b][1] << ' ' << cube_buffers[1][a][b][2] << std::endl;
 
     for (int i = 0; i < layer_data.cube_layers; i++)
     {

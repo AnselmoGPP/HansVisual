@@ -1,16 +1,20 @@
 /*
 *	TODO:
 *		- Allow relative paths for calling LoadShaders()
-*		- Make certain macros (window width and height) really modifiable (controls.hpp does not contains them)
-*		- Vextex in cubes are written at least 3 times. Optimize this
 *       - Cubes complete rotation (rotation method for a point)
-*
-*       > Parameters window (toolbar) (camera, transparency, axis...)
-*		> Small windows for showing info about objects
+*       - Parameters window (toolbar) (camera, transparency, axis...)
 *       - Shaper with loop and without it
 *       - Ordenar buffer para cubos para perfecta transparencia
-*		- Are mutexes covering every situation?
-*		- Crear varios visualizadores (cuidado con static variables)
+*		-> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
+*		-> Selection (or small windows for showing info about objects)
+*		-> Are mutexes covering every situation?
+*		>>> Crear varios visualizadores (cuidado con static variables) (comentar create_demo_windows) (controls camera static why?)
+*       >>> Manipulate point size
+*       >>> Manipulate window size
+*       >>> Defaults: Screen size, point size, background color
+*       >>> Eliminate <dequeu>
+*       >>> Transformation matrices members
+*       >>> Controls is a controled member of visualizerClass
 */
 
 #pragma once
@@ -19,7 +23,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
-#include <deque>
 #include <string>
 #include <thread>
 #include <mutex>
@@ -38,19 +41,17 @@ using namespace glm;
 #include "shader.hpp"
 #include "controls.hpp"
 
-//struct pnt3D {
-//	float x, y, z;
-//
-//	pnt3D(float a = 0, float b = 0, float c = 0) : x(a), y(b), z(c) { }
-//
-//	pnt3D newData(float a, float b, float c) {
-//		x = a; y = b; z = c;
-//		return *this;
-//	}
-//};
+// Store one xyz point (not used)
+struct pnt3D {
+    float x, y, z;
 
-// Names used for selecting different buffers
-enum object_type { points, lines, triangles, cubes };
+    pnt3D(float a = 0, float b = 0, float c = 0) : x(a), y(b), z(c) { }
+
+    pnt3D newData(float a, float b, float c) {
+        x = a; y = b; z = c;
+        return *this;
+    }
+};
 
 // Store the data about the number of layers, their names and their capacity
 struct layer_system {
@@ -210,6 +211,9 @@ struct cube3D {
 		X(x), Y(y), Z(z), width(w), height(h), length(l), rot_H(rh) { }
 };
 
+// Names used for selecting different buffers
+enum object_type { points, lines, triangles, cubes };
+
 // Define the kind of the additional array you send
 enum data_buffer{
     colors,             // Define colors of each point
@@ -217,12 +221,15 @@ enum data_buffer{
     gradient            // Define a gradient for each point that goes from a minimum to a maximum value. You enter the absolute minimum and maximum.
 };
 
+// ----------------------------------------------------------------------------
 
 class visualizerClass {
 
-	controls &cam{ camera };
+    //controls &cam{ camera };
+    controls cam;
 
 	GLFWwindow* window;			// The window object used to draw
+    int display_w, display_h;
 
 	int run_thread();			// The thread where the visualizer is run
 
@@ -234,7 +241,7 @@ class visualizerClass {
     size_t num_objects = 4;					// Points, lines, triangles, cubes
     char test[21];
 
-    // Graphical User Interface rendering
+    // GUI rendering
     void create_windows();
     void create_demo_windows();
     void change_alpha_channel(object_type object, std::string layer_name);		// Change the alpha values from the corresponding color buffer: 1(points), 2(lines), 3(boxes)
@@ -247,7 +254,13 @@ class visualizerClass {
 	int data_window_size;
 	std::mutex mut_fill_data;
 	float backg_color[3] = { 0.5, 0.5, 0.5 };
-	int point_siz = 200;
+    float point_siz = 100;
+
+    // Transformation matrices
+    glm::mat4 ProjectionMatrix;
+    glm::mat4 ViewMatrix;
+    glm::mat4 ModelMatrix;
+    glm::mat4 MVP;
 
     // Common buffers
     std::vector<std::vector<size_t>> objects_to_print;      // Number of objects that are going to be printed per layer

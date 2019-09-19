@@ -8,8 +8,9 @@ HansVisual is a C++ library for 3D data visualization. It allows the programmer 
 
 Libraries used:
 
-- OpenGL
+- OpenGL 4.4 (works with >= 3.3)
 - GLEW 2.1.0
 - GLFW 3.3
 - GLM 0.9.9.5
 - ImGui 1.72b
+- Bullet Physics 2.88
