@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -14,44 +13,43 @@ using namespace std;
 
 #include "shader.hpp"
 
-GLuint LoadShaders(){
 
-	std::string VertexShaderCode =
-		"#version 330 core\n"
+std::string VertexShaderCode =
+    "#version 330 core\n"
 
-		"layout(location = 0) in vec3 vertexPosition_modelspace; \n"
-		"layout(location = 1) in vec4 vertexColor; \n"
+    "layout(location = 0) in vec3 vertexPosition_modelspace; \n"
+    "layout(location = 1) in vec4 vertexColor; \n"
 
-		"out vec4 fragmentColor; \n"
+    "out vec4 fragmentColor; \n"
 
-		"uniform mat4 MVP; \n"
-		"uniform vec3 Cam_pos; \n"
-        "uniform float Pnt_siz; \n"
+    "uniform mat4 MVP; \n"
+    "uniform vec3 Cam_pos; \n"
+    "uniform float Pnt_siz; \n"
 
-		"void main() { \n"
+    "void main() { \n"
 
-		"	gl_Position = MVP * vec4(vertexPosition_modelspace, 1); \n"
+    "	gl_Position = MVP * vec4(vertexPosition_modelspace, 1); \n"
 
-		"	fragmentColor = vertexColor; \n"
+    "	fragmentColor = vertexColor; \n"
 
-        "	gl_PointSize = Pnt_siz / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) ); \n"
-		"} \n";
+    "	gl_PointSize = Pnt_siz / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) ); \n"
+    "} \n";
 
-	
-	std::string FragmentShaderCode =
-		"#version 330 core \n"
+std::string FragmentShaderCode =
+    "#version 330 core \n"
 
-		"in vec4 fragmentColor; \n"
+    "in vec4 fragmentColor; \n"
+    "out vec4 color; \n"
 
-		"out vec4 color; \n"
+    "void main() { \n"
+    "	color = fragmentColor; \n"
+    "} \n";
 
-		"void main() { \n"
-
-		"	color = fragmentColor; \n"
-		"} \n";
+std::string VertexShader2D;
 
 
-
+GLuint LoadShaders(const std::string vertexShader, const std::string fragmentShader){
+std::cout << "LoadShaders" << std::endl;
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -62,7 +60,7 @@ GLuint LoadShaders(){
 
 
 	// Compile Vertex Shader
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
+    char const * VertexSourcePointer = vertexShader.c_str();
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
 	glCompileShader(VertexShaderID);
 
@@ -76,7 +74,7 @@ GLuint LoadShaders(){
 	}
 
 	// Compile Fragment Shader
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
+    char const * FragmentSourcePointer = fragmentShader.c_str();
 	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
 	glCompileShader(FragmentShaderID);
 
@@ -117,7 +115,7 @@ GLuint LoadShaders(){
 	return ProgramID;
 }
 
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
+GLuint LoadShaders_2(const char * vertex_file_path, const char * fragment_file_path) {
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);

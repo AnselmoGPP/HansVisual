@@ -1,7 +1,7 @@
 
 #include "controls.hpp"
 
-controls *camera;
+controls *camera;		// Pointer used by the callback functions (mouse buttons).
 std::mutex cam_mut;
 
 controls::controls(int mode) : camera_mode(mode) {
@@ -16,7 +16,7 @@ controls::controls(int mode) : camera_mode(mode) {
 	}
 	else if (camera_mode == SPHERE) {
 		//position = glm::vec3( 0, 15, 0 );
-		horizontalAngle = 0.0f;
+		horizontalAngle = 3.14f;
 		verticalAngle = 3.14f / 2;
 		initialFoV = 45.0f;
 		speed = 5.f;
@@ -159,14 +159,14 @@ void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
 
 	if (R_pressed)
     {
-		glfwGetCursorPos(window, &xpos, &ypos);
+        glfwGetCursorPos(window, &sel_xpos, &sel_ypos);
 
 		// Front vector (y=0) (used for moving the sphere center)
-        glm::vec3 front = glm::vec3(    sin(horizontalAngle + 3.14f),
-                                        0,
-                                        cos(horizontalAngle + 3.14f) );
+        //glm::vec3 front = glm::vec3(    sin(horizontalAngle + 3.14f),
+        //                                0,
+        //                                cos(horizontalAngle + 3.14f) );
 
-        sphere_center += right_speed * radius * ( (-right * float(xpos - xpos0)) + (front * float(-ypos + ypos0)) );
+        //sphere_center += right_speed * radius * ( (-right * float(xpos - xpos0)) + (front * float(-ypos + ypos0)) );
 	}
 
 	if (scroll_pressed) 
@@ -191,8 +191,24 @@ void controls::adjustments(GLFWwindow *window) {
 	if (camera_mode == FPS)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);	// Hide the mouse and enable unlimited movement. Use GLFW_CURSOR_DISABLED/HIDDEN/NORMAL.
 	else
-		if (camera_mode == SPHERE)
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	if (camera_mode == SPHERE)
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void controls::normalize_vec(glm::vec3 &vec) {
+
+	float magnitude = sqrt( (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z) );
+
+	vec.x /= magnitude;
+	vec.y /= magnitude;
+	vec.z /= magnitude;
+}
+
+double controls::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
+
+	return	(vec1.x - vec2.x) * (vec1.x - vec2.x) +
+			(vec1.y - vec2.y) * (vec1.y - vec2.y) +
+			(vec1.z - vec2.z) * (vec1.z - vec2.z);
 }
 
 // Callback functions ----------------------------
@@ -213,13 +229,15 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
         camera->R_pressed = false;
+
+        camera->R_just_released = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
         camera->R_pressed = true;
-        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
-        camera->ypos = camera->ypos0;
-        camera->xpos = camera->xpos0;
+        glfwGetCursorPos(window, &camera->sel_xpos0, &camera->sel_ypos0);
+        camera->sel_ypos = camera->sel_ypos0;
+        camera->sel_xpos = camera->sel_xpos0;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
 	{

@@ -65,6 +65,7 @@ visualizerClass::visualizerClass(
     mut =               std::vector<std::mutex*>(num_objects);
     palettes =          std::vector<std::vector<float(*)[3]>>(num_objects);
 
+
 	// Point buffers
 	num_layers = layer_data.point_layers;
 
@@ -77,6 +78,9 @@ visualizerClass::visualizerClass(
 	point_buffers = std::vector<float (*)[3]>(num_layers);
 	point_color_buffers = std::vector<float(*)[4]>(num_layers);
     palettes[points] = std::vector<float(*)[3]>(num_layers);
+
+	selected_points = std::vector<std::vector<char>>(num_layers);
+	points_strings = std::vector<std::vector<std::string>>(num_layers);
 
 	for (int i = 0; i < num_layers; i++) 
 	{
@@ -93,7 +97,11 @@ visualizerClass::visualizerClass(
 		checkboxes_values[points][i] = true;
         alpha_channels[points][i] = 1.0f;
         objects_to_print[points][i] = 0;
+
+		selected_points[i] = std::vector<char>(layer_data.max_points[i], 0);
+		points_strings[i] = std::vector<std::string>(layer_data.max_points[i], "");
 	}
+
 
 	// Line buffers
 	num_layers = layer_data.line_layers;
@@ -125,6 +133,7 @@ visualizerClass::visualizerClass(
         objects_to_print[lines][i] = 0;
 	}
 
+
 	// Triangle buffers
     num_layers = layer_data.triangle_layers;
 
@@ -154,6 +163,7 @@ visualizerClass::visualizerClass(
         alpha_channels[triangles][i] = 0.3f;
         objects_to_print[triangles][i] = 0;
     }
+
 
 	// Cubes buffers
     num_layers = layer_data.cube_layers;
@@ -185,9 +195,33 @@ visualizerClass::visualizerClass(
         objects_to_print[cubes][i] = 0;
     }
 
-	// Others
+
+	// Others -----------------------------------------------------
 	data_window_size = 1;
     data_window = new std::string[data_window_size];
+
+	// Rainbow palette
+	for (int i = 0; i < 256; i++) {
+		if (i <= 155) {
+			modified_rainbow[255-i][0] = i * 60./155.;
+			modified_rainbow[255-i][1] = 1.;
+			modified_rainbow[255 - i][2] = 1.;
+		}
+		if (i > 155) {
+			modified_rainbow[255-i][0] = 60. + (i-155) * (240.-60.)/(255.-155.);
+			modified_rainbow[255-i][1] = 1.;
+			modified_rainbow[255-i][2] = 1.;
+		}
+	}
+    convert_HSVtoRGB(&modified_rainbow[0][0], 256);
+
+    // Selection square color
+    for(int i = 0; i < 5; i++)
+    {
+        selection_square_colors[i][0] = selection_color[0];
+        selection_square_colors[i][1] = selection_color[1];
+        selection_square_colors[i][2] = selection_color[2];
+    }
 }
 
 visualizerClass::~visualizerClass(){ 
@@ -291,6 +325,9 @@ visualizerClass& visualizerClass::operator=(const visualizerClass &obj) {
 			palettes[points][i][k][2] = obj.palettes[points][i][k][2];
 		}
 	}
+
+    selected_points = obj.selected_points;
+    points_strings = obj.points_strings;
 
 
 	// Lines data -----
@@ -521,7 +558,7 @@ void visualizerClass::add_layer(object_type type, const char *name, unsigned int
 	}
 
 	if (type == points)
-	{
+    {
 		int siz = layer_data.point_layers;
 
 		// Layer system object
@@ -552,6 +589,10 @@ void visualizerClass::add_layer(object_type type, const char *name, unsigned int
 
 		float(*new_col)[4] = new float[capacity][4];
 		point_color_buffers.push_back(new_col);
+
+		// Points selection
+		selected_points.push_back(std::vector<char>(capacity, 0));
+        points_strings.push_back(std::vector<std::string>(capacity, ""));
 	}
 	if (type == lines)
 	{
@@ -654,7 +695,7 @@ void visualizerClass::add_layer(object_type type, const char *name, unsigned int
 	}
 }
 
-void visualizerClass::send_points(std::string layer_name, int number_points, const float *arr, const float *labels, data_buffer array_type, float min, float max) {
+void visualizerClass::send_points(std::string layer_name, int number_points, const float *arr, const float *labels,  std::string *points_data, data_buffer array_type, float min, float max) {
 
 	// Look for the corresponding point layer and its parameters
 	unsigned int layer, max_points;
@@ -667,7 +708,6 @@ void visualizerClass::send_points(std::string layer_name, int number_points, con
         objects_to_print[points][layer] = max_points;
     }
     else objects_to_print[points][layer] = number_points;
-
 
 	// Write data to buffers (points and colors)
     float siz = max - min;		// Used for gradients
@@ -685,9 +725,9 @@ void visualizerClass::send_points(std::string layer_name, int number_points, con
         // Set color of the point
         if		(labels     == nullptr)
         {
-			point_color_buffers[layer][i][0] = 0;
-			point_color_buffers[layer][i][1] = 0;
-			point_color_buffers[layer][i][2] = 0;
+			point_color_buffers[layer][i][0] = default_color[0];
+			point_color_buffers[layer][i][1] = default_color[1];
+			point_color_buffers[layer][i][2] = default_color[2];
             point_color_buffers[layer][i][3] = alpha_channels[points][layer];
         }
         else if (array_type == categories)
@@ -710,14 +750,24 @@ void visualizerClass::send_points(std::string layer_name, int number_points, con
         {
             if      (labels[i] <= min) index = 0;
             else if (labels[i] >= max) index = palette_sizes[points][layer] - 1;
-            else {
-                index = (int)((labels[i] - min) * (palette_sizes[points][layer] - 1)) / (int)siz;
-            }
+            else    index = (int)((labels[i] - min) * (palette_sizes[points][layer] - 1)) / (int)siz;
 
             point_color_buffers[layer][i][0] = palettes[points][layer][index][0];
             point_color_buffers[layer][i][1] = palettes[points][layer][index][1];
             point_color_buffers[layer][i][2] = palettes[points][layer][index][2];
             point_color_buffers[layer][i][3] = alpha_channels[points][layer];
+        }
+
+        // Fill/empty points_strings[] and empty selected_points[]
+        if(points_data != nullptr)
+        {
+            points_strings[layer][i] = points_data[i];
+            selected_points[layer][i] = 0;
+        }
+        else
+        {
+            points_strings[layer][i] = "";
+            selected_points[layer][i] = 0;
         }
     }
 }
@@ -764,14 +814,14 @@ void visualizerClass::send_lines(std::string layer_name, int number_points, cons
         // Save colors for each vertex
         if		(labels == nullptr)
         {
-            line_color_buffers[layer][i - omitted_segments][0][0] = 0;
-            line_color_buffers[layer][i - omitted_segments][0][1] = 0;
-            line_color_buffers[layer][i - omitted_segments][0][2] = 0;
+            line_color_buffers[layer][i - omitted_segments][0][0] = default_color[0];
+			line_color_buffers[layer][i - omitted_segments][0][1] = default_color[1];
+			line_color_buffers[layer][i - omitted_segments][0][2] = default_color[2];
             line_color_buffers[layer][i - omitted_segments][0][3] = alpha_channels[lines][layer];
 
-            line_color_buffers[layer][i - omitted_segments][1][0] = 0;
-            line_color_buffers[layer][i - omitted_segments][1][1] = 0;
-            line_color_buffers[layer][i - omitted_segments][1][2] = 0;
+            line_color_buffers[layer][i - omitted_segments][1][0] = default_color[0];
+			line_color_buffers[layer][i - omitted_segments][1][1] = default_color[1];
+			line_color_buffers[layer][i - omitted_segments][1][2] = default_color[2];
             line_color_buffers[layer][i - omitted_segments][1][3] = alpha_channels[lines][layer];
         }
         else if (array_type == categories)  // labels contains the category of each segment (including line jumps)
@@ -860,19 +910,19 @@ void visualizerClass::send_triangles(std::string layer_name, int number_triangle
         // Set color of the point
         if		(labels     == nullptr)
         {
-            triangle_color_buffers[layer][i][0][0] = 0;
-            triangle_color_buffers[layer][i][0][1] = 0;
-            triangle_color_buffers[layer][i][0][2] = 0;
+            triangle_color_buffers[layer][i][0][0] = default_color[0];
+			triangle_color_buffers[layer][i][0][1] = default_color[1];
+			triangle_color_buffers[layer][i][0][2] = default_color[2];
             triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
 
-            triangle_color_buffers[layer][i][1][0] = 0;
-            triangle_color_buffers[layer][i][1][1] = 0;
-            triangle_color_buffers[layer][i][1][2] = 0;
+            triangle_color_buffers[layer][i][1][0] = default_color[0];
+			triangle_color_buffers[layer][i][1][1] = default_color[1];
+			triangle_color_buffers[layer][i][1][2] = default_color[2];
             triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
 
-            triangle_color_buffers[layer][i][2][0] = 0;
-            triangle_color_buffers[layer][i][2][1] = 0;
-            triangle_color_buffers[layer][i][2][2] = 0;
+            triangle_color_buffers[layer][i][2][0] = default_color[0];
+			triangle_color_buffers[layer][i][2][1] = default_color[1];
+			triangle_color_buffers[layer][i][2][2] = default_color[2];
             triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
         }
         else if (array_type == categories)
@@ -1129,9 +1179,9 @@ void visualizerClass::send_cubes(std::string layer_name, int number_cubes, const
         {
             for (int k = 0; k < 12 * 3; k++)    // Go through all the points of all triangles in one box
             {
-                cube_color_buffers[layer][j][k][0] = 0.1f;
-                cube_color_buffers[layer][j][k][1] = 0.9f;
-                cube_color_buffers[layer][j][k][2] = 0.1f;
+                cube_color_buffers[layer][j][k][0] = 0.1f;			//default_color[0];
+				cube_color_buffers[layer][j][k][1] = 0.9f;			//default_color[1];
+				cube_color_buffers[layer][j][k][2] = 0.1f;			//default_color[2];
                 cube_color_buffers[layer][j][k][3] = alpha_channels[cubes][layer];
             }
         }
@@ -1435,18 +1485,16 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 
 void visualizerClass::convert_HSVtoRGB(float *colors, int num_colors) {
 
-	float *coloroutput = new float[3];
+	float coloroutput[3];
 
 	for (int i = 0; i < num_colors; i++) 
 	{
-		HSVtoRGB(colors[i * 3 + 0], colors[i * 3 + 0], colors[i * 3 + 0], coloroutput);
+		HSVtoRGB(colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2], coloroutput);
 
 		colors[i * 3 + 0] = coloroutput[0];
 		colors[i * 3 + 1] = coloroutput[1];
 		colors[i * 3 + 2] = coloroutput[2];
 	}
-
-	delete[] coloroutput;
 }
 
 void visualizerClass::convert_RGB255toRGB(float *colors, int num_colors) {
@@ -1619,7 +1667,7 @@ int visualizerClass::run_thread() {
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);	// For circular points (GPU implementation dependent)
     glPointSize(5.0);							// GL_POINT_SIZE_MAX is GPU implementation dependent
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);    // Show only the borders of the triangles
     glLineWidth(2.0);
     GLfloat lineWidthRange[2];                  // GPU implementation dependent
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
@@ -1633,7 +1681,7 @@ int visualizerClass::run_thread() {
 
     // Create and compile our GLSL program from the shaders				    system("pwd"): /home/hank/dev/OGL/Shaper/_BUILD
     //GLuint programID = LoadShaders(	"//home//hank//src//TransformVertexShader.vertexshader", "//home//hank//src//ColorFragmentShader.fragmentshader");
-    GLuint programID = LoadShaders();
+    GLuint programID = LoadShaders(VertexShaderCode, FragmentShaderCode);
 
     // Get a handle for our "MVP" uniform and the camera position coordinates
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
@@ -1683,34 +1731,44 @@ int visualizerClass::run_thread() {
 	glGenBuffers(layer_data.cube_layers, cubebuffersIDs);
 	GLuint *cubecolorsIDs = new GLuint[layer_data.cube_layers];
 	glGenBuffers(layer_data.cube_layers, cubecolorsIDs);
-
+/*
+    GLuint *selectionitemsIDs = new GLuint[2];
+    glGenBuffers(2, selectionitemsIDs);
+    GLuint *selectioncolorsIDs = new GLuint[2];
+    glGenBuffers(2, selectioncolorsIDs);
+*/
     // Main loop --------------------------------------------------------
     do {
         glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        glViewport(0, 0, display_w, display_h);	// Arguments: Lower left 
         glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
 
         // Use our shader
         glUseProgram(programID);
 
-        // Compute the MVP matrix from keyboard and mouse input
+        // Compute the MVP matrix from keyboard and mouse input. Also check whether a selection was made.
         {
             std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions put the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from differente visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
             camera = &cam;
             if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
-        }
-        ProjectionMatrix = cam.getProjectionMatrix();
-        ViewMatrix = cam.getViewMatrix();
-        ModelMatrix = glm::mat4(1.0);                     // Identity matrix
-        MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+        
+			ProjectionMatrix = cam.getProjectionMatrix();
+			ViewMatrix = cam.getViewMatrix();
+			ModelMatrix = glm::mat4(1.0);                     // Identity matrix
+			MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+
+            check_selections();
+		}
+
+
+
 
         // Send our transformation to the currently bound shader, in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
 		// Send the position of the camera. Useful for adjusting the size of each point
 		glUniform3fv(Cam_position, 1, &cam.position[0]);
-
         // Send the size of the points
         glUniform1fv(Pnt_size_ID, 1, &point_siz);
 
@@ -1722,6 +1780,7 @@ int visualizerClass::run_thread() {
 
 
 
+        //load_selectionitems(selectionitemsIDs, selectioncolorsIDs);
         load_points(vertexbuffersIDs, colorbuffersIDs);
         load_lines(linebuffersIDs, linecolorsIDs);
         load_triangles(trianglebuffersIDs, trianglecolorsIDs);
@@ -2012,8 +2071,7 @@ void visualizerClass::rotation_H(float &x, float &y, float X, float Y, float rot
     y = -(hip * sin(beta)) + Y;
 }
 
-void visualizerClass::HSVtoRGB(int H, double S, double V, float coloroutput[3]) {
-
+void visualizerClass::HSVtoRGB(int H, double S, double V, float output[3]) {
 	double C = S * V;
 	double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
 	double m = V - C;
@@ -2050,9 +2108,177 @@ void visualizerClass::HSVtoRGB(int H, double S, double V, float coloroutput[3]) 
 		Bs = X;
 	}
 
-	coloroutput[0] = (Rs + m) * 255;
-	coloroutput[1] = (Gs + m) * 255;
-	coloroutput[2] = (Bs + m) * 255;
+	output[0] = (Rs + m);
+	output[1] = (Gs + m);
+	output[2] = (Bs + m);
+}
+
+void visualizerClass::fill_arrays() {
+
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	// glGetDoublev(GL_PROJECTION_MATRIX, projmatrix);			// See: glMatrixMode, glPushMatrix, glGet
+	// glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
+
+
+	glm::mat4 modelviewmatrix = ViewMatrix * ModelMatrix;
+
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++) 
+		{
+			projmatrix[i * 4 + j] = ProjectionMatrix[i][j];
+			mvmatrix[i * 4 + j] = modelviewmatrix[i][j];
+		}
+}
+
+void visualizerClass::check_selections(){
+
+    // Look for the selected points and print its data, if an array of strings was provided
+    if (cam.R_just_released)
+    {
+        fill_arrays();
+        for(size_t i = 0; i < layer_data.point_layers; i++) std::lock_guard<std::mutex> lock_points(mut[points][i]);
+        restart_selections();
+
+        //check_ray(cam.sel_xpos0, cam.sel_ypos0);      // One point selection way
+
+        signed int xstep, ystep;
+        if(cam.sel_xpos0 <= cam.sel_xpos) xstep = 1;
+        else xstep = -1;
+        if(cam.sel_ypos0 <= cam.sel_ypos) ystep = 1;
+        else ystep = -1;
+
+        for(double column = cam.sel_xpos0; ; column += xstep)
+        {
+            if(xstep == 1 && column > cam.sel_xpos) break;
+            else if(xstep == -1 && column < cam.sel_xpos) break;
+
+            for(double row = cam.sel_ypos0; ; row += ystep)
+            {
+                if(ystep == 1 && row > cam.sel_ypos) break;
+                else if(ystep == -1 && row < cam.sel_ypos) break;
+
+                check_ray(column, row);
+            }
+        }
+
+        copy_selections_to_array();
+
+        std::cout << "\n----- Selections -----" << std::endl;
+        for(size_t i = 0; i < strings_to_show.size(); i++)
+            if(strings_to_show[i] != "") std::cout << strings_to_show[i] << std::endl;
+
+        cam.R_just_released = false;
+    }
+}
+
+void visualizerClass::check_ray(double xpos, double ypos) {
+
+	double dX, dY, dZ;
+	glm::vec3 ClickRayP1, ClickRayP2, pointRayP1, pointRayP2;
+	double dClickY = double(display_h - ypos);				// OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+	double dClickX = xpos;
+	double sqrDist, minSqrDist = MinDistance * MinDistance;
+    glm::vec3 ClickSlope, pointSlope;
+
+	// From the screen coordinates, get the ray's 2 world-space extremes points (they are in the near and far clip plane) 
+	gluUnProject(dClickX, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 0.0: Near clip plane
+	ClickRayP1 = glm::vec3(dX, dY, dZ);
+	gluUnProject(dClickX, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 1.0: Far clip plane
+	ClickRayP2 = glm::vec3(dX, dY, dZ);
+
+    ClickSlope = ClickRayP2 - ClickRayP1;
+    cam.normalize_vec(ClickSlope);                  // Get unary vector for the ray
+
+	// Find the closest points by testing which points' rays are close to the clickRay.
+	for (int i = 0; i < point_buffers.size(); i++)
+	{
+		if(!checkboxes_values[points][i]) continue;
+
+		for (int j = 0; j < objects_to_print[points][i]; j++)
+		{
+			// Point's ray is formed by the vector between the selectable point and the origin point of the clickRay.
+			pointRayP1 = ClickRayP1;
+			pointRayP2 = glm::vec3(	point_buffers[i][j][0], 
+									point_buffers[i][j][1], 
+									point_buffers[i][j][2] );
+
+            pointSlope = pointRayP2 - pointRayP1;
+            cam.normalize_vec(pointSlope);          // Get unitary vector for point's ray
+
+            sqrDist = cam.distance_sqr_vec(pointSlope, ClickSlope);
+
+            if (sqrDist < minSqrDist) selected_points[i][j] = 1;            // Set true the selected points in selected_points[]
+        }
+	}
+}
+
+void visualizerClass::restart_selections(){
+
+    for(int i = 0; i < layer_data.point_layers; i++)
+        for(int j = 0; j < layer_data.max_points[i]; j++)
+    {
+        selected_points[i][j] = 0;
+        //points_strings[i][j] = "";
+    }
+}
+
+void visualizerClass::copy_selections_to_array(){
+
+    strings_to_show = std::vector<std::string>(0);
+
+    for(size_t i = 0; i < selected_points.size(); i++)
+        for(size_t j = 0; j < selected_points[i].size(); j++)
+            if(selected_points[i][j]) strings_to_show.push_back(points_strings[i][j]);
+}
+
+void visualizerClass::load_selectionitems(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs){
+
+    if(cam.is_R_pressed)
+    {
+        double x, y, x0, y0;
+        x =     (cam.sel_xpos - display_w/2)/(display_w/2);     // Optimizar <<<<<<<<<<<<
+        x0 =    (cam.sel_xpos0 - display_w/2)/(display_w/2);
+        y =    -(cam.sel_ypos - display_w/2)/(display_w/2);
+        y0 =   -(cam.sel_ypos0 - display_w/2)/(display_w/2);
+
+        selection_square[0][0] = x0;
+        selection_square[0][1] = y0;
+        selection_square[0][2] = 0.;
+        selection_square[1][0] = x;
+        selection_square[1][1] = y0;
+        selection_square[1][2] = 0.;
+        selection_square[2][0] = x0;
+        selection_square[2][1] = y0;
+        selection_square[2][2] = 0.;
+        selection_square[3][0] = x0;
+        selection_square[3][1] = y;
+        selection_square[3][2] = 0.;
+        selection_square[4][0] = x0;
+        selection_square[4][1] = y0;
+        selection_square[4][2] = 0.;
+
+        glBindBuffer(GL_ARRAY_BUFFER, selectionitemsIDs[0]);
+        glBufferData(GL_ARRAY_BUFFER, 5 * 3 * sizeof(float), &selection_square[0][0], GL_DYNAMIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, selectioncolorsIDs[0]);
+        glBufferData(GL_ARRAY_BUFFER, 5 * 4 * sizeof(float), &selection_square_colors[0][0], GL_DYNAMIC_DRAW);
+    }
+
+    // 1rst attribute buffer : lines
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, selectionitemsIDs[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    // 2nd attribute buffer : colors
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, selectioncolorsIDs[0]);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glDrawArrays(GL_LINES, 0, 5);
+
+
+    //float (*points_selected)[3];
+    //float (*points_selected_colors)[3];
 }
 
 void visualizerClass::load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs){

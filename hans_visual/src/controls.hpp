@@ -30,8 +30,7 @@ class controls {
 	float deltaTime;
 
 	// Mouse
-	double xpos, ypos;
-	double xpos0, ypos0;
+	double xpos, ypos, xpos0, ypos0;
     bool L_pressed, R_pressed, scroll_pressed;
 
 	// camera parameters
@@ -64,6 +63,13 @@ public:
 
 	friend void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 	friend void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+
+	// Points selection
+	double sel_xpos, sel_ypos, sel_xpos0, sel_ypos0;
+	void normalize_vec(glm::vec3 &vec);
+	double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);
+    bool R_just_released = false;
+    bool *is_R_pressed = &R_pressed;
 };
 
 // Callback functions: Get mouse click - Get mouse out/in window - Get cursor position

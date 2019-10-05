@@ -8,13 +8,6 @@
 *		-> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
 *		-> Selection (or small windows for showing info about objects)
 *		-> Are mutexes covering every situation?
-*		>>> Crear varios visualizadores (cuidado con static variables) (comentar create_demo_windows) (controls camera static why?)
-*       >>> Manipulate point size
-*       >>> Manipulate window size
-*       >>> Defaults: Screen size, point size, background color
-*       >>> Eliminate <dequeu>
-*       >>> Transformation matrices members
-*       >>> Controls is a controled member of visualizerClass
 */
 
 #pragma once
@@ -37,6 +30,9 @@ using namespace glm;
 #include "imgui.h"
 #include "examples/imgui_impl_glfw.h"
 #include "examples/imgui_impl_opengl3.h"
+
+//#include "btBulletCollisionCommon.h"
+//#include "btBulletDynamicsCommon.h"
 
 #include "shader.hpp"
 #include "controls.hpp"
@@ -236,7 +232,7 @@ class visualizerClass {
 	layer_system layer_data;
 	bool get_layer_data(std::string layer_name, object_type obj_type, unsigned int &layer, unsigned int &max_points);
 
-	void HSVtoRGB(int H, double S, double V, float coloroutput[3]);
+	void HSVtoRGB(int H, double S, double V, float coloroutput[3]);		// https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
 
     size_t num_objects = 4;					// Points, lines, triangles, cubes
     char test[21];
@@ -253,14 +249,28 @@ class visualizerClass {
 	std::string *data_window;
 	int data_window_size;
 	std::mutex mut_fill_data;
-	float backg_color[3] = { 0.5, 0.5, 0.5 };
-    float point_siz = 100;
+	float backg_color[3] = { 0., 0., 0.14 };
+    float point_siz = 35;
 
     // Transformation matrices
     glm::mat4 ProjectionMatrix;
     glm::mat4 ViewMatrix;
     glm::mat4 ModelMatrix;
     glm::mat4 MVP;
+
+	// Points selection
+    void check_selections();    // Points selection search ( http://www.3dkingdoms.com/selection.html )
+	double projmatrix[16];
+	double mvmatrix[16];
+	int viewport[4];
+	void fill_arrays();			// Fill the 3 previous matrix arrays (projmatrix[], mvmatrix[], viewport[])
+    double MinDistance = 0.01;	// Selection radius: Meters in a 1 meter radius sphere
+	void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[] 
+	std::vector<std::vector<char>> selected_points;
+	std::vector<std::vector<std::string>> points_strings;
+    void restart_selections();                      // Restarts selected_points[]
+    std::vector<std::string> strings_to_show;       // Strings of selected points are stored here
+    void copy_selections_to_array();                // Copy the strings of selected points into strings_to_show[]
 
     // Common buffers
     std::vector<std::vector<size_t>> objects_to_print;      // Number of objects that are going to be printed per layer
@@ -274,6 +284,15 @@ class visualizerClass {
 
     const size_t default_palette_size = 21;
     float (*default_palette)[3];
+
+    float default_color[3] = { 0.9, 0.9, 0.9 };
+
+    // Selection data
+    float selection_square[5][3];
+    float selection_square_colors[5][3];
+    float (*points_selected)[3];
+    float (*points_selected_colors)[3];
+    double selection_color[3] = { 0.97, 1., 0. };
 
 	// Points data
 	std::vector<float(*)[3]> point_buffers;			// Stores all the coordinates of all the points per layer
@@ -295,6 +314,7 @@ class visualizerClass {
     void rotation_H(float &x, float &y, float X, float Y, float rot);
 
     // In-main-loop functions for loading data to the GPU
+    void load_selectionitems(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
     void load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs);
     void load_lines(GLuint *linebuffIDs, GLuint *linecolorbuffIDs);
     void load_triangles(GLuint *trianglebuffIDs, GLuint *trianglecolorbuffIDs);
@@ -325,7 +345,7 @@ public:
     // - 'colors'
 	// For more info, look at the macros definition (visualizerClass.hpp).
 	// When no category or color array is sent, points are black.
-    void send_points(std::string layer_name, int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    void send_points(std::string layer_name, int number_points, const float *arr, const float *labels = nullptr, std::string *points_data = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
 
 	// Send an array containing the points coordinates you want to bind with lines, and the number of points you want to use, including the gap-points with coordinates (1.2, 3.4, 5.6) (include this number in the number of points).
     void send_lines(std::string layer_name, int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
@@ -336,6 +356,9 @@ public:
     void send_cubes(std::string layer_name, int number_cubes, const cube3D *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
 
     // Bonus methods --------------------------------
+
+	// Blue to red palette. Blue-yellow and yellow-red are in a different scale
+	float modified_rainbow[256][3];
 
 	// Transform the coordinates of an array of points from automotive system (x:front, y:left, z:up) to OpenGL system (x:right, y:up, z:back).
 	void transform_coordinates(float *points_arr, int number_points);
