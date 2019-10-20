@@ -69,7 +69,7 @@ public:
 	void normalize_vec(glm::vec3 &vec);
 	double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);
     bool R_just_released = false;
-    bool *is_R_pressed = &R_pressed;
+    bool is_R_pressed() { return R_pressed; }
 };
 
 // Callback functions: Get mouse click - Get mouse out/in window - Get cursor position

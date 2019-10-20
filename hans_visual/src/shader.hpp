@@ -3,7 +3,7 @@
 
 #include <string>
 
-extern std::string VertexShaderCode, FragmentShaderCode, VertexShader2D;
+extern std::string VertexShaderCode, FragmentShaderCode, VertexShaderCode2D;
 
 GLuint LoadShaders(const std::string vertexShader, const std::string fragmentShader);
 

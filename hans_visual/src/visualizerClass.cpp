@@ -215,13 +215,9 @@ visualizerClass::visualizerClass(
 	}
     convert_HSVtoRGB(&modified_rainbow[0][0], 256);
 
-    // Selection square color
-    for(int i = 0; i < 5; i++)
-    {
-        selection_square_colors[i][0] = selection_color[0];
-        selection_square_colors[i][1] = selection_color[1];
-        selection_square_colors[i][2] = selection_color[2];
-    }
+    // Selected points
+    points_to_highlight = new float[0][3];
+    selected_points_colors = new float[0][4];
 }
 
 visualizerClass::~visualizerClass(){ 
@@ -255,6 +251,8 @@ visualizerClass::~visualizerClass(){
 
     delete[] default_palette;
     delete[] data_window;
+    delete[] points_to_highlight;
+    delete[] selected_points_colors;
 }
 
 visualizerClass& visualizerClass::operator=(const visualizerClass &obj) {
@@ -542,6 +540,7 @@ int visualizerClass::open_window() {
 
     std::thread running(&visualizerClass::run_thread, this);
     running.detach();
+
     return 0;
 }
 
@@ -1682,6 +1681,7 @@ int visualizerClass::run_thread() {
     // Create and compile our GLSL program from the shaders				    system("pwd"): /home/hank/dev/OGL/Shaper/_BUILD
     //GLuint programID = LoadShaders(	"//home//hank//src//TransformVertexShader.vertexshader", "//home//hank//src//ColorFragmentShader.fragmentshader");
     GLuint programID = LoadShaders(VertexShaderCode, FragmentShaderCode);
+    GLuint programID_selection = LoadShaders(VertexShaderCode2D, FragmentShaderCode);
 
     // Get a handle for our "MVP" uniform and the camera position coordinates
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
@@ -1731,12 +1731,17 @@ int visualizerClass::run_thread() {
 	glGenBuffers(layer_data.cube_layers, cubebuffersIDs);
 	GLuint *cubecolorsIDs = new GLuint[layer_data.cube_layers];
 	glGenBuffers(layer_data.cube_layers, cubecolorsIDs);
-/*
-    GLuint *selectionitemsIDs = new GLuint[2];
-    glGenBuffers(2, selectionitemsIDs);
-    GLuint *selectioncolorsIDs = new GLuint[2];
-    glGenBuffers(2, selectioncolorsIDs);
-*/
+
+    GLuint *selectedPointsID = new GLuint;
+    glGenBuffers(1, selectedPointsID);
+    GLuint *selectedColorsID = new GLuint;
+    glGenBuffers(1, selectedColorsID);
+
+    GLuint *selectionSquareID = new GLuint;
+    glGenBuffers(1, selectionSquareID);
+    GLuint *selectionSquareColorID = new GLuint;
+    glGenBuffers(1, selectionSquareColorID);
+
     // Main loop --------------------------------------------------------
     do {
         glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -1757,7 +1762,6 @@ int visualizerClass::run_thread() {
 			ViewMatrix = cam.getViewMatrix();
 			ModelMatrix = glm::mat4(1.0);                     // Identity matrix
 			MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
 
             check_selections();
 		}
@@ -1780,13 +1784,19 @@ int visualizerClass::run_thread() {
 
 
 
-        //load_selectionitems(selectionitemsIDs, selectioncolorsIDs);
+        load_selected_points(selectedPointsID, selectedColorsID);
         load_points(vertexbuffersIDs, colorbuffersIDs);
         load_lines(linebuffersIDs, linecolorsIDs);
         load_triangles(trianglebuffersIDs, trianglecolorsIDs);
         load_cubes(cubebuffersIDs, cubecolorsIDs);
 
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
 
+
+
+        glUseProgram(programID_selection);
+        load_selectionSquare(selectionSquareID, selectionSquareColorID);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
@@ -1804,7 +1814,8 @@ int visualizerClass::run_thread() {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-    } // Check if the ESC key was pressed or the window was closed
+    }
+    // Check if the ESC key was pressed or the window was closed
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
 
 
@@ -1823,8 +1834,13 @@ int visualizerClass::run_thread() {
 	glDeleteBuffers(layer_data.triangle_layers, trianglecolorsIDs);
     glDeleteBuffers(layer_data.cube_layers, cubebuffersIDs);
     glDeleteBuffers(layer_data.cube_layers, cubecolorsIDs);
+    glDeleteBuffers(1, selectedPointsID);
+    glDeleteBuffers(1, selectedColorsID);
+    glDeleteBuffers(1, selectionSquareID);
+    glDeleteBuffers(1, selectionSquareColorID);
 
     glDeleteProgram(programID);
+    glDeleteProgram(programID_selection);
     glDeleteVertexArrays(1, &VertexArrayID);
 
     // Close OpenGL window and terminate GLFW
@@ -2224,22 +2240,63 @@ void visualizerClass::restart_selections(){
 
 void visualizerClass::copy_selections_to_array(){
 
+    // Get the points coordinates and its strings
     strings_to_show = std::vector<std::string>(0);
+    std::vector<std::vector<float>> temp_points;
+    std::vector<float> temp_coords(3);
 
     for(size_t i = 0; i < selected_points.size(); i++)
         for(size_t j = 0; j < selected_points[i].size(); j++)
-            if(selected_points[i][j]) strings_to_show.push_back(points_strings[i][j]);
+            if(selected_points[i][j])
+            {
+                strings_to_show.push_back(points_strings[i][j]);
+                temp_coords[0] = point_buffers[i][j][0];
+                temp_coords[1] = point_buffers[i][j][1];
+                temp_coords[2] = point_buffers[i][j][2];
+                temp_points.push_back(temp_coords);
+            }
+
+    // Copy the coordinates in the array that will be sent to OGL
+    num_selected_points = temp_points.size();
+    delete[] points_to_highlight;
+    delete[] selected_points_colors;
+    points_to_highlight = new float[temp_points.size()][3];
+    selected_points_colors = new float[temp_points.size()][4];
+
+    for(int i = 0; i < num_selected_points; ++i)
+    {
+        points_to_highlight[i][0] = temp_points[i][0];
+        points_to_highlight[i][1] = temp_points[i][1];
+        points_to_highlight[i][2] = temp_points[i][2];
+
+        selected_points_colors[i][0] = selection_color[0];
+        selected_points_colors[i][1] = selection_color[1];
+        selected_points_colors[i][2] = selection_color[2];
+        selected_points_colors[i][3] = selection_color[3];
+    }
 }
 
-void visualizerClass::load_selectionitems(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs){
+void visualizerClass::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionColorID){
 
-    if(cam.is_R_pressed)
+    int number_points = 0;
+
+    if(cam.is_R_pressed())
     {
+        // Set colors
+        for(int i = 0; i < 5; i++)
+        {
+            selection_square_colors[i][0] = selection_color[0];
+            selection_square_colors[i][1] = selection_color[1];
+            selection_square_colors[i][2] = selection_color[2];
+            selection_square_colors[i][3] = selection_color[3];
+        }
+
+        // Set positions
         double x, y, x0, y0;
-        x =     (cam.sel_xpos - display_w/2)/(display_w/2);     // Optimizar <<<<<<<<<<<<
+        x =     (cam.sel_xpos - display_w/2)/(display_w/2);
         x0 =    (cam.sel_xpos0 - display_w/2)/(display_w/2);
-        y =    -(cam.sel_ypos - display_w/2)/(display_w/2);
-        y0 =   -(cam.sel_ypos0 - display_w/2)/(display_w/2);
+        y =    -(cam.sel_ypos - display_h/2)/(display_h/2);
+        y0 =   -(cam.sel_ypos0 - display_h/2)/(display_h/2);
 
         selection_square[0][0] = x0;
         selection_square[0][1] = y0;
@@ -2247,8 +2304,8 @@ void visualizerClass::load_selectionitems(GLuint *selectionitemsIDs, GLuint *sel
         selection_square[1][0] = x;
         selection_square[1][1] = y0;
         selection_square[1][2] = 0.;
-        selection_square[2][0] = x0;
-        selection_square[2][1] = y0;
+        selection_square[2][0] = x;
+        selection_square[2][1] = y;
         selection_square[2][2] = 0.;
         selection_square[3][0] = x0;
         selection_square[3][1] = y;
@@ -2257,28 +2314,47 @@ void visualizerClass::load_selectionitems(GLuint *selectionitemsIDs, GLuint *sel
         selection_square[4][1] = y0;
         selection_square[4][2] = 0.;
 
-        glBindBuffer(GL_ARRAY_BUFFER, selectionitemsIDs[0]);
+        number_points = 5;
+
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionSquareID);
         glBufferData(GL_ARRAY_BUFFER, 5 * 3 * sizeof(float), &selection_square[0][0], GL_DYNAMIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER, selectioncolorsIDs[0]);
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
         glBufferData(GL_ARRAY_BUFFER, 5 * 4 * sizeof(float), &selection_square_colors[0][0], GL_DYNAMIC_DRAW);
     }
 
     // 1rst attribute buffer : lines
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, selectionitemsIDs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, selectionSquareID[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // 2nd attribute buffer : colors
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, selectioncolorsIDs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, selectionColorID[0]);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    glDrawArrays(GL_LINES, 0, 5);
+    glDrawArrays(GL_LINE_STRIP, 0, number_points);
+}
 
+void visualizerClass::load_selected_points(GLuint *selectionPointsID, GLuint *selectionColorID) {
 
-    //float (*points_selected)[3];
-    //float (*points_selected_colors)[3];
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionPointsID);
+        glBufferData(GL_ARRAY_BUFFER, num_selected_points * 3 * sizeof(float), &points_to_highlight[0][0], GL_DYNAMIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
+        glBufferData(GL_ARRAY_BUFFER, num_selected_points * 4 * sizeof(float), &selected_points_colors[0][0], GL_DYNAMIC_DRAW);
+
+        // 1rst attribute buffer : vertices
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionPointsID);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        // 2nd attribute buffer : colors
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        glDrawArrays(GL_POINTS, 0, num_selected_points);
 }
 
 void visualizerClass::load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs){
@@ -2309,7 +2385,7 @@ void visualizerClass::load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs){
             glDrawArrays(GL_POINTS, 0, objects_to_print[points][i]);
 		else
 			glDrawArrays(GL_POINTS, 0, 0);
-	}
+    }
 }
 
 void visualizerClass::load_lines(GLuint *linebuffIDs, GLuint *linecolorbuffIDs){

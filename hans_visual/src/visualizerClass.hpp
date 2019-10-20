@@ -266,11 +266,11 @@ class visualizerClass {
 	void fill_arrays();			// Fill the 3 previous matrix arrays (projmatrix[], mvmatrix[], viewport[])
     double MinDistance = 0.01;	// Selection radius: Meters in a 1 meter radius sphere
 	void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[] 
-	std::vector<std::vector<char>> selected_points;
-	std::vector<std::vector<std::string>> points_strings;
     void restart_selections();                      // Restarts selected_points[]
     std::vector<std::string> strings_to_show;       // Strings of selected points are stored here
     void copy_selections_to_array();                // Copy the strings of selected points into strings_to_show[]
+    double selection_color[4] = { 0.97, 1., 0., 1. };
+    float num_selected_points = 0;
 
     // Common buffers
     std::vector<std::vector<size_t>> objects_to_print;      // Number of objects that are going to be printed per layer
@@ -285,14 +285,17 @@ class visualizerClass {
     const size_t default_palette_size = 21;
     float (*default_palette)[3];
 
-    float default_color[3] = { 0.9, 0.9, 0.9 };
+    float default_color[3] = { 1., 1., 1. };
 
     // Selection data
+    std::vector<std::vector<char>> selected_points;
+    std::vector<std::vector<std::string>> points_strings;
     float selection_square[5][3];
-    float selection_square_colors[5][3];
+    float selection_square_colors[5][4];
     float (*points_selected)[3];
     float (*points_selected_colors)[3];
-    double selection_color[3] = { 0.97, 1., 0. };
+    float (*points_to_highlight)[3];
+    float (*selected_points_colors)[4];
 
 	// Points data
 	std::vector<float(*)[3]> point_buffers;			// Stores all the coordinates of all the points per layer
@@ -314,7 +317,8 @@ class visualizerClass {
     void rotation_H(float &x, float &y, float X, float Y, float rot);
 
     // In-main-loop functions for loading data to the GPU
-    void load_selectionitems(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
+    void load_selectionSquare(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
+    void load_selected_points(GLuint *selectionSquareID, GLuint *selectionColorID);
     void load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs);
     void load_lines(GLuint *linebuffIDs, GLuint *linecolorbuffIDs);
     void load_triangles(GLuint *trianglebuffIDs, GLuint *trianglecolorbuffIDs);

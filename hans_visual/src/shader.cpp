@@ -27,11 +27,8 @@ std::string VertexShaderCode =
     "uniform float Pnt_siz; \n"
 
     "void main() { \n"
-
     "	gl_Position = MVP * vec4(vertexPosition_modelspace, 1); \n"
-
     "	fragmentColor = vertexColor; \n"
-
     "	gl_PointSize = Pnt_siz / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) ); \n"
     "} \n";
 
@@ -45,11 +42,22 @@ std::string FragmentShaderCode =
     "	color = fragmentColor; \n"
     "} \n";
 
-std::string VertexShader2D;
+std::string VertexShaderCode2D =
+    "#version 330 core\n"
+
+    "layout(location = 0) in vec3 vertexPosition; \n"
+    "layout(location = 1) in vec4 vertexColor; \n"
+
+    "out vec4 fragmentColor; \n"
+
+    "void main() { \n"
+    "	gl_Position = vec4(vertexPosition, 1); \n"
+    "	fragmentColor = vertexColor; \n"
+    "} \n";
 
 
 GLuint LoadShaders(const std::string vertexShader, const std::string fragmentShader){
-std::cout << "LoadShaders" << std::endl;
+
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -57,7 +65,7 @@ std::cout << "LoadShaders" << std::endl;
 	GLint Result = GL_FALSE;
     int InfoLogLength;
 
-
+    // ----------------------------------------------------
 
 	// Compile Vertex Shader
     char const * VertexSourcePointer = vertexShader.c_str();
@@ -87,7 +95,7 @@ std::cout << "LoadShaders" << std::endl;
         printf("%s\n", &FragmentShaderErrorMessage[0]);
 	}
 
-
+    // ----------------------------------------------------
 
 	// Link the program
 	GLuint ProgramID = glCreateProgram();
@@ -104,7 +112,7 @@ std::cout << "LoadShaders" << std::endl;
         printf("%s\n", &ProgramErrorMessage[0]);
 	}
 
-
+    // ----------------------------------------------------
 	
 	glDetachShader(ProgramID, VertexShaderID);
 	glDetachShader(ProgramID, FragmentShaderID);
