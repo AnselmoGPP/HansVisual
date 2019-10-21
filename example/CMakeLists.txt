@@ -11,6 +11,8 @@ FIND_PACKAGE(OpenGL REQUIRED)
 
 ADD_EXECUTABLE(${PROJECT_NAME}
 	src/main.cpp
+	src/header.cpp
+	src/header.hpp
 )
 
 MESSAGE(STATUS "Building for " ${OP_SYSTEM})

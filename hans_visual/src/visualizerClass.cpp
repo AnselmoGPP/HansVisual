@@ -1412,13 +1412,13 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 
         palettes[points][layer] = new float[number_colors][3];
 
-		for (int i = 0; i < number_colors; i++) { 
+        for (int i = 0; i < number_colors; i++) {
 
             HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[points][layer][i][0]);
 
-            palettes[points][layer][i][0] /= 255;
-            palettes[points][layer][i][1] /= 255;
-            palettes[points][layer][i][2] /= 255;
+            //palettes[points][layer][i][0] /= 255;
+            //palettes[points][layer][i][1] /= 255;
+            //palettes[points][layer][i][2] /= 255;
 		}
 
         palette_sizes[points][layer] = number_colors;
@@ -1437,7 +1437,7 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 
             HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[lines][layer][i][0]);
 
-            palettes[lines][layer][i][0] /= 360;
+            //palettes[lines][layer][i][0] /= 360;
 		}
 
         palette_sizes[lines][layer] = number_colors;
@@ -1456,7 +1456,7 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 
             HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[triangles][layer][i][0]);
 
-            palettes[triangles][layer][i][0] /= 360;
+            //palettes[triangles][layer][i][0] /= 360;
 		}
 
         palette_sizes[triangles][layer] = number_colors;
@@ -1475,7 +1475,7 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 
             HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[cubes][layer][i][0]);
 
-            palettes[cubes][layer][i][0] /= 360;
+            //palettes[cubes][layer][i][0] /= 360;
 		}
 
         palette_sizes[cubes][layer] = number_colors;
