@@ -259,14 +259,12 @@ class visualizerClass {
     glm::mat4 MVP;
 
 	// Points selection
-    void check_selections();    // Points selection search ( http://www.3dkingdoms.com/selection.html )
+    void check_selections();    // Points selection search ( http://www.3dkingdoms.com/selection.html ). Looks for the selected points and print its data, if an array of strings was provided
 	double projmatrix[16];
 	double mvmatrix[16];
 	int viewport[4];
-	void fill_arrays();			// Fill the 3 previous matrix arrays (projmatrix[], mvmatrix[], viewport[])
-    double MinDistance = 0.01;	// Selection radius: Meters in a 1 meter radius sphere
-	void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[] 
-    void restart_selections();                      // Restarts selected_points[]
+    double MinDistance = 0.01;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
+    void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[]
     std::vector<std::string> strings_to_show;       // Strings of selected points are stored here
     void copy_selections_to_array();                // Copy the strings of selected points into strings_to_show[]
     double selection_color[4] = { 0.97, 1., 0., 1. };
@@ -364,7 +362,7 @@ public:
 	// Blue to red palette. Blue-yellow and yellow-red are in a different scale
 	float modified_rainbow[256][3];
 
-	// Transform the coordinates of an array of points from automotive system (x:front, y:left, z:up) to OpenGL system (x:right, y:up, z:back).
+    // Transform the coordinates of an array of points from X-first system (x:front, y:left, z:up) to OpenGL system (x:right, y:up, z:back)
 	void transform_coordinates(float *points_arr, int number_points);
 
     // Send a new palette of colors to replace the current one. Each RGB value is in the range 0 - 1.

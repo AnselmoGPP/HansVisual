@@ -66,14 +66,14 @@ public:
 
 	// Points selection
 	double sel_xpos, sel_ypos, sel_xpos0, sel_ypos0;
-	void normalize_vec(glm::vec3 &vec);
-	double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);
+    void normalize_vec(glm::vec3 &vec);                             // Get the unitary vector
+    double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);      // Square distance between 2 points
     bool R_just_released = false;
     bool is_R_pressed() { return R_pressed; }
-};
 
-// Callback functions: Get mouse click - Get mouse out/in window - Get cursor position
-void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+    // Callback functions: Get mouse click - Get mouse out/in window - Get cursor position
+    static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+    static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+};
 
 #endif

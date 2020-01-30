@@ -1,0 +1,3 @@
+#!/bin/bash
+
+vim example/src/main.cpp header.hpp header.cpp hans_visual/src/visualizerClass.hpp hans_visual/src/visualizerClass.cpp hans_visual/src/controls.hpp hans_visual/src/controls.cpp hans_visual/src/shader.hpp hans_visual/src/shader.cpp

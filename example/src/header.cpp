@@ -1,5 +1,6 @@
 
 #include "header.hpp"
+#include<chrono>
 
 
 // myclass class ----------------------------------------------------------------------
@@ -18,7 +19,7 @@ void myclass::send_data() {
 
         // Draw points ------------------------------
 
-        visual.transform_coordinates(&b.pnts[0][0], 12);                                                // Transform the points coordinates in a buffer from automotive system to OpenGL system
+        visual.transform_coordinates(&b.pnts[0][0], 12);                                                // Transform the points coordinates in a buffer from X-first system to OpenGL system
         visual.send_palette_HSV("Points 1", points, &b.points_colors_HSV[0][0], 12);                    // Change the standard palette of a certain layer. Enter the palette in HSV format
         visual.send_points("Points 1", 12, &b.pnts[0][0]);                                              // Paint some points in black
         visual.send_points("Points 1", 12, &b.pnts[0][0], b.points_categories, nullptr, categories);	// Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
@@ -87,6 +88,15 @@ void myclass::send_data() {
         };
 
         visual.fill_data_window(additional_data, 7);
+
+        // Loop that draws moving lines
+
+        for(;;)
+        {
+            //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            for(int j = 0; j < 12; j++) b.pnts[j][0] += 0.000001;
+            visual.send_points("Points 1", 12, &b.pnts[0][0], b.points_categories, b.points_names);
+        }
 }
 
 // buffers struct ----------------------------------------------------------------------

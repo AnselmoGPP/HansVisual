@@ -1,4 +1,4 @@
-
+﻿
 #include "controls.hpp"
 
 controls *camera;		// Pointer used by the callback functions (mouse buttons).
@@ -213,7 +213,7 @@ double controls::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
 
 // Callback functions ----------------------------
 
-void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+void controls::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 
 	if		(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
@@ -252,7 +252,7 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 	}
 }
 
-void scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
+void controls::scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
     camera->radius -= yOffset * camera->scroll_speed;
     if (camera->radius < camera->minimum_radius) camera->radius = camera->minimum_radius;
 }

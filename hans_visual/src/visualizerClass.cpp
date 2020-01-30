@@ -249,10 +249,16 @@ visualizerClass::~visualizerClass(){
     for(int i = 0; i < num_objects; i++)
         delete[] checkboxes_values[i];
 
+    delete[] mut[points];
+    delete[] mut[lines];
+    delete[] mut[triangles];
+    delete[] mut[cubes];
+
     delete[] default_palette;
     delete[] data_window;
     delete[] points_to_highlight;
     delete[] selected_points_colors;
+
 }
 
 visualizerClass& visualizerClass::operator=(const visualizerClass &obj) {
@@ -757,7 +763,7 @@ void visualizerClass::send_points(std::string layer_name, int number_points, con
             point_color_buffers[layer][i][3] = alpha_channels[points][layer];
         }
 
-        // Fill/empty points_strings[] and empty selected_points[]
+        // Fill/empty points_strings[] and empty selected_points[]      //
         if(points_data != nullptr)
         {
             points_strings[layer][i] = points_data[i];
@@ -1250,8 +1256,9 @@ void visualizerClass::send_palette_RGB_01(std::string layer_name, object_type ob
 			return;
 		}
 
-        delete [] palettes[points][layer];
+        std::lock_guard<std::mutex> lock(mut[points][layer]);
 
+        delete [] palettes[points][layer];
         palettes[points][layer] = new float[number_colors][3];
 
         for(int i = 0; i < number_colors; i++){
@@ -1268,6 +1275,8 @@ void visualizerClass::send_palette_RGB_01(std::string layer_name, object_type ob
             std::cout << "Cannot change lines palette" << std::endl;
 			return;
 		}
+
+        std::lock_guard<std::mutex> lock(mut[lines][layer]);
 
         delete [] palettes[lines][layer];
         palettes[lines][layer] = new float[number_colors][3];
@@ -1287,6 +1296,8 @@ void visualizerClass::send_palette_RGB_01(std::string layer_name, object_type ob
             return;
         }
 
+        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
+
         delete [] palettes[triangles][layer];
         palettes[triangles][layer] = new float[number_colors][3];
 
@@ -1304,6 +1315,8 @@ void visualizerClass::send_palette_RGB_01(std::string layer_name, object_type ob
             std::cout << "Cannot change cubes palette" << std::endl;
 			return;
 		}
+
+        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
 
         delete [] palettes[cubes][layer];
         palettes[cubes][layer] = new float[number_colors][3];
@@ -1329,8 +1342,9 @@ void visualizerClass::send_palette_RGB(std::string layer_name, object_type obj, 
 			return;
 		}
 
-        delete[] palettes[points][layer];
+        std::lock_guard<std::mutex> lock(mut[points][layer]);
 
+        delete[] palettes[points][layer];
         palettes[points][layer] = new float[number_colors][3];
 
 		for (int i = 0; i < number_colors; i++) {
@@ -1347,6 +1361,8 @@ void visualizerClass::send_palette_RGB(std::string layer_name, object_type obj, 
 			std::cout << "Cannot change lines palette" << std::endl;
 			return;
 		}
+
+        std::lock_guard<std::mutex> lock(mut[lines][layer]);
 
         delete[] palettes[lines][layer];
         palettes[lines][layer] = new float[number_colors][3];
@@ -1366,6 +1382,8 @@ void visualizerClass::send_palette_RGB(std::string layer_name, object_type obj, 
 			return;
 		}
 
+        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
+
         delete[] palettes[triangles][layer];
         palettes[triangles][layer] = new float[number_colors][3];
 
@@ -1383,6 +1401,8 @@ void visualizerClass::send_palette_RGB(std::string layer_name, object_type obj, 
 			std::cout << "Cannot change cubes palette" << std::endl;
 			return;
 		}
+
+        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
 
         delete[] palettes[cubes][layer];
         palettes[cubes][layer] = new float[number_colors][3];
@@ -1408,8 +1428,9 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 			return;
 		}
 
-        delete[] palettes[points][layer];
+        std::lock_guard<std::mutex> lock(mut[points][layer]);
 
+        delete[] palettes[points][layer];
         palettes[points][layer] = new float[number_colors][3];
 
         for (int i = 0; i < number_colors; i++) {
@@ -1430,6 +1451,8 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 			return;
 		}
 
+        std::lock_guard<std::mutex> lock(mut[lines][layer]);
+
         delete[] palettes[lines][layer];
         palettes[lines][layer] = new float[number_colors][3];
 
@@ -1449,6 +1472,8 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 			return;
 		}
 
+        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
+
         delete[] palettes[triangles][layer];
         palettes[triangles][layer] = new float[number_colors][3];
 
@@ -1467,6 +1492,8 @@ void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, 
 			std::cout << "Cannot change cubes palette" << std::endl;
 			return;
 		}
+
+        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
 
         delete[] palettes[cubes][layer];
         palettes[cubes][layer] = new float[number_colors][3];
@@ -1754,7 +1781,7 @@ int visualizerClass::run_thread() {
 
         // Compute the MVP matrix from keyboard and mouse input. Also check whether a selection was made.
         {
-            std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions put the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from differente visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
+            std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions puts the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from different visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
             camera = &cam;
             if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
         
@@ -2129,40 +2156,49 @@ void visualizerClass::HSVtoRGB(int H, double S, double V, float output[3]) {
 	output[2] = (Bs + m);
 }
 
-void visualizerClass::fill_arrays() {
-
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	// glGetDoublev(GL_PROJECTION_MATRIX, projmatrix);			// See: glMatrixMode, glPushMatrix, glGet
-	// glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
-
-
-	glm::mat4 modelviewmatrix = ViewMatrix * ModelMatrix;
-
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 4; j++) 
-		{
-			projmatrix[i * 4 + j] = ProjectionMatrix[i][j];
-			mvmatrix[i * 4 + j] = modelviewmatrix[i][j];
-		}
-}
-
 void visualizerClass::check_selections(){
 
-    // Look for the selected points and print its data, if an array of strings was provided
     if (cam.R_just_released)
     {
-        fill_arrays();
-        for(size_t i = 0; i < layer_data.point_layers; i++) std::lock_guard<std::mutex> lock_points(mut[points][i]);
-        restart_selections();
+    // >>> Fill the MVP arrays for the square selection (projmatrix[], mvmatrix[], viewport[]):
+
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        // glGetDoublev(GL_PROJECTION_MATRIX, projmatrix);			// See: glMatrixMode, glPushMatrix, glGet
+        // glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
+
+        glm::mat4 modelviewmatrix = ViewMatrix * ModelMatrix;
+
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+            {
+                projmatrix[i * 4 + j] = ProjectionMatrix[i][j];
+                mvmatrix[i * 4 + j] = modelviewmatrix[i][j];
+            }
+
+    // >>> Restart selection, and forbid new buffers editions in this main-loop iteration. If any buffer is being edited now, there is a lock_guard ahead to avoid conflicts.
+
+        //for (int i = 0; i < point_buffers.size(); i++) buffer_closed[points][i] = true;
+
+        // Restarts selected_points[]
+        for(int i = 0; i < layer_data.point_layers; i++)
+            for(int j = 0; j < layer_data.max_points[i]; j++)
+        {
+            selected_points[i][j] = 0;
+            //points_strings[i][j] = "";    // Not necessary
+        }
+
+    // >>> Point selection search
 
         //check_ray(cam.sel_xpos0, cam.sel_ypos0);      // One point selection way
 
+        // Check the direction to where you draw the selection square
         signed int xstep, ystep;
         if(cam.sel_xpos0 <= cam.sel_xpos) xstep = 1;
         else xstep = -1;
         if(cam.sel_ypos0 <= cam.sel_ypos) ystep = 1;
         else ystep = -1;
 
+        // Send a ray for each pixel inside the selection square
         for(double column = cam.sel_xpos0; ; column += xstep)
         {
             if(xstep == 1 && column > cam.sel_xpos) break;
@@ -2189,53 +2225,50 @@ void visualizerClass::check_selections(){
 
 void visualizerClass::check_ray(double xpos, double ypos) {
 
-	double dX, dY, dZ;
-	glm::vec3 ClickRayP1, ClickRayP2, pointRayP1, pointRayP2;
-	double dClickY = double(display_h - ypos);				// OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-	double dClickX = xpos;
-	double sqrDist, minSqrDist = MinDistance * MinDistance;
-    glm::vec3 ClickSlope, pointSlope;
+    double dX, dY, dZ;                      // Temporary variables
+    double dClickY, dClickX;                // OGL screen coordinates of the pixel
+    glm::vec3 ClickRayP1, ClickRayP2;       // OGL world coordinates of the pixel ray ends (in the near and far clip plane).
+    glm::vec3 pointRayP1, pointRayP2;       // OGL world coordinates of the point ray ends (in the near clip plane and the point).
+    glm::vec3 ClickSlope, pointSlope;       // Direction vectors: Directions (unitary vector) of the pixel ray and the point's ray
+    double sqrDist, minSqrDist = MinDistance * MinDistance;
 
-	// From the screen coordinates, get the ray's 2 world-space extremes points (they are in the near and far clip plane) 
-	gluUnProject(dClickX, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 0.0: Near clip plane
+    // From the screen coordinates, get the 2 ray ends in world-space (they are in the near and far clip plane)
+    dClickX = xpos;
+    dClickY = double(display_h - ypos);         // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+
+    gluUnProject(dClickX, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 0.0: Near clip plane
 	ClickRayP1 = glm::vec3(dX, dY, dZ);
 	gluUnProject(dClickX, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 1.0: Far clip plane
 	ClickRayP2 = glm::vec3(dX, dY, dZ);
 
-    ClickSlope = ClickRayP2 - ClickRayP1;
-    cam.normalize_vec(ClickSlope);                  // Get unary vector for the ray
+    // Get the direction vector of the pixel ray
+    ClickSlope = ClickRayP2 - ClickRayP1;           // Get the direction vector
+    cam.normalize_vec(ClickSlope);                  // Get unitary direction vector
 
-	// Find the closest points by testing which points' rays are close to the clickRay.
+    // Find the closest points by testing which points' rays are close to the clickRay (checks all the points)
 	for (int i = 0; i < point_buffers.size(); i++)
 	{
 		if(!checkboxes_values[points][i]) continue;
 
+        std::lock_guard<std::mutex> lock(mut[points][i]);       // This second filther (after activating buffer_closed) avoid conflicts with buffers being currently edited (can only happen during the first iteration)
+
 		for (int j = 0; j < objects_to_print[points][i]; j++)
 		{
-			// Point's ray is formed by the vector between the selectable point and the origin point of the clickRay.
+            // Point's ray is formed by the vector between the selectable point and the origin point of the clickRay
 			pointRayP1 = ClickRayP1;
 			pointRayP2 = glm::vec3(	point_buffers[i][j][0], 
 									point_buffers[i][j][1], 
 									point_buffers[i][j][2] );
 
-            pointSlope = pointRayP2 - pointRayP1;
-            cam.normalize_vec(pointSlope);          // Get unitary vector for point's ray
+            // Get the direction vector of the point ray
+            pointSlope = pointRayP2 - pointRayP1;   // Get the direction vector
+            cam.normalize_vec(pointSlope);          // Get unitary direction vector
 
+            // Check distance between the ends the direction vector of the pixel ray and the point ray
             sqrDist = cam.distance_sqr_vec(pointSlope, ClickSlope);
-
             if (sqrDist < minSqrDist) selected_points[i][j] = 1;            // Set true the selected points in selected_points[]
         }
 	}
-}
-
-void visualizerClass::restart_selections(){
-
-    for(int i = 0; i < layer_data.point_layers; i++)
-        for(int j = 0; j < layer_data.max_points[i]; j++)
-    {
-        selected_points[i][j] = 0;
-        //points_strings[i][j] = "";
-    }
 }
 
 void visualizerClass::copy_selections_to_array(){
