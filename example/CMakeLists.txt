@@ -1,11 +1,8 @@
 # cd home/username/dev/OGL/Shaper/src
 # cmake -G"Unix Makefiles" ..
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 PROJECT (Shaper)
-
-# Possible operative systems: Linux, Windows
-SET(OP_SYSTEM Linux)
 
 FIND_PACKAGE(OpenGL REQUIRED)
 
@@ -15,7 +12,6 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	src/header.hpp
 )
 
-MESSAGE(STATUS "Building for " ${OP_SYSTEM})
 MESSAGE(STATUS "Project source dir: " ${PROJECT_SOURCE_DIR})
 MESSAGE(STATUS "OpenGL library: " ${OPENGL_LIBRARY})
 
@@ -31,7 +27,7 @@ TARGET_INCLUDE_DIRECTORIES( ${PROJECT_NAME} PUBLIC
 
 # Libraries (.a, .lib) ---------------------------------
 
-if( OP_SYSTEM MATCHES Windows )
+if( WIN32 )
 	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} 
 		optimized	${OPENGL_LIBRARY} 
 		optimized	${PROJECT_SOURCE_DIR}/../_BUILD/hans_visual/Release/hans_visual.lib
@@ -49,7 +45,7 @@ if( OP_SYSTEM MATCHES Windows )
 	)
 endif()
 
-if( OP_SYSTEM MATCHES Linux )
+if( UNIX )
 	TARGET_LINK_LIBRARIES( ${PROJECT_NAME} 
 		optimized	${OPENGL_LIBRARY} 
 		optimized	${PROJECT_SOURCE_DIR}/../_BUILD/hans_visual/libhans_visual.a

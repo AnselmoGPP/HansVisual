@@ -1,7 +1,7 @@
 #https://stackoverflow.com/questions/22598208/linking-opencv-libraries-included-as-an-external-project-via-cmake
 #https://cmake.org/cmake/help/v3.0/command/find_package.html
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 PROJECT(ocv_test)
 

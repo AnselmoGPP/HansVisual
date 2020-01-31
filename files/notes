@@ -1,7 +1,7 @@
 -Create a class for each layer, and unify load_ functions-Data structures for layers
 -Don't forget to uncomment the buffers_close variable in check_selections
 -Keep points selected after a new scan is drawn in that layer (send_pts())
--CMake version (update) (add_package) add_compile_options
+-CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
 -Licence
 -Put selections in a ImGui window
 -Flags for: currently drawing points (?), currently selecting points
