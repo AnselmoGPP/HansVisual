@@ -1,11 +1,17 @@
--Create a class for each layer, and unify load_ functions-Data structures for layers
--Don't forget to uncomment the buffers_close variable in check_selections
+-Allow add_layer to be called after opening a window (open_window)
+-add_layer whenever you want (lock_guard)
+-Axis
+-Floor squares
+-Visualizer copy constructor
+- Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
+-Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
+- Take into account layers of type none when modifying any layer state
+-Can checkboxes be checked just after entering load_buffers()? this way, all the loading process could be avoided
+-Create a class for each layer, and unify load_ functions - Data structures for layers - Don't forget to uncomment the buffers_close variable in check_selections
 -Keep points selected after a new scan is drawn in that layer (send_pts())
 -CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
--Licence
 -Put selections in a ImGui window
 -Flags for: currently drawing points (?), currently selecting points
-
 -Flag: Datos waiting for being drawn (if new data arrives, omit it)
 -Mutex for 2 flows: add_layer and main loop
 -Save selected points from buffer > Load pts from buffer to GPU > repeat
@@ -17,6 +23,7 @@
 -fill_data_window 
 -Modify class name "HansVisual"
 - Why the moving points get a different shape (deformation)
+- In check_ray(), don't check already selected points
 -close() function
 -Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function.
 -Only one free function call per loop (main loop)
@@ -28,5 +35,11 @@
 -Improve cubes rotation
 -Are multiple windows possible? (1763)
 -Mutex call in check_selection is not correct (lock_guard)
+- OOP: Encapsulation, abstraction, inheritance, polymorphism
+- Try many visualizer windows
+
+-http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
+- Caves
+- Name generator
 
 ----- Solved ---------------------------------------------------------

@@ -27,12 +27,15 @@ ADD_COMPILE_DEFINITIONS(IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC
 	src/main.cpp
+	src/hansVisual.hpp
+	src/layers.hpp
+	src/visualizerClass.hpp
+	src/visualizerClass.cpp
 	src/controls.hpp
 	src/controls.cpp
 	src/shader.hpp
 	src/shader.cpp
-	src/visualizerClass.hpp
-	src/visualizerClass.cpp
+
 	
 	../extern/imgui/imgui-1.72b/imgui.cpp
 	../extern/imgui/imgui-1.72b/imgui_demo.cpp

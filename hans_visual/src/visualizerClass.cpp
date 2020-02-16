@@ -2,529 +2,63 @@
 
 // Main public members ---------------------------------------------------
 
-visualizerClass::visualizerClass(
-	unsigned int point_lay,		std::string *point_names,		unsigned int *max_points,
-	unsigned int line_lay,		std::string *line_names,		unsigned int *max_lines,
-    unsigned int triangles_lay,	std::string *triangle_names,	unsigned int *max_triangles,
-    unsigned int cubes_lay,		std::string *cube_names,		unsigned int *max_cubes ) {
-
-	// Default constructor (no arguments) just creates the default palette colors and the empty vectors and arrays for each object type.
-
-	// Configure the layer scheme
-	layer_data = layer_system(
-		point_lay, point_names, max_points, 
-		line_lay, line_names, max_lines,  
-        triangles_lay, triangle_names, max_triangles,
-        cubes_lay, cube_names, max_cubes );
-
+visualizerClass::visualizerClass()
+{
      char test2[21] = { 0x3c, 0x3c, 0x3c, 0x20, 0x20, 0x48, 0x61,
                         0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
                         0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
      for(int i = 0; i < 21; i++) test[i] = test2[i];
 
-	// Create the default palette colors
-    std::vector<std::vector<float>> temp = {
-                      {1.0f,	0.0f,	0.00f},
-                      {0.0f,	1.0f,	0.00f},
-                      {0.0f,	0.0f,	1.00f},
-                      {1.0f,	0.0f,	1.00f},
-                      {1.0f,	1.0f,	0.00f},
-                      {0.0f,	1.0f,	1.00f},
-                      {0.5f,	0.0f,	0.00f},
-                      {0.0f,	0.5f,	0.00f},
-                      {0.0f,	0.0f,	0.50f},
-                      {0.5f,	0.5f,	0.00f},
-                      {0.5f,	0.0f,	0.50f},
-                      {0.0f,	0.5f,	0.50f},
-                      {0.75f,   0.25f,	0.25f},
-                      {0.25f,   0.75f,	0.25f},
-                      {0.25f,   0.25f,	0.75f},
-                      {0.25f,   0.25f,	0.00f},
-                      {0.25f,   0.0f,	0.25f},
-                      {0.0f,	0.25f,	0.25f},
-                      {0.75f,   0.75f,	0.00f},
-                      {0.0f,	0.75f,	0.75f},
-                      {0.75f,   0.0f,	0.75f} };
+    layersSet.push_back(layer("Selections", points, 0));
 
-    default_palette = new float[default_palette_size][3];
-
-    for(int i = 0; i < default_palette_size; i++)
-    {
-        default_palette[i][0] = temp[i][0];
-        default_palette[i][1] = temp[i][1];
-        default_palette[i][2] = temp[i][2];
-    }
-
-	// Set buffers and parameters -----------------------
-	unsigned int num_layers;
-
-    checkboxes_values = std::vector<bool*>(num_objects);		// Lets allocate space for 4 sets of checkboxes (points, lines, triangles, cubes)
-    objects_to_print =  std::vector<std::vector<size_t>>(num_objects);
-    palette_sizes =     std::vector<std::vector<size_t>>(num_objects);
-    alpha_channels =    std::vector<std::vector<float>>(num_objects);
-    mut =               std::vector<std::mutex*>(num_objects);
-    palettes =          std::vector<std::vector<float(*)[3]>>(num_objects);
-
-
-	// Point buffers
-	num_layers = layer_data.point_layers;
-
-    checkboxes_values[points] = new bool[num_layers];
-    objects_to_print[points] = std::vector<size_t>(num_layers);
-    palette_sizes[points] = std::vector<size_t>(num_layers);
-    alpha_channels[points] = std::vector<float>(num_layers);
-    mut[points] = new std::mutex[num_layers];
-
-	point_buffers = std::vector<float (*)[3]>(num_layers);
-	point_color_buffers = std::vector<float(*)[4]>(num_layers);
-    palettes[points] = std::vector<float(*)[3]>(num_layers);
-
-	selected_points = std::vector<std::vector<char>>(num_layers);
-	points_strings = std::vector<std::vector<std::string>>(num_layers);
-
-	for (int i = 0; i < num_layers; i++) 
-	{
-		point_buffers[i] = new float[layer_data.max_points[i]][3];
-		point_color_buffers[i] = new float[layer_data.max_points[i]][4];
-        palette_sizes[points][i] = default_palette_size;
-        palettes[points][i] = new float[palette_sizes[points][i]][3];
-		for (int j = 0; j < default_palette_size; j++)
-		{
-            palettes[points][i][j][0] = default_palette[j][0];
-            palettes[points][i][j][1] = default_palette[j][1];
-            palettes[points][i][j][2] = default_palette[j][2];
-		}
-		checkboxes_values[points][i] = true;
-        alpha_channels[points][i] = 1.0f;
-        objects_to_print[points][i] = 0;
-
-		selected_points[i] = std::vector<char>(layer_data.max_points[i], 0);
-		points_strings[i] = std::vector<std::string>(layer_data.max_points[i], "");
-	}
-
-
-	// Line buffers
-	num_layers = layer_data.line_layers;
-
-    checkboxes_values[lines] = new bool(num_layers);
-    objects_to_print[lines] = std::vector<size_t>(num_layers);
-    palette_sizes[lines] = std::vector<size_t>(num_layers);
-    alpha_channels[lines] = std::vector<float>(num_layers);
-	mut[lines] = new std::mutex[num_layers];
-
-	line_buffers = std::vector<float(*)[2][3]>(num_layers);
-	line_color_buffers = std::vector<float(*)[2][4]>(num_layers);
-    palettes[lines] = std::vector<float(*)[3]>(num_layers);
-
-	for (int i = 0; i < num_layers; i++)
-	{
-		line_buffers[i] = new float[layer_data.max_lines[i]][2][3];
-		line_color_buffers[i] = new float[layer_data.max_lines[i]][2][4];
-        palette_sizes[lines][i] = default_palette_size;
-        palettes[lines][i] = new float[palette_sizes[lines][i]][3];
-		for (int j = 0; j < default_palette_size; j++)
-		{
-            palettes[lines][i][j][0] = default_palette[j][0];
-            palettes[lines][i][j][1] = default_palette[j][1];
-            palettes[lines][i][j][2] = default_palette[j][2];
-		}
-		checkboxes_values[lines][i] = true;
-        alpha_channels[lines][i] = 1.0f;
-        objects_to_print[lines][i] = 0;
-	}
-
-
-	// Triangle buffers
-    num_layers = layer_data.triangle_layers;
-
-    checkboxes_values[triangles] = new bool(num_layers);
-    objects_to_print[triangles] = std::vector<size_t>(num_layers);
-    palette_sizes[triangles] = std::vector<size_t>(num_layers);
-    alpha_channels[triangles] = std::vector<float>(num_layers);
-	mut[triangles] = new std::mutex[num_layers];
-
-    triangle_buffers = std::vector<float(*)[3][3]>(num_layers);
-    triangle_color_buffers = std::vector<float(*)[3][4]>(num_layers);
-    palettes[triangles] = std::vector<float(*)[3]>(num_layers);
-
-    for (int i = 0; i < num_layers; i++)
-    {
-        triangle_buffers[i] = new float[layer_data.max_triangles[i]][3][3];
-        triangle_color_buffers[i] = new float[layer_data.max_triangles[i]][3][4];
-        palette_sizes[triangles][i] = default_palette_size;
-        palettes[triangles][i] = new float[palette_sizes[triangles][i]][3];
-        for (int j = 0; j < default_palette_size; j++)
-        {
-            palettes[triangles][i][j][0] = default_palette[j][0];
-            palettes[triangles][i][j][1] = default_palette[j][1];
-            palettes[triangles][i][j][2] = default_palette[j][2];
-        }
-        checkboxes_values[triangles][i] = true;
-        alpha_channels[triangles][i] = 0.3f;
-        objects_to_print[triangles][i] = 0;
-    }
-
-
-	// Cubes buffers
-    num_layers = layer_data.cube_layers;
-
-    checkboxes_values[cubes] = new bool(num_layers);
-    objects_to_print[cubes] = std::vector<size_t>(num_layers);
-    palette_sizes[cubes] = std::vector<size_t>(num_layers);
-    alpha_channels[cubes] = std::vector<float>(num_layers);
-	mut[cubes] = new std::mutex[num_layers];
-
-    cube_buffers = std::vector<float(*)[12*3][3]>(num_layers);
-    cube_color_buffers = std::vector<float(*)[12*3][4]>(num_layers);
-    palettes[cubes] = std::vector<float(*)[3]>(num_layers);
-
-    for (int i = 0; i < num_layers; i++)
-    {
-        cube_buffers[i] = new float[layer_data.max_cubes[i]][12*3][3];
-        cube_color_buffers[i] = new float[layer_data.max_cubes[i]][12*3][4];
-        palette_sizes[cubes][i] = default_palette_size;
-        palettes[cubes][i] = new float[palette_sizes[cubes][i]][3];
-        for (int j = 0; j < default_palette_size; j++)
-        {
-            palettes[cubes][i][j][0] = default_palette[j][0];
-            palettes[cubes][i][j][1] = default_palette[j][1];
-            palettes[cubes][i][j][2] = default_palette[j][2];
-        }
-        checkboxes_values[cubes][i] = true;
-        alpha_channels[cubes][i] = 0.3f;
-        objects_to_print[cubes][i] = 0;
-    }
-
-
-	// Others -----------------------------------------------------
+    // Data window
 	data_window_size = 1;
     data_window = new std::string[data_window_size];
 
-	// Rainbow palette
-	for (int i = 0; i < 256; i++) {
-		if (i <= 155) {
-			modified_rainbow[255-i][0] = i * 60./155.;
-			modified_rainbow[255-i][1] = 1.;
-			modified_rainbow[255 - i][2] = 1.;
-		}
-		if (i > 155) {
-			modified_rainbow[255-i][0] = 60. + (i-155) * (240.-60.)/(255.-155.);
-			modified_rainbow[255-i][1] = 1.;
-			modified_rainbow[255-i][2] = 1.;
-		}
-	}
-    convert_HSVtoRGB(&modified_rainbow[0][0], 256);
-
-    // Selected points
-    points_to_highlight = new float[0][3];
-    selected_points_colors = new float[0][4];
+    // Rainbow palette
+    for (int i = 0; i < 256; i++) {
+        if (i <= 155) {
+            modified_rainbow[255-i][0] = i * 60./155.;
+            modified_rainbow[255-i][1] = 1.;
+            modified_rainbow[255 - i][2] = 1.;
+        }
+        if (i > 155) {
+            modified_rainbow[255-i][0] = 60. + (i-155) * (240.-60.)/(255.-155.);
+            modified_rainbow[255-i][1] = 1.;
+            modified_rainbow[255-i][2] = 1.;
+        }
+    }
+    layer temp;
+    temp.convert_HSVtoRGB(&modified_rainbow[0][0], 256);
 }
 
-visualizerClass::~visualizerClass(){ 
-
-	for (int i = 0; i < layer_data.point_layers; i++) {
-		delete[] point_buffers[i];
-		delete[] point_color_buffers[i];
-        delete[] palettes[points][i];
-	}
-
-	for (int i = 0; i < layer_data.line_layers; i++) {
-		delete[] line_buffers[i];
-		delete[] line_color_buffers[i];
-        delete[] palettes[lines][i];
-	}
-
-	for (int i = 0; i < layer_data.triangle_layers; i++) {
-		delete[] triangle_buffers[i];
-		delete[] triangle_color_buffers[i];
-        delete[] palettes[triangles][i];
-	}
-
-	for (int i = 0; i < layer_data.cube_layers; i++) {
-		delete[] cube_buffers[i];
-		delete[] cube_color_buffers[i];
-        delete[] palettes[cubes][i];
-	}
-
-    for(int i = 0; i < num_objects; i++)
-        delete[] checkboxes_values[i];
-
-    delete[] mut[points];
-    delete[] mut[lines];
-    delete[] mut[triangles];
-    delete[] mut[cubes];
-
-    delete[] default_palette;
-    delete[] data_window;
-    delete[] points_to_highlight;
-    delete[] selected_points_colors;
+visualizerClass::visualizerClass(const visualizerClass &obj)
+{
 
 }
 
 visualizerClass& visualizerClass::operator=(const visualizerClass &obj) {
 
-	for (int i = 0; i < 3; i++) backg_color[i] = obj.backg_color[i];
+    layersSet = obj.layersSet;
 
-	unsigned int num_layers;
+    for (int i = 0; i < 3; i++) backg_color[i] = obj.backg_color[i];
 
-	// GUI state -----
-	show_checkboxes = obj.show_checkboxes;
-	show_data = obj.show_data;
-	show_options = obj.show_options;
+    // GUI state -----
+    show_checkboxes = obj.show_checkboxes;
+    show_data = obj.show_data;
+    show_options = obj.show_options;
 
-	data_window_size = obj.data_window_size;
-	delete[] data_window;
-	data_window = new std::string[data_window_size];
-	for(int i = 0; i < data_window_size; i++) data_window[i] = obj.data_window[i];
-
-
-	// Points data -----
-    num_layers = obj.layer_data.point_layers;
-
-	objects_to_print[points] = obj.objects_to_print[points];
-	palette_sizes[points] = obj.palette_sizes[points];
-    alpha_channels[points] = obj.alpha_channels[points];
-
-	delete[] mut[points];
-	mut[points] = new std::mutex[num_layers];
-
-	delete[] checkboxes_values[points];
-	checkboxes_values[points] = new bool(num_layers);
-
-	for (int i = 0; i < layer_data.point_layers; i++)
-	{
-		delete[] point_buffers[i];
-		delete[] point_color_buffers[i];
-		delete[] palettes[points][i];
-	}
-    point_buffers = std::vector<float(*)[3]>(num_layers);
-    point_color_buffers = std::vector<float(*)[4]>(num_layers);
-    palettes[points] = std::vector<float(*)[3]>(num_layers);
-
-    for (int i = 0; i < num_layers; i++)
-	{
-        checkboxes_values[points][i] = obj.checkboxes_values[points][i];
-
-		point_buffers[i] = new float[obj.layer_data.max_points[i]][3];
-		point_color_buffers[i] = new float[obj.layer_data.max_points[i]][4];
-
-		for (int j = 0; j < obj.layer_data.max_points[i]; j++)
-		{
-			point_buffers[i][j][0] = obj.point_buffers[i][j][0];
-			point_buffers[i][j][1] = obj.point_buffers[i][j][1];
-			point_buffers[i][j][2] = obj.point_buffers[i][j][2];
-
-			point_color_buffers[i][j][0] = obj.point_color_buffers[i][j][0];
-			point_color_buffers[i][j][1] = obj.point_color_buffers[i][j][1];
-			point_color_buffers[i][j][2] = obj.point_color_buffers[i][j][2];
-			point_color_buffers[i][j][3] = obj.point_color_buffers[i][j][3];
-		}
-
-        palettes[points][i] = new float[palette_sizes[points][i]][3];
-
-        for (int k = 0; k < palette_sizes[points][i]; k++)
-		{
-			palettes[points][i][k][0] = obj.palettes[points][i][k][0];
-			palettes[points][i][k][1] = obj.palettes[points][i][k][1];
-			palettes[points][i][k][2] = obj.palettes[points][i][k][2];
-		}
-	}
-
-    selected_points = obj.selected_points;
-    points_strings = obj.points_strings;
-
-
-	// Lines data -----
-	num_layers = obj.layer_data.line_layers;
-
-	objects_to_print[lines] = obj.objects_to_print[lines];
-	palette_sizes[lines] = obj.palette_sizes[lines];
-	alpha_channels[lines] = obj.alpha_channels[lines];
-
-	delete[] mut[lines];
-	mut[lines] = new std::mutex[num_layers];
-
-	delete[] checkboxes_values[lines];
-	checkboxes_values[lines] = new bool(num_layers);
-
-	for (int i = 0; i < layer_data.line_layers; i++)
-	{
-		delete[] line_buffers[i];
-		delete[] line_color_buffers[i];
-		delete[] palettes[lines][i];
-	}
-	line_buffers = std::vector<float(*)[2][3]>(num_layers);
-	line_color_buffers = std::vector<float(*)[2][4]>(num_layers);
-	palettes[lines] = std::vector<float(*)[3]>(num_layers);
-
-	for (int i = 0; i < num_layers; i++)
-	{
-		checkboxes_values[lines][i] = obj.checkboxes_values[lines][i];
-
-		line_buffers[i] = new float[obj.layer_data.max_lines[i]][2][3];
-		line_color_buffers[i] = new float[obj.layer_data.max_lines[i]][2][4];
-
-		for (int j = 0; j < obj.layer_data.max_lines[i]; j++)
-		{
-			line_buffers[i][j][0][0] = obj.line_buffers[i][j][0][0];
-			line_buffers[i][j][0][1] = obj.line_buffers[i][j][0][1];
-			line_buffers[i][j][0][2] = obj.line_buffers[i][j][0][2];
-
-			line_buffers[i][j][1][0] = obj.line_buffers[i][j][1][0];
-			line_buffers[i][j][1][1] = obj.line_buffers[i][j][1][1];
-			line_buffers[i][j][1][2] = obj.line_buffers[i][j][1][2];
-
-			line_color_buffers[i][j][0][0] = obj.line_color_buffers[i][j][0][0];
-			line_color_buffers[i][j][0][1] = obj.line_color_buffers[i][j][0][1];
-			line_color_buffers[i][j][0][2] = obj.line_color_buffers[i][j][0][2];
-			line_color_buffers[i][j][0][3] = obj.line_color_buffers[i][j][0][3];
-
-			line_color_buffers[i][j][1][0] = obj.line_color_buffers[i][j][1][0];
-			line_color_buffers[i][j][1][1] = obj.line_color_buffers[i][j][1][1];
-			line_color_buffers[i][j][1][2] = obj.line_color_buffers[i][j][1][2];
-			line_color_buffers[i][j][1][3] = obj.line_color_buffers[i][j][1][3];
-		}
-
-		palettes[lines][i] = new float[palette_sizes[lines][i]][3];
-
-		for (int k = 0; k < palette_sizes[lines][i]; k++)
-		{
-			palettes[lines][i][k][0] = obj.palettes[lines][i][k][0];
-			palettes[lines][i][k][1] = obj.palettes[lines][i][k][1];
-			palettes[lines][i][k][2] = obj.palettes[lines][i][k][2];
-		}
-	}
-
-
-	// Triangles data -----
-	num_layers = obj.layer_data.triangle_layers;
-
-	objects_to_print[triangles] = obj.objects_to_print[triangles];
-	palette_sizes[triangles] = obj.palette_sizes[triangles];
-	alpha_channels[triangles] = obj.alpha_channels[triangles];
-
-	delete[] mut[triangles];
-	mut[triangles] = new std::mutex[num_layers];
-
-	delete[] checkboxes_values[triangles];
-	checkboxes_values[triangles] = new bool(num_layers);
-
-	for (int i = 0; i < layer_data.triangle_layers; i++)
-	{
-		delete[] triangle_buffers[i];
-		delete[] triangle_color_buffers[i];
-		delete[] palettes[triangles][i];
-	}
-	triangle_buffers = std::vector<float(*)[3][3]>(num_layers);
-	triangle_color_buffers = std::vector<float(*)[3][4]>(num_layers);
-	palettes[triangles] = std::vector<float(*)[3]>(num_layers);
-
-	for (int i = 0; i < num_layers; i++)
-	{
-		checkboxes_values[triangles][i] = obj.checkboxes_values[triangles][i];
-
-		triangle_buffers[i] = new float[obj.layer_data.max_triangles[i]][3][3];
-		triangle_color_buffers[i] = new float[obj.layer_data.max_triangles[i]][3][4];
-
-		for (int j = 0; j < obj.layer_data.max_triangles[i]; j++)
-		{
-			triangle_buffers[i][j][0][0] = obj.triangle_buffers[i][j][0][0];
-			triangle_buffers[i][j][0][1] = obj.triangle_buffers[i][j][0][1];
-			triangle_buffers[i][j][0][2] = obj.triangle_buffers[i][j][0][2];
-
-			triangle_buffers[i][j][1][0] = obj.triangle_buffers[i][j][1][0];
-			triangle_buffers[i][j][1][1] = obj.triangle_buffers[i][j][1][1];
-			triangle_buffers[i][j][1][2] = obj.triangle_buffers[i][j][1][2];
-
-			triangle_buffers[i][j][2][0] = obj.triangle_buffers[i][j][2][0];
-			triangle_buffers[i][j][2][1] = obj.triangle_buffers[i][j][2][1];
-			triangle_buffers[i][j][2][2] = obj.triangle_buffers[i][j][2][2];
-
-			triangle_color_buffers[i][j][0][0] = obj.triangle_color_buffers[i][j][0][0];
-			triangle_color_buffers[i][j][0][1] = obj.triangle_color_buffers[i][j][0][1];
-			triangle_color_buffers[i][j][0][2] = obj.triangle_color_buffers[i][j][0][2];
-			triangle_color_buffers[i][j][0][3] = obj.triangle_color_buffers[i][j][0][3];
-
-			triangle_color_buffers[i][j][1][0] = obj.triangle_color_buffers[i][j][1][0];
-			triangle_color_buffers[i][j][1][1] = obj.triangle_color_buffers[i][j][1][1];
-			triangle_color_buffers[i][j][1][2] = obj.triangle_color_buffers[i][j][1][2];
-			triangle_color_buffers[i][j][1][3] = obj.triangle_color_buffers[i][j][1][3];
-
-			triangle_color_buffers[i][j][2][0] = obj.triangle_color_buffers[i][j][2][0];
-			triangle_color_buffers[i][j][2][1] = obj.triangle_color_buffers[i][j][2][1];
-			triangle_color_buffers[i][j][2][2] = obj.triangle_color_buffers[i][j][2][2];
-			triangle_color_buffers[i][j][2][3] = obj.triangle_color_buffers[i][j][2][3];
-		}
-
-		palettes[triangles][i] = new float[palette_sizes[triangles][i]][3];
-
-		for (int k = 0; k < palette_sizes[triangles][i]; k++)
-		{
-			palettes[triangles][i][k][0] = obj.palettes[triangles][i][k][0];
-			palettes[triangles][i][k][1] = obj.palettes[triangles][i][k][1];
-			palettes[triangles][i][k][2] = obj.palettes[triangles][i][k][2];
-		}
-	}
-
-
-	// Cubes data -----
-	num_layers = obj.layer_data.cube_layers;
-
-	objects_to_print[cubes] = obj.objects_to_print[cubes];
-	palette_sizes[cubes] = obj.palette_sizes[cubes];
-	alpha_channels[cubes] = obj.alpha_channels[cubes];
-
-	delete[] mut[cubes];
-	mut[cubes] = new std::mutex[num_layers];
-
-	delete[] checkboxes_values[cubes];
-	checkboxes_values[cubes] = new bool(num_layers);
-
-	for (int i = 0; i < layer_data.cube_layers; i++)
-	{
-		delete[] cube_buffers[i];
-		delete[] cube_color_buffers[i];
-		delete[] palettes[cubes][i];
-	}
-	cube_buffers = std::vector<float(*)[12*3][3]>(num_layers);
-	cube_color_buffers = std::vector<float(*)[12*3][4]>(num_layers);
-	palettes[cubes] = std::vector<float(*)[3]>(num_layers);
-
-	for (int i = 0; i < num_layers; i++)
-	{
-		checkboxes_values[cubes][i] = obj.checkboxes_values[cubes][i];
-
-		cube_buffers[i] = new float[obj.layer_data.max_cubes[i]][12*3][3];
-		cube_color_buffers[i] = new float[obj.layer_data.max_cubes[i]][12*3][4];
-
-		for(int cub = 0; cub < obj.layer_data.max_cubes[i]; cub++)
-			for (int vert = 0; vert < 12*3; vert++)
-			{
-				cube_buffers[i][cub][vert][0] = obj.cube_buffers[i][cub][vert][0];
-				cube_buffers[i][cub][vert][1] = obj.cube_buffers[i][cub][vert][1];
-				cube_buffers[i][cub][vert][2] = obj.cube_buffers[i][cub][vert][2];
-
-				cube_color_buffers[i][cub][vert][0] = obj.cube_color_buffers[i][cub][vert][0];
-				cube_color_buffers[i][cub][vert][1] = obj.cube_color_buffers[i][cub][vert][1];
-				cube_color_buffers[i][cub][vert][2] = obj.cube_color_buffers[i][cub][vert][2];
-				cube_color_buffers[i][cub][vert][3] = obj.cube_color_buffers[i][cub][vert][3];
-			}
-
-		palettes[cubes][i] = new float[palette_sizes[cubes][i]][3];
-
-		for (int k = 0; k < palette_sizes[cubes][i]; k++)
-		{
-			palettes[cubes][i][k][0] = obj.palettes[cubes][i][k][0];
-			palettes[cubes][i][k][1] = obj.palettes[cubes][i][k][1];
-			palettes[cubes][i][k][2] = obj.palettes[cubes][i][k][2];
-		}
-	}
-
-
-	// Layers data -----
-	layer_data = obj.layer_data;
+    data_window_size = obj.data_window_size;
+    delete[] data_window;
+    data_window = new std::string[data_window_size];
+    for(int i = 0; i < data_window_size; i++) data_window[i] = obj.data_window[i];
 
     return *this;
+}
+
+visualizerClass::~visualizerClass()
+{
+    delete[] data_window;
 }
 
 int visualizerClass::open_window() {
@@ -550,1083 +84,159 @@ int visualizerClass::open_window() {
     return 0;
 }
 
-void visualizerClass::add_layer(object_type type, const char *name, unsigned int capacity) {
-
-    std::string layer_name = name;
-	int siz;
-
-	float(*new_palette)[3] = new float[default_palette_size][3];
-	for (int i = 0; i < default_palette_size; i++) {
-		new_palette[i][0] = default_palette[i][0];
-		new_palette[i][1] = default_palette[i][1];
-		new_palette[i][2] = default_palette[i][2];
-	}
-
-	if (type == points)
-    {
-		int siz = layer_data.point_layers;
-
-		// Layer system object
-		layer_data.point_layers++;
-		layer_data.point_layers_names.push_back(layer_name);
-		layer_data.max_points.push_back(capacity);
-
-		// Checkboxes
-		bool *temp = new bool(siz + 1);
-		for (int i = 0; i < siz; i++) temp[i] = checkboxes_values[points][i];
-		temp[siz] = true;
-		delete[] checkboxes_values[points];
-		checkboxes_values[points] = temp;
-
-		// Parameters
-		objects_to_print[points].push_back(0);
-		palette_sizes[points].push_back(default_palette_size);
-		alpha_channels[points].push_back(1.0f);
-
-		delete[] mut[points];
-		mut[points] = new std::mutex[siz + 1];
-
-		// Buffers
-		palettes[points].push_back(new_palette);
-
-		float(*new_buff)[3] = new float[capacity][3];
-		point_buffers.push_back(new_buff);
-
-		float(*new_col)[4] = new float[capacity][4];
-		point_color_buffers.push_back(new_col);
-
-		// Points selection
-		selected_points.push_back(std::vector<char>(capacity, 0));
-        points_strings.push_back(std::vector<std::string>(capacity, ""));
-	}
-	if (type == lines)
-	{
-		int siz = layer_data.line_layers;
-
-		// Layer system object
-		layer_data.line_layers++;
-		layer_data.line_layers_names.push_back(layer_name);
-		layer_data.max_lines.push_back(capacity);
-
-		// Checkboxes
-		bool *temp = new bool(siz + 1);
-		for (int i = 0; i < siz; i++) temp[i] = checkboxes_values[lines][i];
-		temp[siz] = true;
-		delete[] checkboxes_values[lines];
-		checkboxes_values[lines] = temp;
-
-		// Parameters
-		objects_to_print[lines].push_back(0);
-		palette_sizes[lines].push_back(default_palette_size);
-		alpha_channels[lines].push_back(1.0f);
-
-		delete[] mut[lines];
-		mut[lines] = new std::mutex[siz + 1];
-
-		// Buffers
-		palettes[lines].push_back(new_palette);
-
-		float(*new_buff)[2][3] = new float[capacity][2][3];
-		line_buffers.push_back(new_buff);
-
-		float(*new_col)[2][4] = new float[capacity][2][4];
-		line_color_buffers.push_back(new_col);
-	}
-	if (type == triangles)
-	{
-		int siz = layer_data.triangle_layers;
-
-		// Layer system object
-		layer_data.triangle_layers++;
-		layer_data.triangle_layers_names.push_back(layer_name);
-		layer_data.max_triangles.push_back(capacity);
-
-		// Checkboxes
-		bool *temp = new bool(siz + 1);
-		for (int i = 0; i < siz; i++) temp[i] = checkboxes_values[triangles][i];
-		temp[siz] = true;
-		delete[] checkboxes_values[triangles];
-		checkboxes_values[triangles] = temp;
-
-		// Parameters
-		objects_to_print[triangles].push_back(0);
-		palette_sizes[triangles].push_back(default_palette_size);
-		alpha_channels[triangles].push_back(0.3f);
-
-		delete[] mut[triangles];
-		mut[triangles] = new std::mutex[siz + 1];
-
-		// Buffers
-		palettes[triangles].push_back(new_palette);
-
-		float(*new_buff)[3][3] = new float[capacity][3][3];
-		triangle_buffers.push_back(new_buff);
-
-		float(*new_col)[3][4] = new float[capacity][3][4];
-		triangle_color_buffers.push_back(new_col);
-	}
-	if (type == cubes)
-	{
-		int siz = layer_data.triangle_layers;
-
-		// Layer system object
-		layer_data.cube_layers++;
-		layer_data.cube_layers_names.push_back(layer_name);
-		layer_data.max_cubes.push_back(capacity);
-
-		// Checkboxes
-		bool *temp = new bool(siz + 1);
-		for (int i = 0; i < siz; i++) temp[i] = checkboxes_values[cubes][i];
-		temp[siz] = true;
-		delete[] checkboxes_values[cubes];
-		checkboxes_values[cubes] = temp;
-
-		// Parameters
-		objects_to_print[cubes].push_back(0);
-		palette_sizes[cubes].push_back(default_palette_size);
-		alpha_channels[cubes].push_back(0.3f);
-
-		delete[] mut[cubes];
-		mut[cubes] = new std::mutex[siz + 1];
-
-		// Buffers
-		palettes[cubes].push_back(new_palette);
-
-		float(*new_buff)[12 * 3][3] = new float[capacity][12 * 3][3];
-		cube_buffers.push_back(new_buff);
-
-		float(*new_col)[12 * 3][4] = new float[capacity][12 * 3][4];
-		cube_color_buffers.push_back(new_col);
-	}
+void visualizerClass::add_layer(const char *name, object_type type, unsigned int capacity)
+{
+    layersSet.push_back(layer(name, type, capacity));
 }
 
-void visualizerClass::send_points(std::string layer_name, int number_points, const float *arr, const float *labels,  std::string *points_data, data_buffer array_type, float min, float max) {
+void visualizerClass::send_points(std::string layer_name, unsigned int number_points, const float *arr, const float *labels,  std::string *points_data, data_buffer array_type, float min, float max)
+{
+    bool layer_founded = false;
 
-	// Look for the corresponding point layer and its parameters
-	unsigned int layer, max_points;
-
-	if (get_layer_data(layer_name, points, layer, max_points)) return;
-
-	// Get the number of points the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-    if (number_points > max_points) {
-        std::cout << "Too many points for the buffer of the layer \"" << layer_name << "\" (" << number_points << " > " << max_points << ')' << std::endl;
-        objects_to_print[points][layer] = max_points;
-    }
-    else objects_to_print[points][layer] = number_points;
-
-	// Write data to buffers (points and colors)
-    float siz = max - min;		// Used for gradients
-    int index;
-
-    std::lock_guard<std::mutex> lock_points(mut[points][layer]);
-
-    for (int i = 0; i < objects_to_print[points][layer]; i++)			// Main loop for filling the corresponding points buffer
-    {
-        // Set point position in 3D;
-        point_buffers[layer][i][0] = arr[i * 3 + 0];
-		point_buffers[layer][i][1] = arr[i * 3 + 1];
-		point_buffers[layer][i][2] = arr[i * 3 + 2];
-
-        // Set color of the point
-        if		(labels     == nullptr)
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
         {
-			point_color_buffers[layer][i][0] = default_color[0];
-			point_color_buffers[layer][i][1] = default_color[1];
-			point_color_buffers[layer][i][2] = default_color[2];
-            point_color_buffers[layer][i][3] = alpha_channels[points][layer];
-        }
-        else if (array_type == categories)
-        {
-            index = (int)labels[i] % palette_sizes[points][layer];
-
-            point_color_buffers[layer][i][0] = palettes[points][layer][index][0];
-            point_color_buffers[layer][i][1] = palettes[points][layer][index][1];
-            point_color_buffers[layer][i][2] = palettes[points][layer][index][2];
-            point_color_buffers[layer][i][3] = alpha_channels[points][layer];
-        }
-        else if	(array_type == colors)
-        {
-            point_color_buffers[layer][i][0] = labels[i * 3 + 0];
-            point_color_buffers[layer][i][1] = labels[i * 3 + 1];
-            point_color_buffers[layer][i][2] = labels[i * 3 + 2];
-            point_color_buffers[layer][i][3] = alpha_channels[points][layer];
-        }
-        else if (array_type == gradient)
-        {
-            if      (labels[i] <= min) index = 0;
-            else if (labels[i] >= max) index = palette_sizes[points][layer] - 1;
-            else    index = (int)((labels[i] - min) * (palette_sizes[points][layer] - 1)) / (int)siz;
-
-            point_color_buffers[layer][i][0] = palettes[points][layer][index][0];
-            point_color_buffers[layer][i][1] = palettes[points][layer][index][1];
-            point_color_buffers[layer][i][2] = palettes[points][layer][index][2];
-            point_color_buffers[layer][i][3] = alpha_channels[points][layer];
+            layersSet[i].state = half_closed;
+            layersSet[i].save_points(number_points, arr, labels, points_data, array_type, min, max);
+            layer_founded = true;
         }
 
-        // Fill/empty points_strings[] and empty selected_points[]      //
-        if(points_data != nullptr)
-        {
-            points_strings[layer][i] = points_data[i];
-            selected_points[layer][i] = 0;
-        }
-        else
-        {
-            points_strings[layer][i] = "";
-            selected_points[layer][i] = 0;
-        }
-    }
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::send_lines(std::string layer_name, int number_points, const float *arr, const float *labels, data_buffer array_type, float min, float max) {
+void visualizerClass::send_lines(std::string layer_name, unsigned int number_points, const float *arr, const float *labels, data_buffer array_type, float min, float max)
+{
+    bool layer_founded = false;
 
-	// Look for the corresponding line layer and its parameters
-	unsigned int layer, max_lines;
-
-	if (get_layer_data(layer_name, lines, layer, max_lines)) return;
-
-	// Get the number of lines the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-    if (number_points - 1 > max_lines) {
-        std::cout << "Too many lines for the buffer of the layer \"" << layer_name << "\" (" << --number_points << " > " << max_lines << ')' << std::endl;
-        objects_to_print[lines][layer] = max_lines;
-	}
-    else objects_to_print[lines][layer] = --number_points;
-
-    // Write data to buffers (points and colors)
-	float siz = max - min;		// Used for gradients
-	int index = 0;
-	int omitted_segments = 0;
-
-    std::lock_guard<std::mutex> lock_points(mut[lines][layer]);
-
-    for (int i = 0; i < objects_to_print[lines][layer]; i++)		// Main loop for filling the corresponding lines buffer
-    {
-        // Check for the line jump
-        if (arr[i * 3 + 3] == 1.2f && arr[i * 3 + 4] == 3.4f && arr[i * 3 + 5] == 5.6f) {
-            omitted_segments += 2;
-            i++;
-            continue;
-        }
-
-        // Save two points (vertex) for each segment
-        line_buffers[layer][i - omitted_segments][0][0] = arr[i * 3 + 0];
-        line_buffers[layer][i - omitted_segments][0][1] = arr[i * 3 + 1];
-        line_buffers[layer][i - omitted_segments][0][2] = arr[i * 3 + 2];
-
-        line_buffers[layer][i - omitted_segments][1][0] = arr[i * 3 + 3];
-        line_buffers[layer][i - omitted_segments][1][1] = arr[i * 3 + 4];
-        line_buffers[layer][i - omitted_segments][1][2] = arr[i * 3 + 5];
-
-        // Save colors for each vertex
-        if		(labels == nullptr)
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
         {
-            line_color_buffers[layer][i - omitted_segments][0][0] = default_color[0];
-			line_color_buffers[layer][i - omitted_segments][0][1] = default_color[1];
-			line_color_buffers[layer][i - omitted_segments][0][2] = default_color[2];
-            line_color_buffers[layer][i - omitted_segments][0][3] = alpha_channels[lines][layer];
-
-            line_color_buffers[layer][i - omitted_segments][1][0] = default_color[0];
-			line_color_buffers[layer][i - omitted_segments][1][1] = default_color[1];
-			line_color_buffers[layer][i - omitted_segments][1][2] = default_color[2];
-            line_color_buffers[layer][i - omitted_segments][1][3] = alpha_channels[lines][layer];
+            layersSet[i].state = half_closed;
+            layersSet[i].save_lines(number_points, arr, labels, array_type, min, max);
+            layer_founded = true;
         }
-        else if (array_type == categories)  // labels contains the category of each segment (including line jumps)
-        {
-            index = (int)labels[i] % palette_sizes[lines][layer];
 
-            line_color_buffers[layer][i - omitted_segments][0][0] = palettes[lines][layer][index][0];
-            line_color_buffers[layer][i - omitted_segments][0][1] = palettes[lines][layer][index][1];
-            line_color_buffers[layer][i - omitted_segments][0][2] = palettes[lines][layer][index][2];
-            line_color_buffers[layer][i - omitted_segments][0][3] = alpha_channels[lines][layer];
-
-            line_color_buffers[layer][i - omitted_segments][1][0] = palettes[lines][layer][index][0];
-            line_color_buffers[layer][i - omitted_segments][1][1] = palettes[lines][layer][index][1];
-            line_color_buffers[layer][i - omitted_segments][1][2] = palettes[lines][layer][index][2];
-            line_color_buffers[layer][i - omitted_segments][1][3] = alpha_channels[lines][layer];
-        }
-        else if	(array_type == colors)      // labels contains the color of each segment (including line jumps)
-        {
-            line_color_buffers[layer][i - omitted_segments][0][0] = labels[i * 3 + 0];
-            line_color_buffers[layer][i - omitted_segments][0][1] = labels[i * 3 + 1];
-            line_color_buffers[layer][i - omitted_segments][0][2] = labels[i * 3 + 2];
-            line_color_buffers[layer][i - omitted_segments][0][3] = alpha_channels[lines][layer];
-
-            line_color_buffers[layer][i - omitted_segments][1][0] = labels[i * 3 + 0];
-            line_color_buffers[layer][i - omitted_segments][1][1] = labels[i * 3 + 1];
-            line_color_buffers[layer][i - omitted_segments][1][2] = labels[i * 3 + 2];
-            line_color_buffers[layer][i - omitted_segments][1][3] = alpha_channels[lines][layer];
-        }
-        else if (array_type == gradient)
-        {
-			if (labels[i] <= min) index = 0;
-            else if (labels[i] >= max) index = palette_sizes[lines][layer] - 1;
-			else {
-                index = ((labels[i] - min) * (palette_sizes[lines][layer] - 1)) / siz;
-			}
-
-            line_color_buffers[layer][i - omitted_segments][0][0] = palettes[lines][layer][index][0];
-            line_color_buffers[layer][i - omitted_segments][0][1] = palettes[lines][layer][index][1];
-            line_color_buffers[layer][i - omitted_segments][0][2] = palettes[lines][layer][index][2];
-            line_color_buffers[layer][i - omitted_segments][0][3] = alpha_channels[lines][layer];
-
-            line_color_buffers[layer][i - omitted_segments][1][0] = palettes[lines][layer][index][0];
-            line_color_buffers[layer][i - omitted_segments][1][1] = palettes[lines][layer][index][1];
-            line_color_buffers[layer][i - omitted_segments][1][2] = palettes[lines][layer][index][2];
-            line_color_buffers[layer][i - omitted_segments][1][3] = alpha_channels[lines][layer];
-        }
-    }
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::send_triangles(std::string layer_name, int number_triangles, const float *arr, const float *labels, data_buffer array_type, float min, float max) {
+void visualizerClass::send_triangles(std::string layer_name, unsigned int number_triangles, const float *arr, const float *labels, data_buffer array_type, float min, float max)
+{
+    bool layer_founded = false;
 
-    // Look for the corresponding triangle layer and its parameters
-    unsigned int layer, max_triangles;
-
-    if (get_layer_data(layer_name, triangles, layer, max_triangles)) return;
-
-    // Get the number of triangles the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-    if (number_triangles > max_triangles) {
-        std::cout << "Too many points for the buffer of the layer \"" << layer_name << "\" (" << number_triangles << " > " << max_triangles << ')' << std::endl;
-        objects_to_print[triangles][layer] = max_triangles;
-    }
-    else objects_to_print[triangles][layer] = number_triangles;
-
-
-    // Write data to buffers (points and colors)
-    float siz = max - min;		// Used for gradients
-    int index;
-
-    std::lock_guard<std::mutex> lock_points(mut[triangles][layer]);
-
-    for (int i = 0; i < objects_to_print[triangles][layer]; i++)			// Main loop for filling the corresponding points buffer
-    {
-        // Set triangle position in 3D;
-        triangle_buffers[layer][i][0][0] = arr[i * 9 + 0];
-        triangle_buffers[layer][i][0][1] = arr[i * 9 + 1];
-        triangle_buffers[layer][i][0][2] = arr[i * 9 + 2];
-
-        triangle_buffers[layer][i][1][0] = arr[i * 9 + 3];
-        triangle_buffers[layer][i][1][1] = arr[i * 9 + 4];
-        triangle_buffers[layer][i][1][2] = arr[i * 9 + 5];
-
-        triangle_buffers[layer][i][2][0] = arr[i * 9 + 6];
-        triangle_buffers[layer][i][2][1] = arr[i * 9 + 7];
-        triangle_buffers[layer][i][2][2] = arr[i * 9 + 8];
-
-        // Set color of the point
-        if		(labels     == nullptr)
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
         {
-            triangle_color_buffers[layer][i][0][0] = default_color[0];
-			triangle_color_buffers[layer][i][0][1] = default_color[1];
-			triangle_color_buffers[layer][i][0][2] = default_color[2];
-            triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][1][0] = default_color[0];
-			triangle_color_buffers[layer][i][1][1] = default_color[1];
-			triangle_color_buffers[layer][i][1][2] = default_color[2];
-            triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][2][0] = default_color[0];
-			triangle_color_buffers[layer][i][2][1] = default_color[1];
-			triangle_color_buffers[layer][i][2][2] = default_color[2];
-            triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
+            layersSet[i].state = half_closed;
+            layersSet[i].save_triangles(number_triangles, arr, labels, array_type, min, max);
+            layer_founded = true;
         }
-        else if (array_type == categories)
-        {
-            index = (int)labels[i] % palette_sizes[triangles][layer];
 
-            triangle_color_buffers[layer][i][0][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][0][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][0][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][1][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][1][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][1][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][2][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][2][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][2][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
-        }
-        else if	(array_type == colors)
-        {
-            triangle_color_buffers[layer][i][0][0] = labels[i * 3 + 0];
-            triangle_color_buffers[layer][i][0][1] = labels[i * 3 + 1];
-            triangle_color_buffers[layer][i][0][2] = labels[i * 3 + 2];
-            triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][1][0] = labels[i * 3 + 0];
-            triangle_color_buffers[layer][i][1][1] = labels[i * 3 + 1];
-            triangle_color_buffers[layer][i][1][2] = labels[i * 3 + 2];
-            triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][2][0] = labels[i * 3 + 0];
-            triangle_color_buffers[layer][i][2][1] = labels[i * 3 + 1];
-            triangle_color_buffers[layer][i][2][2] = labels[i * 3 + 2];
-            triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
-        }
-        else if (array_type == gradient)
-        {
-            if      (labels[i] <= min) index = 0;
-            else if (labels[i] >= max) index = palette_sizes[triangles][layer] - 1;
-            else {
-                index = (int)((labels[i] - min) * (palette_sizes[triangles][layer] - 1)) / (int)siz;
-            }
-
-            triangle_color_buffers[layer][i][0][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][0][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][0][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][1][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][1][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][1][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
-
-            triangle_color_buffers[layer][i][2][0] = palettes[triangles][layer][index][0];
-            triangle_color_buffers[layer][i][2][1] = palettes[triangles][layer][index][1];
-            triangle_color_buffers[layer][i][2][2] = palettes[triangles][layer][index][2];
-            triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
-        }
-    }
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::send_cubes(std::string layer_name, int number_cubes, const cube3D *arr, const float *labels, data_buffer array_type, float min, float max) {
+void visualizerClass::send_cubes(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float *labels, data_buffer array_type, float min, float max)
+{
+    bool layer_founded = false;
 
-    // Look for the corresponding cube layer and its parameters
-    unsigned int layer, max_cubes;
-
-    if (get_layer_data(layer_name, cubes, layer, max_cubes)) return;
-
-    // Get the number of cubes the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-    if (number_cubes > max_cubes) {
-        std::cout << "Too many cubes for the buffer of the layer \"" << layer_name << "\" (" << number_cubes << " > " << max_cubes << ')' << std::endl;
-        objects_to_print[cubes][layer] = max_cubes;
-    }
-    else objects_to_print[cubes][layer] = number_cubes;
-
-    // Write data to buffers (cubes and colors)
-    float X, Y, Z, x, y, z, rot_H, rot_V;
-
-    std::lock_guard<std::mutex> lock_points(mut[cubes][layer]);
-
-    // Fill cubes_buffer                            >>> This draws triangles anti-clockwise
-    for (size_t i = 0; i < objects_to_print[cubes][layer]; i++) {
-
-        X = arr[i].X;
-        Y = arr[i].Y;
-        Z = arr[i].Z;
-        x = arr[i].width / 2;
-        y = arr[i].height / 2;
-        z = arr[i].length / 2;
-        rot_H = arr[i].rot_H;
-
-        /*
-                    // Computations used with no rotations
-                    float x1 = X - x,   y1 = Y + y,   z1 = Z + z;
-                    float x2 = X - x,   y2 = Y - y,   z2 = Z + z;
-                    float x3 = X + x,   y3 = Y + y,   z3 = Z + z;
-                    float x4 = X + x,   y4 = Y - y,   z4 = Z + z;
-                    float x5 = X + x,   y5 = Y + y,   z5 = Z - z;
-                    float x6 = X + x,   y6 = Y - y,   z6 = Z - z;
-                    float x7 = X - x,   y7 = Y + y,   z7 = Z - z;
-                    float x8 = X - x,   y8 = Y - y,   z8 = Z - z;
-        */
-
-        float x1 = -x, y1 = Y + y, z1 = +z;
-        float x2 = -x, y2 = Y - y, z2 = +z;
-        float x3 = +x, y3 = Y + y, z3 = +z;
-        float x4 = +x, y4 = Y - y, z4 = +z;
-        float x5 = +x, y5 = Y + y, z5 = -z;
-        float x6 = +x, y6 = Y - y, z6 = -z;
-        float x7 = -x, y7 = Y + y, z7 = -z;
-        float x8 = -x, y8 = Y - y, z8 = -z;
-
-        rotation_H(x1, z1, X, Z, rot_H);
-        rotation_H(x2, z2, X, Z, rot_H);
-        rotation_H(x3, z3, X, Z, rot_H);
-        rotation_H(x4, z4, X, Z, rot_H);
-        rotation_H(x5, z5, X, Z, rot_H);
-        rotation_H(x6, z6, X, Z, rot_H);
-        rotation_H(x7, z7, X, Z, rot_H);
-        rotation_H(x8, z8, X, Z, rot_H);
-
-        // 1-2-3
-        cube_buffers[layer][i][0][0] = x1;
-        cube_buffers[layer][i][0][1] = y1;
-        cube_buffers[layer][i][0][2] = z1;
-        cube_buffers[layer][i][1][0] = x2;
-        cube_buffers[layer][i][1][1] = y2;
-        cube_buffers[layer][i][1][2] = z2;
-        cube_buffers[layer][i][2][0] = x3;
-        cube_buffers[layer][i][2][1] = y3;
-        cube_buffers[layer][i][2][2] = z3;
-        // 2-4-3
-        cube_buffers[layer][i][3][0] = x2;
-        cube_buffers[layer][i][3][1] = y2;
-        cube_buffers[layer][i][3][2] = z2;
-        cube_buffers[layer][i][4][0] = x4;
-        cube_buffers[layer][i][4][1] = y4;
-        cube_buffers[layer][i][4][2] = z4;
-        cube_buffers[layer][i][5][0] = x3;
-        cube_buffers[layer][i][5][1] = y3;
-        cube_buffers[layer][i][5][2] = z3;
-        // 3-4-5
-        cube_buffers[layer][i][6][0] = x3;
-        cube_buffers[layer][i][6][1] = y3;
-        cube_buffers[layer][i][6][2] = z3;
-        cube_buffers[layer][i][7][0] = x4;
-        cube_buffers[layer][i][7][1] = y4;
-        cube_buffers[layer][i][7][2] = z4;
-        cube_buffers[layer][i][8][0] = x5;
-        cube_buffers[layer][i][8][1] = y5;
-        cube_buffers[layer][i][8][2] = z5;
-        // 4-6-5
-        cube_buffers[layer][i][9][0] = x4;
-        cube_buffers[layer][i][9][1] = y4;
-        cube_buffers[layer][i][9][2] = z4;
-        cube_buffers[layer][i][10][0] = x6;
-        cube_buffers[layer][i][10][1] = y6;
-        cube_buffers[layer][i][10][2] = z6;
-        cube_buffers[layer][i][11][0] = x5;
-        cube_buffers[layer][i][11][1] = y5;
-        cube_buffers[layer][i][11][2] = z5;
-        // 5-6-7
-        cube_buffers[layer][i][12][0] = x5;
-        cube_buffers[layer][i][12][1] = y5;
-        cube_buffers[layer][i][12][2] = z5;
-        cube_buffers[layer][i][13][0] = x6;
-        cube_buffers[layer][i][13][1] = y6;
-        cube_buffers[layer][i][13][2] = z6;
-        cube_buffers[layer][i][14][0] = x7;
-        cube_buffers[layer][i][14][1] = y7;
-        cube_buffers[layer][i][14][2] = z7;
-        // 6-8-7
-        cube_buffers[layer][i][15][0] = x6;
-        cube_buffers[layer][i][15][1] = y6;
-        cube_buffers[layer][i][15][2] = z6;
-        cube_buffers[layer][i][16][0] = x8;
-        cube_buffers[layer][i][16][1] = y8;
-        cube_buffers[layer][i][16][2] = z8;
-        cube_buffers[layer][i][17][0] = x7;
-        cube_buffers[layer][i][17][1] = y7;
-        cube_buffers[layer][i][17][2] = z7;
-        // 7-8-1
-        cube_buffers[layer][i][18][0] = x7;
-        cube_buffers[layer][i][18][1] = y7;
-        cube_buffers[layer][i][18][2] = z7;
-        cube_buffers[layer][i][19][0] = x8;
-        cube_buffers[layer][i][19][1] = y8;
-        cube_buffers[layer][i][19][2] = z8;
-        cube_buffers[layer][i][20][0] = x1;
-        cube_buffers[layer][i][20][1] = y1;
-        cube_buffers[layer][i][20][2] = z1;
-        // 8-2-1
-        cube_buffers[layer][i][21][0] = x8;
-        cube_buffers[layer][i][21][1] = y8;
-        cube_buffers[layer][i][21][2] = z8;
-        cube_buffers[layer][i][22][0] = x2;
-        cube_buffers[layer][i][22][1] = y2;
-        cube_buffers[layer][i][22][2] = z2;
-        cube_buffers[layer][i][23][0] = x1;
-        cube_buffers[layer][i][23][1] = y1;
-        cube_buffers[layer][i][23][2] = z1;
-        // 1-3-7
-        cube_buffers[layer][i][24][0] = x1;
-        cube_buffers[layer][i][24][1] = y1;
-        cube_buffers[layer][i][24][2] = z1;
-        cube_buffers[layer][i][25][0] = x3;
-        cube_buffers[layer][i][25][1] = y3;
-        cube_buffers[layer][i][25][2] = z3;
-        cube_buffers[layer][i][26][0] = x7;
-        cube_buffers[layer][i][26][1] = y7;
-        cube_buffers[layer][i][26][2] = z7;
-        // 3-5-7
-        cube_buffers[layer][i][27][0] = x3;
-        cube_buffers[layer][i][27][1] = y3;
-        cube_buffers[layer][i][27][2] = z3;
-        cube_buffers[layer][i][28][0] = x5;
-        cube_buffers[layer][i][28][1] = y5;
-        cube_buffers[layer][i][28][2] = z5;
-        cube_buffers[layer][i][29][0] = x7;
-        cube_buffers[layer][i][29][1] = y7;
-        cube_buffers[layer][i][29][2] = z7;
-        // 2-8-4
-        cube_buffers[layer][i][30][0] = x2;
-        cube_buffers[layer][i][30][1] = y2;
-        cube_buffers[layer][i][30][2] = z2;
-        cube_buffers[layer][i][31][0] = x8;
-        cube_buffers[layer][i][31][1] = y8;
-        cube_buffers[layer][i][31][2] = z8;
-        cube_buffers[layer][i][32][0] = x4;
-        cube_buffers[layer][i][32][1] = y4;
-        cube_buffers[layer][i][32][2] = z4;
-        // 4-8-6
-        cube_buffers[layer][i][33][0] = x4;
-        cube_buffers[layer][i][33][1] = y4;
-        cube_buffers[layer][i][33][2] = z4;
-        cube_buffers[layer][i][34][0] = x8;
-        cube_buffers[layer][i][34][1] = y8;
-        cube_buffers[layer][i][34][2] = z8;
-        cube_buffers[layer][i][35][0] = x6;
-        cube_buffers[layer][i][35][1] = y6;
-        cube_buffers[layer][i][35][2] = z6;
-    }
-
-    // Fill cubes_color_buffer
-    float siz = max - min;		// Used for gradients
-    int index;
-
-    for (int j = 0; j < number_cubes; j++)
-    {
-        if(labels == nullptr)
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
         {
-            for (int k = 0; k < 12 * 3; k++)    // Go through all the points of all triangles in one box
-            {
-                cube_color_buffers[layer][j][k][0] = 0.1f;			//default_color[0];
-				cube_color_buffers[layer][j][k][1] = 0.9f;			//default_color[1];
-				cube_color_buffers[layer][j][k][2] = 0.1f;			//default_color[2];
-                cube_color_buffers[layer][j][k][3] = alpha_channels[cubes][layer];
-            }
+            layersSet[i].state = half_closed;
+            layersSet[i].save_cubes(number_cubes, arr, labels, array_type, min, max);
+            layer_founded = true;
         }
-        else if(array_type == categories)
-        {
-            index = (int)labels[j] % palette_sizes[cubes][layer];
 
-            for (int k = 0; k < 12 * 3; k++)
-            {
-                cube_color_buffers[layer][j][k][0] = palettes[cubes][layer][index][0];
-                cube_color_buffers[layer][j][k][1] = palettes[cubes][layer][index][1];
-                cube_color_buffers[layer][j][k][2] = palettes[cubes][layer][index][2];
-                cube_color_buffers[layer][j][k][3] = alpha_channels[cubes][layer];
-            }
-        }
-        else if(array_type == colors)
-        {
-            for(int k = 0; k < 12 * 3; k++)
-            {
-                cube_color_buffers[layer][j][k][0] = labels[j * 3 + 0];
-                cube_color_buffers[layer][j][k][1] = labels[j * 3 + 1];
-                cube_color_buffers[layer][j][k][2] = labels[j * 3 + 2];
-                cube_color_buffers[layer][j][k][3] = alpha_channels[cubes][layer];
-            }
-        }
-        else if(array_type == gradient)
-        {
-            if      (labels[j] <= min) index = 0;
-            else if (labels[j] >= max) index = palette_sizes[cubes][layer] - 1;
-            else index = (int)((labels[j] - min) * (palette_sizes[cubes][layer] - 1)) / (int)siz;
-
-            for(int k = 0; k < 12 * 3; k++)
-            {
-                cube_color_buffers[layer][j][k][0] = palettes[cubes][layer][index][0];
-                cube_color_buffers[layer][j][k][1] = palettes[cubes][layer][index][1];
-                cube_color_buffers[layer][j][k][2] = palettes[cubes][layer][index][2];
-                cube_color_buffers[layer][j][k][3] = alpha_channels[cubes][layer];
-            }
-        }
-    }
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
 // Auxiliary public members ----------------------------------------------
 
-void visualizerClass::transform_coordinates(float *points_arr, int number_points) {
+void visualizerClass::send_palette_RGB_01(std::string layer_name, float *new_palette, int number_colors)
+{
+    bool layer_founded = false;
 
-	float temp;
-
-	for (int i = 0; i < number_points; i++)
-	{
-		temp = points_arr[i * 3 + 0];
-
-		points_arr[i * 3 + 0] = - points_arr[i * 3 + 1];
-		points_arr[i * 3 + 1] =   points_arr[i * 3 + 2];
-		points_arr[i * 3 + 2] = - temp;
-	}
-}
-
-void visualizerClass::send_palette_RGB_01(std::string layer_name, object_type obj, float *new_palette, int number_colors){
-
-    unsigned int layer, max_elements;
-
-    if(obj == points)
-    {
-		if (get_layer_data(layer_name, points, layer, max_elements)) {
-            std::cout << "Cannot change points palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[points][layer]);
-
-        delete [] palettes[points][layer];
-        palettes[points][layer] = new float[number_colors][3];
-
-        for(int i = 0; i < number_colors; i++){
-            palettes[points][layer][i][0] = new_palette[i * 3 + 0];
-            palettes[points][layer][i][1] = new_palette[i * 3 + 1];
-            palettes[points][layer][i][2] = new_palette[i * 3 + 2];
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
+        {
+            layersSet[i].save_palette_RGB_01(new_palette, number_colors);
+            layer_founded = true;
         }
 
-        palette_sizes[points][layer] = number_colors;
-    }
-    else if(obj == lines)
-    {
-		if (get_layer_data(layer_name, lines, layer, max_elements)) {
-            std::cout << "Cannot change lines palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[lines][layer]);
-
-        delete [] palettes[lines][layer];
-        palettes[lines][layer] = new float[number_colors][3];
-
-        for(int i = 0; i < number_colors; i++){
-            palettes[lines][layer][i][0] = new_palette[i * 3 + 0];
-            palettes[lines][layer][i][1] = new_palette[i * 3 + 1];
-            palettes[lines][layer][i][2] = new_palette[i * 3 + 2];
-        }
-
-        palette_sizes[lines][layer] = number_colors;
-    }
-    else if (obj == triangles)
-    {
-        if (get_layer_data(layer_name, triangles, layer, max_elements)) {
-            std::cout << "Cannot change triangles palette" << std::endl;
-            return;
-        }
-
-        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
-
-        delete [] palettes[triangles][layer];
-        palettes[triangles][layer] = new float[number_colors][3];
-
-        for(int i = 0; i < number_colors; i++){
-            palettes[triangles][layer][i][0] = new_palette[i * 3 + 0];
-            palettes[triangles][layer][i][1] = new_palette[i * 3 + 1];
-            palettes[triangles][layer][i][2] = new_palette[i * 3 + 2];
-        }
-
-        palette_sizes[triangles][layer] = number_colors;
-    }
-    else if(obj == cubes)
-    {
-		if (get_layer_data(layer_name, cubes, layer, max_elements)) {
-            std::cout << "Cannot change cubes palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
-
-        delete [] palettes[cubes][layer];
-        palettes[cubes][layer] = new float[number_colors][3];
-
-        for(int i = 0; i < number_colors; i++){
-            palettes[cubes][layer][i][0] = new_palette[i * 3 + 0];
-            palettes[cubes][layer][i][1] = new_palette[i * 3 + 1];
-            palettes[cubes][layer][i][2] = new_palette[i * 3 + 2];
-        }
-
-        palette_sizes[cubes][layer] = number_colors;
-    }
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::send_palette_RGB(std::string layer_name, object_type obj, float *new_palette, int number_colors) {
+void visualizerClass::send_palette_RGB(std::string layer_name, float *new_palette, int number_colors)
+{
+    bool layer_founded = false;
 
-	unsigned int layer, max_elements;
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
+        {
+            layersSet[i].save_palette_RGB(new_palette, number_colors);
+            layer_founded = true;
+        }
 
-	if (obj == points)
-	{
-		if (get_layer_data(layer_name, points, layer, max_elements)) {
-			std::cout << "Cannot change points palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[points][layer]);
-
-        delete[] palettes[points][layer];
-        palettes[points][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-            palettes[points][layer][i][0] = new_palette[i * 3 + 0] / 255;
-            palettes[points][layer][i][1] = new_palette[i * 3 + 1] / 255;
-            palettes[points][layer][i][2] = new_palette[i * 3 + 2] / 255;
-		}
-
-        palette_sizes[points][layer] = number_colors;
-	}
-	else if (obj == lines)
-	{
-		if (get_layer_data(layer_name, lines, layer, max_elements)) {
-			std::cout << "Cannot change lines palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[lines][layer]);
-
-        delete[] palettes[lines][layer];
-        palettes[lines][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-            palettes[lines][layer][i][0] = new_palette[i * 3 + 0] / 255;
-            palettes[lines][layer][i][1] = new_palette[i * 3 + 1] / 255;
-            palettes[lines][layer][i][2] = new_palette[i * 3 + 2] / 255;
-		}
-
-        palette_sizes[lines][layer] = number_colors;
-	}
-	else if (obj == triangles)
-	{
-		if (get_layer_data(layer_name, triangles, layer, max_elements)) {
-			std::cout << "Cannot change triangles palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
-
-        delete[] palettes[triangles][layer];
-        palettes[triangles][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-            palettes[triangles][layer][i][0] = new_palette[i * 3 + 0] / 255;
-            palettes[triangles][layer][i][1] = new_palette[i * 3 + 1] / 255;
-            palettes[triangles][layer][i][2] = new_palette[i * 3 + 2] / 255;
-		}
-
-        palette_sizes[triangles][layer] = number_colors;
-	}
-	else if (obj == cubes)
-	{
-		if (get_layer_data(layer_name, cubes, layer, max_elements)) {
-			std::cout << "Cannot change cubes palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
-
-        delete[] palettes[cubes][layer];
-        palettes[cubes][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-            palettes[cubes][layer][i][0] = new_palette[i * 3 + 0] / 255;
-            palettes[cubes][layer][i][1] = new_palette[i * 3 + 1] / 255;
-            palettes[cubes][layer][i][2] = new_palette[i * 3 + 2] / 255;
-		}
-
-        palette_sizes[cubes][layer] = number_colors;
-	}
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::send_palette_HSV(std::string layer_name, object_type obj, float *new_palette, int number_colors) {
+void visualizerClass::send_palette_HSV(std::string layer_name, float *new_palette, int number_colors)
+{
+    bool layer_founded = false;
 
-	unsigned int layer, max_elements;
+    for(size_t i = 0; i < layersSet.size(); i++)
+        if(layersSet[i].layer_name == layer_name)
+        {
+            layersSet[i].save_palette_HSV(new_palette, number_colors);
+            layer_founded = true;
+        }
 
-	if (obj == points)
-	{
-		if (get_layer_data(layer_name, points, layer, max_elements)) {
-			std::cout << "Cannot change points palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[points][layer]);
-
-        delete[] palettes[points][layer];
-        palettes[points][layer] = new float[number_colors][3];
-
-        for (int i = 0; i < number_colors; i++) {
-
-            HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[points][layer][i][0]);
-
-            //palettes[points][layer][i][0] /= 255;
-            //palettes[points][layer][i][1] /= 255;
-            //palettes[points][layer][i][2] /= 255;
-		}
-
-        palette_sizes[points][layer] = number_colors;
-	}
-	else if (obj == lines)
-	{
-		if (get_layer_data(layer_name, lines, layer, max_elements)) {
-			std::cout << "Cannot change lines palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[lines][layer]);
-
-        delete[] palettes[lines][layer];
-        palettes[lines][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-
-            HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[lines][layer][i][0]);
-
-            //palettes[lines][layer][i][0] /= 360;
-		}
-
-        palette_sizes[lines][layer] = number_colors;
-	}
-	else if (obj == triangles)
-	{
-		if (get_layer_data(layer_name, triangles, layer, max_elements)) {
-			std::cout << "Cannot change triangles palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[triangles][layer]);
-
-        delete[] palettes[triangles][layer];
-        palettes[triangles][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-
-            HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[triangles][layer][i][0]);
-
-            //palettes[triangles][layer][i][0] /= 360;
-		}
-
-        palette_sizes[triangles][layer] = number_colors;
-	}
-	else if (obj == cubes)
-	{
-		if (get_layer_data(layer_name, cubes, layer, max_elements)) {
-			std::cout << "Cannot change cubes palette" << std::endl;
-			return;
-		}
-
-        std::lock_guard<std::mutex> lock(mut[cubes][layer]);
-
-        delete[] palettes[cubes][layer];
-        palettes[cubes][layer] = new float[number_colors][3];
-
-		for (int i = 0; i < number_colors; i++) {
-
-            HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palettes[cubes][layer][i][0]);
-
-            //palettes[cubes][layer][i][0] /= 360;
-		}
-
-        palette_sizes[cubes][layer] = number_colors;
-	}
+    if(!layer_founded) std::cout << "Layer \"" << layer_name << "\" not founded" << std::endl;
 }
 
-void visualizerClass::convert_HSVtoRGB(float *colors, int num_colors) {
 
-	float coloroutput[3];
-
-	for (int i = 0; i < num_colors; i++) 
-	{
-		HSVtoRGB(colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2], coloroutput);
-
-		colors[i * 3 + 0] = coloroutput[0];
-		colors[i * 3 + 1] = coloroutput[1];
-		colors[i * 3 + 2] = coloroutput[2];
-	}
+void visualizerClass::convert_HSVtoRGB(float *colors, int num_colors)
+{
+    layer obj;
+    obj.convert_HSVtoRGB(colors, num_colors);
 }
 
-void visualizerClass::convert_RGB255toRGB(float *colors, int num_colors) {
+void visualizerClass::convert_RGB255toRGB(float *colors, int num_colors)
+{
+    layer obj;
+    obj.convert_RGB255toRGB(colors, num_colors);
+}
 
-	for (int i = 0; i < num_colors; i++)
-	{
-		colors[i * 3 + 0] /= 255;
-		colors[i * 3 + 1] /= 255;
-		colors[i * 3 + 2] /= 255;
-	}
+void visualizerClass::transform_coordinates(float *points_arr, int number_points)
+{
+    layer obj;
+    obj.transform_coordinates(points_arr, number_points);
+}
+
+void visualizerClass::polynomial_graph(float (*result)[3], float min_x, float max_x, int sample_size, float *coefficients, float number_of_coefficients)
+{
+    layer obj;
+    obj.polynomial_graph(result, min_x, max_x, sample_size, coefficients, number_of_coefficients);
+}
+
+void visualizerClass::icosahedron(float side_length, float(*points)[3])
+{
+    layer obj;
+    obj.icosahedron(side_length, points);
 }
 
 void visualizerClass::fill_data_window(const std::string *data_strings, int num_strings) {
 
     std::lock_guard<std::mutex> lock(mut_fill_data);
 
-	if (data_window_size != num_strings)
-	{
+    if (data_window_size != num_strings)
+    {
         delete [] data_window;
-		data_window_size = num_strings;
-		data_window = new std::string[num_strings];
-	}
+        data_window_size = num_strings;
+        data_window = new std::string[num_strings];
+    }
 
     for (int i = 0; i < num_strings; i++)
         data_window[i] = data_strings[i];
-}
-
-void visualizerClass::pol_3th_degree(float *results_array, float xmin, float xmax, float sample, float a, float b, float c, float d) {
-
-    float step = (xmax - xmin) / sample;
-    int counter = 0;
-    for (int i = 0; i <= sample; i++)
-    {
-        results_array[i * 3 + 0] = xmin;
-        results_array[i * 3 + 1] = a + b * xmin + c * xmin*xmin + d * xmin*xmin*xmin;
-        results_array[i * 3 + 2] = 0;
-
-        xmin += step;
-    }
-}
-
-void visualizerClass::icosahedron(float side_length, float(*points)[3]) {
-
-	float S = side_length;
-	const float pi = 3.14159265359;
-	float t1 = 2 * pi / 5;
-	float t2 = (pi / 2) - t1;
-	float t4 = t1 / 2;
-	float t3 = t4 - pi / 10;
-
-	float R = (S / 2) / std::sin(t4);
-	float H = std::cos(t4) * R;
-	float Cx = R * std::sin(t2);
-	float Cz = R * std::cos(t2);
-	float H1 = std::sqrt(S * S - R * R);
-	float H2 = std::sqrt((H + R) * (H + R) - H * H);
-	float Y2 = (H2 - H1) / 2;
-	float Y1 = Y2 + H1;
-
-	points[0][0] = 0.;
-	points[0][1] = Y1;
-	points[0][2] = 0.;
-
-	points[1][0] = R;
-	points[1][1] = Y2;
-	points[1][2] = 0.;
-
-	points[2][0] = Cx;
-	points[2][1] = Y2;
-	points[2][2] = Cz;
-
-	points[3][0] = -H;
-	points[3][1] = Y2;
-	points[3][2] = S / 2;
-
-	points[4][0] = -H;
-	points[4][1] = Y2;
-	points[4][2] = -S / 2;
-
-	points[5][0] = Cx;
-	points[5][1] = Y2;
-	points[5][2] = -Cz;
-
-	points[6][0] = -R;
-	points[6][1] = -Y2;
-	points[6][2] = 0.;
-
-	points[7][0] = -Cx;
-	points[7][1] = -Y2;
-	points[7][2] = -Cz;
-
-	points[8][0] = H;
-	points[8][1] = -Y2;
-	points[8][2] = -S / 2;
-
-	points[9][0] = H;
-	points[9][1] = -Y2;
-	points[9][2] = S / 2;
-
-	points[10][0] = -Cx;
-	points[10][1] = -Y2;
-	points[10][2] = Cz;
-
-	points[11][0] = 0.;
-	points[11][1] = -Y1;
-	points[11][2] = 0.;
 }
 
 // Private members -------------------------------------------------------
@@ -1710,7 +320,7 @@ int visualizerClass::run_thread() {
     GLuint programID = LoadShaders(VertexShaderCode, FragmentShaderCode);
     GLuint programID_selection = LoadShaders(VertexShaderCode2D, FragmentShaderCode);
 
-    // Get a handle for our "MVP" uniform and the camera position coordinates
+    // Get a handle for our uniforms: MVP, camera position and coordinates
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 	GLuint Cam_position = glGetUniformLocation(programID, "Cam_pos");
     GLuint Pnt_size_ID = glGetUniformLocation(programID, "Pnt_siz");
@@ -1739,30 +349,10 @@ int visualizerClass::run_thread() {
     */
     // ------------------------------------------------------------------
 
-    GLuint *vertexbuffersIDs = new GLuint[layer_data.point_layers];
-    glGenBuffers(layer_data.point_layers, vertexbuffersIDs);
-	GLuint *colorbuffersIDs = new GLuint[layer_data.point_layers];
-    glGenBuffers(layer_data.point_layers, colorbuffersIDs);
-
-	GLuint *linebuffersIDs = new GLuint[layer_data.line_layers];
-	glGenBuffers(layer_data.line_layers, linebuffersIDs);
-	GLuint *linecolorsIDs = new GLuint[layer_data.line_layers];
-	glGenBuffers(layer_data.line_layers, linecolorsIDs);
-
-	GLuint *trianglebuffersIDs = new GLuint[layer_data.triangle_layers];
-	glGenBuffers(layer_data.triangle_layers, trianglebuffersIDs);
-	GLuint *trianglecolorsIDs = new GLuint[layer_data.triangle_layers];
-	glGenBuffers(layer_data.triangle_layers, trianglecolorsIDs);
-
-	GLuint *cubebuffersIDs = new GLuint[layer_data.cube_layers];
-	glGenBuffers(layer_data.cube_layers, cubebuffersIDs);
-	GLuint *cubecolorsIDs = new GLuint[layer_data.cube_layers];
-	glGenBuffers(layer_data.cube_layers, cubecolorsIDs);
-
-    GLuint *selectedPointsID = new GLuint;
-    glGenBuffers(1, selectedPointsID);
-    GLuint *selectedColorsID = new GLuint;
-    glGenBuffers(1, selectedColorsID);
+    GLuint *vertexbuffersIDs = new GLuint[layersSet.size()];    // The first buffer is for the selected points
+    glGenBuffers(layersSet.size(), vertexbuffersIDs);
+    GLuint *colorbuffersIDs = new GLuint[layersSet.size()];
+    glGenBuffers(layersSet.size(), colorbuffersIDs);
 
     GLuint *selectionSquareID = new GLuint;
     glGenBuffers(1, selectionSquareID);
@@ -1770,7 +360,10 @@ int visualizerClass::run_thread() {
     glGenBuffers(1, selectionSquareColorID);
 
     // Main loop --------------------------------------------------------
-    do {
+    do
+    {
+        time_1 = std::chrono::high_resolution_clock::now();
+
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);	// Arguments: Lower left 
         glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
@@ -1793,9 +386,6 @@ int visualizerClass::run_thread() {
             check_selections();
 		}
 
-
-
-
         // Send our transformation to the currently bound shader, in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 		// Send the position of the camera. Useful for adjusting the size of each point
@@ -1803,24 +393,14 @@ int visualizerClass::run_thread() {
         // Send the size of the points
         glUniform1fv(Pnt_size_ID, 1, &point_siz);
 
-
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-
-
-        load_selected_points(selectedPointsID, selectedColorsID);
-        load_points(vertexbuffersIDs, colorbuffersIDs);
-        load_lines(linebuffersIDs, linecolorsIDs);
-        load_triangles(trianglebuffersIDs, trianglecolorsIDs);
-        load_cubes(cubebuffersIDs, cubecolorsIDs);
+        load_buffers(vertexbuffersIDs, colorbuffersIDs);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-
-
 
         glUseProgram(programID_selection);
         load_selectionSquare(selectionSquareID, selectionSquareColorID);
@@ -1828,24 +408,22 @@ int visualizerClass::run_thread() {
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
 
-
-
         // ImGui rendering
         create_windows();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-
-
         // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
 
+        for(layer &lay : layersSet) lay.state = open;
+
+        time_2 = std::chrono::high_resolution_clock::now();
+        fps_control(60);
     }
     // Check if the ESC key was pressed or the window was closed
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
-
-
 
     // ImGui cleanup
     ImGui_ImplOpenGL3_Shutdown();
@@ -1853,16 +431,8 @@ int visualizerClass::run_thread() {
     ImGui::DestroyContext();
 
     // Cleanup VBO and shader
-    glDeleteBuffers(layer_data.point_layers, vertexbuffersIDs);
-    glDeleteBuffers(layer_data.point_layers, colorbuffersIDs);
-	glDeleteBuffers(layer_data.line_layers, linebuffersIDs);
-	glDeleteBuffers(layer_data.line_layers, linecolorsIDs);
-	glDeleteBuffers(layer_data.triangle_layers, trianglebuffersIDs);
-	glDeleteBuffers(layer_data.triangle_layers, trianglecolorsIDs);
-    glDeleteBuffers(layer_data.cube_layers, cubebuffersIDs);
-    glDeleteBuffers(layer_data.cube_layers, cubecolorsIDs);
-    glDeleteBuffers(1, selectedPointsID);
-    glDeleteBuffers(1, selectedColorsID);
+    glDeleteBuffers(layersSet.size(), vertexbuffersIDs);
+    glDeleteBuffers(layersSet.size(), colorbuffersIDs);
     glDeleteBuffers(1, selectionSquareID);
     glDeleteBuffers(1, selectionSquareColorID);
 
@@ -1915,23 +485,8 @@ void visualizerClass::create_windows() {
     {
         ImGui::Begin("Checkboxes", &show_checkboxes);
 
-			for(int i = 0; i < layer_data.point_layers; i++)
-                ImGui::Checkbox((layer_data.point_layers_names[i]).c_str(), &checkboxes_values[points][i]);
-
-			ImGui::Separator;
-
-			for (int i = 0; i < layer_data.line_layers; i++)
-				ImGui::Checkbox((layer_data.line_layers_names[i]).c_str(), &checkboxes_values[lines][i]);
-
-			ImGui::Separator;
-
-			for (int i = 0; i < layer_data.triangle_layers; i++)
-				ImGui::Checkbox((layer_data.triangle_layers_names[i]).c_str(), &checkboxes_values[triangles][i]);
-
-			ImGui::Separator;
-
-			for (int i = 0; i < layer_data.cube_layers; i++)
-				ImGui::Checkbox((layer_data.cube_layers_names[i]).c_str(), &checkboxes_values[cubes][i]);
+            for(size_t i = 0; i < layersSet.size(); i++)
+                ImGui::Checkbox((layersSet[i].layer_name).c_str(), &layersSet[i].checkbox_value);
 
         ImGui::End();
     }
@@ -1953,27 +508,21 @@ void visualizerClass::create_windows() {
     {
         ImGui::Begin("Configuration", &show_options);
 
-			ImGui::ColorEdit3("Background", backg_color);
+        ImGui::ColorEdit3("Background", backg_color);
 
-            ImGui::SliderFloat("Point size", &point_siz, 1.0f, 500.0f);
-			ImGui::Separator;
-			for(int i = 0; i < layer_data.point_layers; i++)
-                ImGui::SliderFloat(layer_data.point_layers_names[i].c_str(), &alpha_channels[points][i], 0.0f, 1.0f);
-			ImGui::Separator;
-			for (int i = 0; i < layer_data.line_layers; i++)
-                ImGui::SliderFloat(layer_data.line_layers_names[i].c_str(), &alpha_channels[lines][i], 0.0f, 1.0f);
-			ImGui::Separator;
-			for (int i = 0; i < layer_data.triangle_layers; i++)
-                ImGui::SliderFloat(layer_data.triangle_layers_names[i].c_str(), &alpha_channels[triangles][i], 0.0f, 1.0f);
-			ImGui::Separator;
-			for (int i = 0; i < layer_data.cube_layers; i++)
-                ImGui::SliderFloat(layer_data.cube_layers_names[i].c_str(), &alpha_channels[cubes][i], 0.0f, 1.0f);
-			ImGui::End();
+        ImGui::SliderFloat("Point size", &point_siz, 1.0f, 500.0f);
 
-			for (int i = 0; i < layer_data.point_layers; i++)		change_alpha_channel(points, layer_data.point_layers_names[i]);
-			for (int i = 0; i < layer_data.line_layers; i++)		change_alpha_channel(lines, layer_data.line_layers_names[i]);
-			for (int i = 0; i < layer_data.triangle_layers; i++)	change_alpha_channel(triangles, layer_data.triangle_layers_names[i]);
-			for (int i = 0; i < layer_data.cube_layers; i++)		change_alpha_channel(cubes, layer_data.cube_layers_names[i]);
+        ImGui::Separator;
+
+        float alpha_value;
+        for(size_t i = 0; i < layersSet.size(); i++)
+        {
+            alpha_value = layersSet[i].alpha_channel;
+            ImGui::SliderFloat((layersSet[i].layer_name).c_str(), &alpha_value, 0.0f, 1.0f);
+            layersSet[i].set_alpha_channel(alpha_value);
+        }
+
+        ImGui::End();
     }
 }
 
@@ -2012,150 +561,6 @@ void visualizerClass::create_demo_windows() {
 */
 }
 
-void visualizerClass::change_alpha_channel(object_type object, std::string layer_name) {
-
-	unsigned int layer, max_elements;
-	if ( get_layer_data(layer_name, object, layer, max_elements) ) return;
-
-    if (object == points)
-    {
-        for (int i = 0; i < max_elements; i++)
-            point_color_buffers[layer][i][3] = alpha_channels[points][layer];
-    }
-    if (object == lines)
-    {
-        for (int i = 0; i < max_elements; i++)
-        {
-            line_color_buffers[layer][i][0][3] = alpha_channels[lines][layer];
-            line_color_buffers[layer][i][1][3] = alpha_channels[lines][layer];
-        }
-    }
-	if (object == triangles)
-	{
-		for (int i = 0; i < max_elements; i++)
-		{
-            triangle_color_buffers[layer][i][0][3] = alpha_channels[triangles][layer];
-            triangle_color_buffers[layer][i][1][3] = alpha_channels[triangles][layer];
-            triangle_color_buffers[layer][i][2][3] = alpha_channels[triangles][layer];
-		}
-	}
-    if (object == cubes)
-    {
-		for (int i = 0; i < max_elements; i++)
-			for (int j = 0; j < 12 * 3; j++)
-                cube_color_buffers[layer][i][j][3] = alpha_channels[cubes][layer];
-    }
-}
-
-bool visualizerClass::get_layer_data(std::string layer_name, object_type obj_type, unsigned int &layer, unsigned int &max_elements) {
-
-	unsigned int num_layers;
-	std::string *names;
-	unsigned int *max_primitives;
-
-	// For the given object type, get the number of layers, layer names and maximum number of elements per layer.
-	if (obj_type == points)
-	{
-		num_layers = layer_data.point_layers;
-		names = &layer_data.point_layers_names[0];
-		max_primitives = &layer_data.max_points[0];
-	}
-	else if (obj_type == lines)
-	{
-		num_layers = layer_data.line_layers;
-		names = &layer_data.line_layers_names[0];
-		max_primitives = &layer_data.max_lines[0];
-	}
-	else if (obj_type == triangles)
-    {
-        num_layers = layer_data.triangle_layers;
-        names = &layer_data.triangle_layers_names[0];
-        max_primitives = &layer_data.max_triangles[0];
-	}
-	else if (obj_type == cubes)
-	{
-		num_layers = layer_data.cube_layers;
-		names = &layer_data.cube_layers_names[0];
-		max_primitives = &layer_data.max_cubes[0];
-	}
-
-	// For the given layer name, get the number of the layer, and its maximum number of elements.
-	for (unsigned int i = 0; i <= num_layers; i++)
-	{
-		if (i == num_layers)
-		{
-			std::cout << "The layer \"" << layer_name << "\" doesn't exist" << std::endl;
-			return 1;
-		}
-
-		if (layer_name == names[i])
-		{
-			layer = i;
-			max_elements = max_primitives[i];
-			return 0;
-		}
-	}
-}
-
-void visualizerClass::rotation_H(float &x, float &y, float X, float Y, float rot) {
-
-    y = -y;
-
-    float alpha = atan(y / x);
-    if (x < 0 && y >= 0) alpha += 3.1415926535f;
-    else if (y < 0 && x < 0) alpha += 3.1415926535f;
-    else if (y < 0 && x >= 0) alpha += 2.f * 3.1415926535f;
-
-    float hip = sqrt(x * x + y * y);
-
-    float beta = alpha + rot;
-
-    x = hip * cos(beta) + X;
-    y = -(hip * sin(beta)) + Y;
-}
-
-void visualizerClass::HSVtoRGB(int H, double S, double V, float output[3]) {
-	double C = S * V;
-	double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
-	double m = V - C;
-	double Rs, Gs, Bs;
-
-	if (H >= 0 && H < 60) {
-		Rs = C;
-		Gs = X;
-		Bs = 0;
-	}
-	else if (H >= 60 && H < 120) {
-		Rs = X;
-		Gs = C;
-		Bs = 0;
-	}
-	else if (H >= 120 && H < 180) {
-		Rs = 0;
-		Gs = C;
-		Bs = X;
-	}
-	else if (H >= 180 && H < 240) {
-		Rs = 0;
-		Gs = X;
-		Bs = C;
-	}
-	else if (H >= 240 && H < 300) {
-		Rs = X;
-		Gs = 0;
-		Bs = C;
-	}
-	else {
-		Rs = C;
-		Gs = 0;
-		Bs = X;
-	}
-
-	output[0] = (Rs + m);
-	output[1] = (Gs + m);
-	output[2] = (Bs + m);
-}
-
 void visualizerClass::check_selections(){
 
     if (cam.R_just_released)
@@ -2175,17 +580,10 @@ void visualizerClass::check_selections(){
                 mvmatrix[i * 4 + j] = modelviewmatrix[i][j];
             }
 
-    // >>> Restart selection, and forbid new buffers editions in this main-loop iteration. If any buffer is being edited now, there is a lock_guard ahead to avoid conflicts.
-
-        //for (int i = 0; i < point_buffers.size(); i++) buffer_closed[points][i] = true;
-
-        // Restarts selected_points[]
-        for(int i = 0; i < layer_data.point_layers; i++)
-            for(int j = 0; j < layer_data.max_points[i]; j++)
-        {
-            selected_points[i][j] = 0;
-            //points_strings[i][j] = "";    // Not necessary
-        }
+    // >>> Forbid new buffers editions in this main-loop iteration. If any buffer is being edited now, there is a lock_guard ahead to avoid conflicts.
+        for (size_t i = 0; i < layersSet.size(); i++) layersSet[i].state = closed;
+        // Clear the vector (size = 0, but keeps previous capacity) that will pass the selected points to the layer
+        temp_selections.clear();
 
     // >>> Point selection search
 
@@ -2213,11 +611,28 @@ void visualizerClass::check_selections(){
             }
         }
 
-        copy_selections_to_array();
+        // Copy all the selected points to a layer (Selections)
+        layersSet[0] = layer("Selections", points, temp_selections.size());
+        layersSet[0].objs_to_print = temp_selections.size();
+        for(size_t i = 0; i < temp_selections.size(); i++)
+        {
+            layersSet[0].points_buffer[i][0] = temp_selections[i][0];
+            layersSet[0].points_buffer[i][1] = temp_selections[i][1];
+            layersSet[0].points_buffer[i][2] = temp_selections[i][2];
+
+            layersSet[0].points_color_buffer[i][0] = selection_color[0];
+            layersSet[0].points_color_buffer[i][1] = selection_color[1];
+            layersSet[0].points_color_buffer[i][2] = selection_color[2];
+            layersSet[0].points_color_buffer[i][3] = selection_color[3];
+        }
 
         std::cout << "\n----- Selections -----" << std::endl;
-        for(size_t i = 0; i < strings_to_show.size(); i++)
-            if(strings_to_show[i] != "") std::cout << strings_to_show[i] << std::endl;
+        for(size_t i = 0; i < layersSet.size(); i++)
+        {
+            if(layersSet[i].layer_type == points)
+                for(size_t j = 0; j < layersSet[i].objs_to_print; j++)
+                    if(layersSet[i].points_strings[j] != "") std::cout << layersSet[i].points_strings[j] << std::endl;
+        }
 
         cam.R_just_released = false;
     }
@@ -2246,19 +661,21 @@ void visualizerClass::check_ray(double xpos, double ypos) {
     cam.normalize_vec(ClickSlope);                  // Get unitary direction vector
 
     // Find the closest points by testing which points' rays are close to the clickRay (checks all the points)
-	for (int i = 0; i < point_buffers.size(); i++)
+    for (size_t i = 0; i < layersSet.size(); i++)
 	{
-		if(!checkboxes_values[points][i]) continue;
+        if(layersSet[i].layer_type != points || !layersSet[i].checkbox_value) continue;
 
-        std::lock_guard<std::mutex> lock(mut[points][i]);       // This second filther (after activating buffer_closed) avoid conflicts with buffers being currently edited (can only happen during the first iteration)
+        std::lock_guard<std::mutex> lock(*layersSet[i].mut);       // This second filther (after setting buffer_closed to closed) avoid conflicts with buffers being currently edited (can only happen during the first iteration of this loop for each layer)
 
-		for (int j = 0; j < objects_to_print[points][i]; j++)
+        for (size_t j = 0; j < layersSet[i].objs_to_print; j++)
 		{
+            // TODO <<<<<<<<<< If this point was already selected (by a different ClickRay), don't check again whether it is selected
+
             // Point's ray is formed by the vector between the selectable point and the origin point of the clickRay
 			pointRayP1 = ClickRayP1;
-			pointRayP2 = glm::vec3(	point_buffers[i][j][0], 
-									point_buffers[i][j][1], 
-									point_buffers[i][j][2] );
+            pointRayP2 = glm::vec3(	layersSet[i].points_buffer[j][0],
+                                    layersSet[i].points_buffer[j][1],
+                                    layersSet[i].points_buffer[j][2] );
 
             // Get the direction vector of the point ray
             pointSlope = pointRayP2 - pointRayP1;   // Get the direction vector
@@ -2266,120 +683,118 @@ void visualizerClass::check_ray(double xpos, double ypos) {
 
             // Check distance between the ends the direction vector of the pixel ray and the point ray
             sqrDist = cam.distance_sqr_vec(pointSlope, ClickSlope);
-            if (sqrDist < minSqrDist) selected_points[i][j] = 1;            // Set true the selected points in selected_points[]
+            if (sqrDist < minSqrDist)
+                temp_selections.push_back(glm::vec3(layersSet[i].points_buffer[j][0],
+                                                    layersSet[i].points_buffer[j][1],
+                                                    layersSet[i].points_buffer[j][2]));
         }
 	}
 }
 
-void visualizerClass::copy_selections_to_array(){
-
-    // Get the points coordinates and its strings
-    strings_to_show = std::vector<std::string>(0);
-    std::vector<std::vector<float>> temp_points;
-    std::vector<float> temp_coords(3);
-
-    for(size_t i = 0; i < selected_points.size(); i++)
-        for(size_t j = 0; j < selected_points[i].size(); j++)
-            if(selected_points[i][j])
-            {
-                strings_to_show.push_back(points_strings[i][j]);
-                temp_coords[0] = point_buffers[i][j][0];
-                temp_coords[1] = point_buffers[i][j][1];
-                temp_coords[2] = point_buffers[i][j][2];
-                temp_points.push_back(temp_coords);
-            }
-
-    // Copy the coordinates in the array that will be sent to OGL
-    num_selected_points = temp_points.size();
-    delete[] points_to_highlight;
-    delete[] selected_points_colors;
-    points_to_highlight = new float[temp_points.size()][3];
-    selected_points_colors = new float[temp_points.size()][4];
-
-    for(int i = 0; i < num_selected_points; ++i)
+void visualizerClass::load_buffers(GLuint *vertexbuffIDs, GLuint *colorbuffIDs)
+{
+    for(size_t i = 0; i < layersSet.size(); i++)
     {
-        points_to_highlight[i][0] = temp_points[i][0];
-        points_to_highlight[i][1] = temp_points[i][1];
-        points_to_highlight[i][2] = temp_points[i][2];
+        unsigned long vertex_per_obj;
+        GLenum GL_OBJS;
 
-        selected_points_colors[i][0] = selection_color[0];
-        selected_points_colors[i][1] = selection_color[1];
-        selected_points_colors[i][2] = selection_color[2];
-        selected_points_colors[i][3] = selection_color[3];
+        if     (layersSet[i].layer_type == points)
+        {
+            vertex_per_obj = 1;
+            GL_OBJS = GL_POINTS;
+        }
+        else if(layersSet[i].layer_type == lines)
+        {
+            vertex_per_obj = 2;
+            GL_OBJS = GL_LINES;
+        }
+        else if(layersSet[i].layer_type == triangles)
+        {
+            vertex_per_obj = 3;
+            GL_OBJS = GL_TRIANGLES;
+        }
+        else if(layersSet[i].layer_type == cubes)
+        {
+            vertex_per_obj = 3*12;
+            GL_OBJS = GL_TRIANGLES;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(*layersSet[i].mut);
+            glBindBuffer(GL_ARRAY_BUFFER, vertexbuffIDs[i]);
+            glBufferData(GL_ARRAY_BUFFER, layersSet[i].objs_to_print * vertex_per_obj * 3 * sizeof(float), layersSet[i].get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
+
+            glBindBuffer(GL_ARRAY_BUFFER, colorbuffIDs[i]);
+            glBufferData(GL_ARRAY_BUFFER, layersSet[i].objs_to_print * vertex_per_obj * 4 * sizeof(float), layersSet[i].get_colors_ptr(), GL_DYNAMIC_DRAW);
+        }
+
+        // 1rst attribute buffer : vertices
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffIDs[i]);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        // 2nd attribute buffer : colors
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, colorbuffIDs[i]);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        if (layersSet[i].checkbox_value)
+            glDrawArrays(GL_OBJS, 0, layersSet[i].objs_to_print * vertex_per_obj);
+        else
+            glDrawArrays(GL_OBJS, 0, 0);
     }
 }
 
-void visualizerClass::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionColorID){
-
-    int number_points = 0;
-
+void visualizerClass::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionColorID)
+{
     if(cam.is_R_pressed())
     {
-        // Set colors
-        for(int i = 0; i < 5; i++)
-        {
-            selection_square_colors[i][0] = selection_color[0];
-            selection_square_colors[i][1] = selection_color[1];
-            selection_square_colors[i][2] = selection_color[2];
-            selection_square_colors[i][3] = selection_color[3];
-        }
-
         // Set positions
+        float square[5][3];
         double x, y, x0, y0;
         x =     (cam.sel_xpos - display_w/2)/(display_w/2);
         x0 =    (cam.sel_xpos0 - display_w/2)/(display_w/2);
         y =    -(cam.sel_ypos - display_h/2)/(display_h/2);
         y0 =   -(cam.sel_ypos0 - display_h/2)/(display_h/2);
 
-        selection_square[0][0] = x0;
-        selection_square[0][1] = y0;
-        selection_square[0][2] = 0.;
-        selection_square[1][0] = x;
-        selection_square[1][1] = y0;
-        selection_square[1][2] = 0.;
-        selection_square[2][0] = x;
-        selection_square[2][1] = y;
-        selection_square[2][2] = 0.;
-        selection_square[3][0] = x0;
-        selection_square[3][1] = y;
-        selection_square[3][2] = 0.;
-        selection_square[4][0] = x0;
-        selection_square[4][1] = y0;
-        selection_square[4][2] = 0.;
+        square[0][0] = x0;
+        square[0][1] = y0;
+        square[0][2] = 0.;
+        square[1][0] = x;
+        square[1][1] = y0;
+        square[1][2] = 0.;
+        square[2][0] = x;
+        square[2][1] = y;
+        square[2][2] = 0.;
+        square[3][0] = x0;
+        square[3][1] = y;
+        square[3][2] = 0.;
+        square[4][0] = x0;
+        square[4][1] = y0;
+        square[4][2] = 0.;
 
-        number_points = 5;
+        // Set colors
+        float square_colors[5][4];
+        for(int i = 0; i < 5; i++)
+        {
+            square_colors[i][0] = selection_color[0];
+            square_colors[i][1] = selection_color[1];
+            square_colors[i][2] = selection_color[2];
+            square_colors[i][3] = selection_square.alpha_channel;
+        }
+
+        selection_square.save_points(5, &square[0][0], &square_colors[0][0], nullptr, colors);
+
 
         glBindBuffer(GL_ARRAY_BUFFER, *selectionSquareID);
-        glBufferData(GL_ARRAY_BUFFER, 5 * 3 * sizeof(float), &selection_square[0][0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, selection_square.objs_to_print * 3 * sizeof(float), selection_square.get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
 
         glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
-        glBufferData(GL_ARRAY_BUFFER, 5 * 4 * sizeof(float), &selection_square_colors[0][0], GL_DYNAMIC_DRAW);
-    }
-
-    // 1rst attribute buffer : lines
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, selectionSquareID[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    // 2nd attribute buffer : colors
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, selectionColorID[0]);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glDrawArrays(GL_LINE_STRIP, 0, number_points);
-}
-
-void visualizerClass::load_selected_points(GLuint *selectionPointsID, GLuint *selectionColorID) {
-
-        glBindBuffer(GL_ARRAY_BUFFER, *selectionPointsID);
-        glBufferData(GL_ARRAY_BUFFER, num_selected_points * 3 * sizeof(float), &points_to_highlight[0][0], GL_DYNAMIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
-        glBufferData(GL_ARRAY_BUFFER, num_selected_points * 4 * sizeof(float), &selected_points_colors[0][0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, selection_square.objs_to_print * 4 * sizeof(float), selection_square.get_colors_ptr(), GL_DYNAMIC_DRAW);
 
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, *selectionPointsID);
+        glBindBuffer(GL_ARRAY_BUFFER, *selectionSquareID);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         // 2nd attribute buffer : colors
@@ -2387,129 +802,16 @@ void visualizerClass::load_selected_points(GLuint *selectionPointsID, GLuint *se
         glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        glDrawArrays(GL_POINTS, 0, num_selected_points);
-}
-
-void visualizerClass::load_points(GLuint *vertexbuffIDs, GLuint *colorbuffIDs){
-
-	for(int i = 0; i < layer_data.point_layers; i++)
-	{
-		{
-            std::lock_guard<std::mutex> lock_points(mut[points][i]);
-			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[points][i] * 3 * sizeof(float), &point_buffers[i][0][0], GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
-
-			glBindBuffer(GL_ARRAY_BUFFER, colorbuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[points][i] * 4 * sizeof(float), &point_color_buffers[i][0][0], GL_DYNAMIC_DRAW);
-		}
-
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffIDs[i]);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		// 2nd attribute buffer : colors
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbuffIDs[i]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		//glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
-		if (checkboxes_values[points][i])
-            glDrawArrays(GL_POINTS, 0, objects_to_print[points][i]);
-		else
-			glDrawArrays(GL_POINTS, 0, 0);
+        glDrawArrays(GL_LINE_STRIP, 0, selection_square.objs_to_print);
     }
 }
 
-void visualizerClass::load_lines(GLuint *linebuffIDs, GLuint *linecolorbuffIDs){
+void visualizerClass::fps_control(unsigned int frequency)
+{
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(time_2 - time_1).count();
+    long desired_time = 1000000/frequency;
+    if(duration < desired_time) std::this_thread::sleep_for(std::chrono::microseconds(desired_time - duration));
 
-	for (int i = 0; i < layer_data.line_layers; i++)
-	{
-		{
-            std::lock_guard<std::mutex> lock_points(mut[lines][i]);
-
-			glBindBuffer(GL_ARRAY_BUFFER, linebuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[lines][i] * 2 * 3 * sizeof(float), &line_buffers[i][0][0], GL_DYNAMIC_DRAW);
-
-			glBindBuffer(GL_ARRAY_BUFFER, linecolorbuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[lines][i] * 2 * 4 * sizeof(float), &line_color_buffers[i][0][0], GL_DYNAMIC_DRAW);
-		}
-
-        // 1st attribute buffer : lines
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, linebuffIDs[i]);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		// 2nd attribute buffer : colors
-		glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, linecolorbuffIDs[i]);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        if (checkboxes_values[lines][i])
-            glDrawArrays(GL_LINES, 0, objects_to_print[lines][i] * 2);
-		else
-			glDrawArrays(GL_LINES, 0, 0);
-	}
-}
-
-void visualizerClass::load_triangles(GLuint *trianglebuffIDs, GLuint *trianglecolorbuffIDs) {
-
-    for (int i = 0; i < layer_data.triangle_layers; i++)
-    {
-        {
-            std::lock_guard<std::mutex> lock_points(mut[triangles][i]);
-
-            glBindBuffer(GL_ARRAY_BUFFER, trianglebuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[triangles][i] * 3 * 3 * sizeof(float), &triangle_buffers[i][0][0], GL_DYNAMIC_DRAW);
-
-            glBindBuffer(GL_ARRAY_BUFFER, trianglecolorbuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[triangles][i] * 3 * 4 * sizeof(float), &triangle_color_buffers[i][0][0], GL_DYNAMIC_DRAW);
-        }
-
-        // 1st attribute buffer : lines
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, trianglebuffIDs[i]);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        // 2nd attribute buffer : colors
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, trianglecolorbuffIDs[i]);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        if (checkboxes_values[triangles][i])
-            glDrawArrays(GL_TRIANGLES, 0, objects_to_print[triangles][i] * 3);
-        else
-            glDrawArrays(GL_TRIANGLES, 0, 0);
-    }
-}
-
-void visualizerClass::load_cubes(GLuint *cubebuffIDs, GLuint *cubecolorbuffIDs){
-
-    for (int i = 0; i < layer_data.cube_layers; i++)
-    {
-        {
-            std::lock_guard<std::mutex> lock_points(mut[cubes][i]);
-
-            glBindBuffer(GL_ARRAY_BUFFER, cubebuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[cubes][i] * 12 * 3 * 3 * sizeof(float), &cube_buffers[i][0][0], GL_DYNAMIC_DRAW);
-
-            glBindBuffer(GL_ARRAY_BUFFER, cubecolorbuffIDs[i]);
-            glBufferData(GL_ARRAY_BUFFER, objects_to_print[cubes][i] * 12 * 3 * 4 * sizeof(float), &cube_color_buffers[i][0][0], GL_DYNAMIC_DRAW);
-        }
-
-        // 1st attribute buffer : cubes
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, cubebuffIDs[i]);
-        glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0 );
-
-        // 2nd attribute buffer : colors
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, cubecolorbuffIDs[i]);
-        glVertexAttribPointer( 1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0 );
-
-        if(checkboxes_values[cubes][i])
-            glDrawArrays(GL_TRIANGLES, 0, objects_to_print[cubes][i] * 12 * 3);
-        else
-            glDrawArrays(GL_TRIANGLES, 0, 0);
-    }
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_1).count();
+    //std::cout << "FPS: " << 1000000/duration << '\r';
 }
