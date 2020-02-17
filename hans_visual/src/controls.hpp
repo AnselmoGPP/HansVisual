@@ -1,6 +1,11 @@
 #ifndef CONTROLS_HPP
 #define CONTROLS_HPP
 
+#define WINDOW_WIDTH    1920/2      //1024
+#define WINDOW_HEIGHT   1080/2      //768
+#define FPS     1       // Not used
+#define SPHERE  2       // Not used
+
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,14 +15,6 @@ using namespace glm;
 #include <cmath>
 #include <iomanip>
 #include <mutex>
-
-// Window size
-#define WINDOW_WIDTH    1920/2      //1024
-#define WINDOW_HEIGHT   1080/2      //768
-
-// Camera system
-#define FPS     1
-#define SPHERE  2
 
 class controls;
 extern controls *camera;

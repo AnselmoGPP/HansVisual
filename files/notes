@@ -1,8 +1,11 @@
+-Visualizer copy constructor
 -Allow add_layer to be called after opening a window (open_window)
 -add_layer whenever you want (lock_guard)
+- Basic macros for configuring visualizer
+- In main, uncomment the first lines (copy constructor, copy assig. operator)
 -Axis
 -Floor squares
--Visualizer copy constructor
+- cam.adjustments(window);
 - Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
 -Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
 - Take into account layers of type none when modifying any layer state
@@ -37,6 +40,7 @@
 -Mutex call in check_selection is not correct (lock_guard)
 - OOP: Encapsulation, abstraction, inheritance, polymorphism
 - Try many visualizer windows
+- The rainbow is incorrectly stretched
 
 -http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
 - Caves

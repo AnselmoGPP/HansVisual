@@ -1,5 +1,4 @@
-﻿
-#include "controls.hpp"
+﻿#include "controls.hpp"
 
 controls *camera;		// Pointer used by the callback functions (mouse buttons).
 std::mutex cam_mut;

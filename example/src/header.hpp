@@ -1,5 +1,8 @@
+#ifndef HEADER_HPP
+#define HEADER_HPP
 
-#include "visualizerClass.hpp"
+#include "HansVisual.hpp"
+#include "toolKit.hpp"
 
 // Point buffers
 extern float pnts[12][3];                           // Contains 12 points that form and icosahedron
@@ -38,3 +41,5 @@ extern float cubes_gradients[3];
 
 // Function that fills some buffers. It uses some special functions from HansVisual
 void fill_buffers();
+
+#endif

@@ -1,4 +1,3 @@
-
 #include "header.hpp"
 #include<chrono>
 
@@ -463,12 +462,10 @@ float cubes_gradient_palette[21][3] = {
 };
 float cubes_gradients[3] = { 2, 6, 12 };
 
-void fill_buffers() {
-
-        visualizerClass vis;
-
+void fill_buffers()
+{
         // Fill pnts[] with 12 points forming an icosahedron with diameter 2
-        vis.icosahedron(2, pnts);
+        toolKit::icosahedron(2, pnts);
 
         // Create a "box"
         float box[9][3] = {
@@ -486,7 +483,7 @@ void fill_buffers() {
         // Create a parable
         float parable[101][3];
         float coefficients[3] = {0, 0, 1};                              // y = 0 + 0x + 1x²
-        vis.polynomial_graph(parable, -10, 10, 100, coefficients, 3);
+        toolKit::polynomial_graph(parable, -10, 10, 100, coefficients, 3);
 
         // Fill myLines[] with a parable and a "box"
         int i;

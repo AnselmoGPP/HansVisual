@@ -1,5 +1,3 @@
-
-#include "visualizerClass.hpp"
 #include "header.hpp"
 
 int main()
@@ -7,8 +5,8 @@ int main()
     fill_buffers();
 
     // Create a visualizer object (here are 3 different ways of doing so)
-    visualizerClass display;
-    //visualizerClass d(display);       // <<<<<<<<
+    HansVisual display;
+    //HansVisual d(display);
     //display = d;
 
     // Add some layers to the visualizer
@@ -31,7 +29,7 @@ int main()
     // ----- Send points -----------------------------------------------------------
 
     // Ways of sending points in no mode (all points have default color)
-        display.transform_coordinates(&pnts[0][0], 12);                                             // Transform the points coordinates in a buffer from X-first system to OpenGL system
+        toolKit::transform_coordinates(&pnts[0][0], 12);                                             // Transform the points coordinates in a buffer from X-first system to OpenGL system
     display.send_points("Points 1", 12, &pnts[0][0]);                                               // Paint some points in default color (white)
 
     // Ways of sending points in mode "categories" (uses layer's palette)
@@ -41,7 +39,7 @@ int main()
 
     // Ways of sending points in mode "colors" (user defines colors)
     display.send_points("Points 2", 12, &pnts[0][0], &points_colors_RGB[0][0], nullptr, colors);        // Paint the points and provide an array with the color of each one in RGB system
-        display.convert_HSVtoRGB(&points_colors_HSV_2[0][0], 12);                                       // Convert an array of colors in HSV system to RGB system, so you can use it in the next send_points()
+        toolKit::convert_HSVtoRGB(&points_colors_HSV_2[0][0], 12);                                       // Convert an array of colors in HSV system to RGB system, so you can use it in the next send_points()
     display.send_points("Points 2", 12, &pnts[0][0], &points_colors_HSV_2[0][0], nullptr, colors);      // Paint points and provide an array with the color of each one in RGB system (if it's HSV, first convert it to RGB)
     display.send_points("Points 2", 256, &points_line_2[0][0], &display.modified_rainbow[0][0], nullptr, colors);
 

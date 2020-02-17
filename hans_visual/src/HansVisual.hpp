@@ -10,12 +10,19 @@
 *		-> Are mutexes covering every situation?
 */
 
+#ifndef HANSVISUAL_HPP
+#define HANSVISUAL_HPP
+
 #define BACKG_R 0.
 #define BACKG_G 0.
 #define BACKG_B 0.14
 #define PNT_SIZE 35
-
-#pragma once
+#define MAX_PNT_SIZE 500.0f
+#define DESIRED_FPS 60
+#define ANTIALIASING 4      // x4 antialiasing
+#define VERSION_GLFW 3
+#define VERSION_GLFW_for_IMGUI "#version 330"
+#define POLYGON_MODE 0      // Show only the borders of the triangles
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,15 +50,16 @@ using namespace glm;
 #include "shader.hpp"
 #include "controls.hpp"
 
-class visualizerClass {
+class HansVisual
+{
+    std::vector<layer> layersSet;
 
-    //controls &cam{ camera };
     controls cam;
 
 	GLFWwindow* window;			// The window object used to draw
     int display_w, display_h;
 
-	int run_thread();			// The thread where the visualizer is run	
+    int main_loop_thread();		// The thread where the visualizer is run
 
     char test[21];
 
@@ -77,36 +85,19 @@ class visualizerClass {
 
 	// Points selection
     void check_selections();    // Points selection search ( http://www.3dkingdoms.com/selection.html ). Looks for the selected points and print its data, if an array of strings was provided
-	double projmatrix[16];
+    void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[]
+    double projmatrix[16];
 	double mvmatrix[16];
 	int viewport[4];
     double MinDistance = 0.01;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
-    void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[]
-    //std::vector<std::string> strings_to_show;       // Strings of selected points are stored here
-    //void copy_selections_to_array();                // Copy the strings of selected points into strings_to_show[]
     float selection_color[4] = { 0.97, 1., 0., 1. };
-    //float num_selected_points = 0;
-
-    // Layers data
-    //layer selections = layer("selections", points, 100);
-    //int point_layers = 0, line_layers = 0, triangle_layers = 0, cube_layers = 0;
-
-    // Common buffers
-    std::vector<layer> layersSet;
-
-    //const size_t default_palette_size = 21;
-    //float (*default_palette)[3];
-
-    //float default_color[3] = { 1., 1., 1. };
 
     // Selection data
     layer selection_square = layer("Sel. square", points, 0);
-    //layer selected_points = layer("Selections", points, 0);
     std::vector<glm::vec3> temp_selections;
 
     // In-main-loop functions for loading data to the GPU
     void load_selectionSquare(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
-    //void load_selected_points(GLuint *selectionSquareID, GLuint *selectionColorID);
     void load_buffers(GLuint *vertexbuffIDs, GLuint *colorbuffIDs);
 
     // Frequency (FPS)
@@ -114,10 +105,10 @@ class visualizerClass {
     void fps_control(unsigned int frequency);           // Tell how many fps you want. If they are higher, they will be reduced until the specified fps
 
 public:
-    visualizerClass();
-    visualizerClass(const visualizerClass &obj);
-    visualizerClass& operator=(const visualizerClass &obj);
-    ~visualizerClass();
+    HansVisual();
+    HansVisual(const HansVisual &obj);
+    HansVisual& operator=(const HansVisual &obj);
+    ~HansVisual();
 
     // Main methods ---------------------------------
 
@@ -144,27 +135,14 @@ public:
 	// Blue to red palette. Blue-yellow and yellow-red are in a different scale
 	float modified_rainbow[256][3];
 
-    // Transform the coordinates of an array of points from X-first system (x:front, y:left, z:up) to OpenGL system (x:right, y:up, z:back)
-	void transform_coordinates(float *points_arr, int number_points);
-
     void send_palette_RGB_01(std::string layer_name, float *new_palette, int number_colors);
 
     void send_palette_RGB(std::string layer_name, float *new_palette, int number_colors);
 
     void send_palette_HSV(std::string layer_name, float *new_palette, int number_colors);
 
-	// Transform an array of HSV colors to RGB colors
-	void convert_HSVtoRGB(float *colors, int num_colors);
-
-	// Transform an array of RGB 0-255 colors to RGB 0-1 colors
-	void convert_RGB255toRGB(float *colors, int num_colors);
-
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
-
-    // This represents the function [ y(x) = a + bx + cx^2 + dx^3 ]. It outputs the y value for the inclusive range [xmin, xmax] (including extremes). The sample variable is the number of segments (the result_array will store 'sample' + 1 elements)
-    void polynomial_graph(float (*result)[3], float min_x, float max_x, int sample_size, float *coefficients, float number_of_coefficients);
-
-	// Pass a pointer to an array[12][3] to store the icosahedron vertices. You must provide the radius too.
-	void icosahedron(float side_length, float(*points)[3]);
 };
+
+#endif
