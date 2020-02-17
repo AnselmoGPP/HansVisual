@@ -14,6 +14,7 @@ MESSAGE(STATUS "OPENGL_LIBRARY: " ${OPENGL_LIBRARY})
 # add_subdirectory()
 
 add_definitions(
+	-std=c++11
 	-DTW_STATIC
 	-DTW_NO_LIB_PRAGMA
 	-DTW_NO_DIRECT3D
