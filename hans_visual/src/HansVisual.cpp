@@ -9,49 +9,82 @@ HansVisual::HansVisual()
                         0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
      for(int i = 0; i < 21; i++) test[i] = test2[i];
 
+    // Create the first layer (Selections)
     layersSet.push_back(layer("Selections", points, 0));
 
-    // Data window
+    window = nullptr;
+    window_open = false;
+
+    // GUI state
+    show_checkboxes = 1;
+    show_data = 0;
+    show_options = 0;
 	data_window_size = 1;
     data_window = new std::string[data_window_size];
+    backg_color[0] = BACKG_R;  backg_color[1] = BACKG_G;  backg_color[2] = BACKG_B;
+    point_siz = PNT_SIZE;
 
-    // Rainbow palette
-    for (int i = 0; i < 256; i++) {
-        if (i <= 155) {
-            modified_rainbow[255-i][0] = i * 60./155.;
-            modified_rainbow[255-i][1] = 1.;
-            modified_rainbow[255 - i][2] = 1.;
-        }
-        if (i > 155) {
-            modified_rainbow[255-i][0] = 60. + (i-155) * (240.-60.)/(255.-155.);
-            modified_rainbow[255-i][1] = 1.;
-            modified_rainbow[255-i][2] = 1.;
-        }
-    }
-    layer temp;
-    temp.convert_HSVtoRGB(&modified_rainbow[0][0], 256);
+    // Points selection
+    MinDistance = 0.01;
+    selection_color[0] = 0.97;  selection_color[1] = 1.;  selection_color[2] = 0.;  selection_color[3] = 1.;
+    selection_square = layer("Sel. square", points, 0);
 }
 
 HansVisual::HansVisual(const HansVisual &obj)
 {
-
-}
-
-HansVisual& HansVisual::operator=(const HansVisual &obj) {
-
     layersSet = obj.layersSet;
 
-    for (int i = 0; i < 3; i++) backg_color[i] = obj.backg_color[i];
+    //cam = obj.cam;
 
-    // GUI state -----
+    window_open = false;
+
+    for(int i = 0; i < 21; ++i) test[i] = obj.test[i];
+
+    // GUI state
     show_checkboxes = obj.show_checkboxes;
     show_data = obj.show_data;
     show_options = obj.show_options;
+    data_window_size = obj.data_window_size;
+    data_window = new std::string[data_window_size];        // No need to delete[] now, it haven't been allocated yet
+    for(int i = 0; i < data_window_size; i++) data_window[i] = obj.data_window[i];
 
+    for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
+    point_siz = obj.point_siz;
+
+    // Points selection
+    MinDistance = obj.MinDistance;
+    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
+    temp_selections = obj.temp_selections;
+}
+
+HansVisual& HansVisual::operator=(const HansVisual &obj)
+{
+    layersSet = obj.layersSet;
+
+    //cam = obj.cam;
+
+    //window = obj.window;
+    display_w = obj.display_w;  display_h = obj.display_h;
+
+    for(int i = 0; i < 21; ++i) test[i] = obj.test[i];
+
+    // GUI state
+    show_checkboxes = obj.show_checkboxes;
+    show_data = obj.show_data;
+    show_options = obj.show_options;
     data_window_size = obj.data_window_size;
     delete[] data_window;
     data_window = new std::string[data_window_size];
     for(int i = 0; i < data_window_size; i++) data_window[i] = obj.data_window[i];
+    for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
+    point_siz = obj.point_siz;
+
+    // Points selection
+    for(int i = 0; i < 16; ++i) { projmatrix[i] = obj.projmatrix[i];  mvmatrix[i] = obj.mvmatrix[i]; }
+    for(int i = 0; i < 4; ++i) viewport[i] = obj.viewport[i];
+    MinDistance = obj.MinDistance;
+    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
+    temp_selections = obj.temp_selections;
 
     return *this;
 }
@@ -59,10 +92,12 @@ HansVisual& HansVisual::operator=(const HansVisual &obj) {
 HansVisual::~HansVisual()
 {
     delete[] data_window;
+
+    // delete window;
 }
 
-int  HansVisual::open_window() {
-
+int  HansVisual::open_window()
+{
     // Initialize GLFW
     if (!glfwInit())
     {
@@ -81,6 +116,7 @@ int  HansVisual::open_window() {
     std::thread running(&HansVisual::main_loop_thread, this);
     running.detach();
 
+    window_open = true;
     return 0;
 }
 
@@ -205,6 +241,10 @@ void HansVisual::fill_data_window(const std::string *data_strings, int num_strin
     for (int i = 0; i < num_strings; i++)
         data_window[i] = data_strings[i];
 }
+
+bool HansVisual::window_is_open() { return window_open; }
+
+void HansVisual::close_window() { window_open = false; }
 
 // Private members -------------------------------------------------------
 
@@ -334,6 +374,7 @@ int  HansVisual::main_loop_thread()
     do
     {
         time_1 = std::chrono::high_resolution_clock::now();
+        if(!window_open) break;
 
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);	// Arguments: Lower left 
@@ -415,6 +456,8 @@ int  HansVisual::main_loop_thread()
 
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
+
+    window_open = false;
     return 0;
 }
 

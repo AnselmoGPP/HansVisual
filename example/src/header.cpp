@@ -46,6 +46,7 @@ float points_colors_RGB[12][3] = {
 0.0f, 0.0f, 1.0f,
 0.0f, 0.0f, 1.0f
 };
+float modified_rainbow[256][3];
 float points_gradient_palette[21][3] = {
     0.0f, 0.0f, 0.00f,
     0.0f, 0.0f, 0.05f,
@@ -466,6 +467,9 @@ void fill_buffers()
 {
         // Fill pnts[] with 12 points forming an icosahedron with diameter 2
         toolKit::icosahedron(2, pnts);
+
+        // Fill modified_rainbow with a variation of rainbow colors
+        toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // The same as:  toolKit::fill_rainbow(modified_rainbow)
 
         // Create a "box"
         float box[9][3] = {

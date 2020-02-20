@@ -1,10 +1,8 @@
--Visualizer copy constructor
--Allow add_layer to be called after opening a window (open_window)
--add_layer whenever you want (lock_guard)
+-Put selections in a ImGui window
+-Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
 - Basic macros for configuring visualizer
-- In main, uncomment the first lines (copy constructor, copy assig. operator)
--Axis
--Floor squares
+-Axis and grid (create generator functions), center of the sphere (option of the visualizer)
+-Crear un find_package() para no tener que linkar todas las librerías en el CMake
 - cam.adjustments(window);
 - Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
 -Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
@@ -13,9 +11,6 @@
 -Create a class for each layer, and unify load_ functions - Data structures for layers - Don't forget to uncomment the buffers_close variable in check_selections
 -Keep points selected after a new scan is drawn in that layer (send_pts())
 -CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
--Put selections in a ImGui window
--Flags for: currently drawing points (?), currently selecting points
--Flag: Datos waiting for being drawn (if new data arrives, omit it)
 -Mutex for 2 flows: add_layer and main loop
 -Save selected points from buffer > Load pts from buffer to GPU > repeat
 -mut_fill_data (mutex)
@@ -24,26 +19,25 @@
 -lock_points(mut[points][layer]), check_selection > lock_points(mut[pts][i]) (for), load_points > lock_points(mut[pts][i])
 -send_palette
 -fill_data_window 
--Modify class name "HansVisual"
-- Why the moving points get a different shape (deformation)
 - In check_ray(), don't check already selected points
--close() function
--Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function.
+-Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function
 -Only one free function call per loop (main loop)
--Sería más eficiente solo permitir una LM function call per layer per loop?
 -Reorder surfaces (box planes and planes) so transparencies look right
 -Optimizar selección. En lugar de chequear todos los puntos por cada píxel, averigüar la posición de cada punto en la pantalla.
 -Improve selection (see sciencesoftcode notes)
 -Make sure you destroy all the news
 -Improve cubes rotation
--Are multiple windows possible? (1763)
--Mutex call in check_selection is not correct (lock_guard)
+-Are multiple windows possible? (1763) - Try many visualizer windows
 - OOP: Encapsulation, abstraction, inheritance, polymorphism
-- Try many visualizer windows
-- The rainbow is incorrectly stretched
-
 -http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
+
+
+----- Future ---------------------------------------------------------
+
+- Why the moving points get a different shape (deformation)?
 - Caves
 - Name generator
 
------ Solved ---------------------------------------------------------
+----- Done ---------------------------------------------------------
+
+- add_points, add_lines, add_triangles & add_cubes only callable once per layer per loop

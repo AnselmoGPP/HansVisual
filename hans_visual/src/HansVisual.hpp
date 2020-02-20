@@ -60,6 +60,7 @@ class HansVisual
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
+    bool window_open;           // True if main_loop_thread is running. If false, it's out (or will get out asap)
 
     char test[21];
 
@@ -71,11 +72,11 @@ class HansVisual
 	bool show_checkboxes = 1;
 	bool show_data = 0;
 	bool show_options = 0;
+    int data_window_size;
 	std::string *data_window;
-	int data_window_size;
 	std::mutex mut_fill_data;
-    float backg_color[3] = { BACKG_R, BACKG_G, BACKG_B };
-    float point_siz = PNT_SIZE;
+    float backg_color[3];
+    float point_siz;
 
     // Transformation matrices
     glm::mat4 ProjectionMatrix;
@@ -89,11 +90,9 @@ class HansVisual
     double projmatrix[16];
 	double mvmatrix[16];
 	int viewport[4];
-    double MinDistance = 0.01;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
-    float selection_color[4] = { 0.97, 1., 0., 1. };
-
-    // Selection data
-    layer selection_square = layer("Sel. square", points, 0);
+    double MinDistance;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
+    float selection_color[4];
+    layer selection_square;
     std::vector<glm::vec3> temp_selections;
 
     // In-main-loop functions for loading data to the GPU
@@ -132,9 +131,6 @@ public:
 
     // Bonus methods --------------------------------
 
-	// Blue to red palette. Blue-yellow and yellow-red are in a different scale
-	float modified_rainbow[256][3];
-
     void send_palette_RGB_01(std::string layer_name, float *new_palette, int number_colors);
 
     void send_palette_RGB(std::string layer_name, float *new_palette, int number_colors);
@@ -143,6 +139,12 @@ public:
 
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
+
+    // Check whether the window is open
+    bool window_is_open();
+
+    // Close the window
+    void close_window();
 };
 
 #endif

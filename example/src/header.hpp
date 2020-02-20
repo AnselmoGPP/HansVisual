@@ -10,6 +10,7 @@ extern float points_categories[12];
 extern float points_colors_HSV[12][3];
 extern float points_colors_HSV_2[12][3];
 extern float points_colors_RGB[12][3];
+extern float modified_rainbow[256][3];
 extern float points_gradient_palette[21][3];
 extern float points_gradients[12];
 

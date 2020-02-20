@@ -4,10 +4,10 @@ int main()
 {
     fill_buffers();
 
-    // Create a visualizer object (here are 3 different ways of doing so)
+    // Different ways of creating a visualizer object
     HansVisual display;
-    //HansVisual d(display);
-    //display = d;
+    HansVisual d(display);
+    display = d;
 
     // Add some layers to the visualizer
     display.add_layer("Points 1", points, 20);
@@ -41,7 +41,7 @@ int main()
     display.send_points("Points 2", 12, &pnts[0][0], &points_colors_RGB[0][0], nullptr, colors);        // Paint the points and provide an array with the color of each one in RGB system
         toolKit::convert_HSVtoRGB(&points_colors_HSV_2[0][0], 12);                                       // Convert an array of colors in HSV system to RGB system, so you can use it in the next send_points()
     display.send_points("Points 2", 12, &pnts[0][0], &points_colors_HSV_2[0][0], nullptr, colors);      // Paint points and provide an array with the color of each one in RGB system (if it's HSV, first convert it to RGB)
-    display.send_points("Points 2", 256, &points_line_2[0][0], &display.modified_rainbow[0][0], nullptr, colors);
+    display.send_points("Points 2", 256, &points_line_2[0][0], &modified_rainbow[0][0], nullptr, colors);
 
     // Ways of sending points in mode "gradient" (color depends on the gradient assigned to each point)
         display.send_palette_RGB_01("Points 3", &points_gradient_palette[0][0], 21);                    // Change the standard palette of a certain layer. Enter the palette in RGB format (0-1)
@@ -124,6 +124,6 @@ int main()
     }
 */
 
-    char abc;
-    std::cin >> abc;
+    while(display.window_is_open()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
+    display.close_window();
 }
