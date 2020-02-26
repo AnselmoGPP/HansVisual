@@ -1,51 +1,24 @@
-#ifndef LAYERS_HPP
-#define LAYERS_HPP
+#include "layer.hpp"
 
-#include <iostream>
-#include <vector>
-#include <mutex>
-#include <cmath>
+pnt3D::pnt3D(float a, float b, float c) : x(a), y(b), z(c) { }
 
-// Store one xyz point (not used)
-struct pnt3D {
-    float x, y, z;
-
-    pnt3D(float a = 0, float b = 0, float c = 0) : x(a), y(b), z(c) { }
-
-    pnt3D newData(float a, float b, float c) {
-        x = a; y = b; z = c;
-        return *this;
-    }
-};
-
-// Structure used for sending cubes to the visualizer
-struct cube3D {
-    float X, Y, Z, width, height, length, rot_H;      // rotation in radians
-
-    // Parameters: x, y, z (cube's center), width, height, length, rot_H (horizontal rotation)
-    cube3D(float x, float y, float z, float w, float h, float l, float rh) :
-        X(x), Y(y), Z(z), width(w), height(h), length(l), rot_H(rh) { }
-};
-
-// Names used for selecting different buffers
-enum object_type { points, lines, triangles, cubes, none };
-
-// Define the kind of the additional array you send
-enum data_buffer {
-    colors,             // Define colors of each point
-    categories,         // Define category of each point. If number of categories > colors in the palette, the visualizer starts again from the beginning of the pallete
-    gradient            // Define a gradient for each point that goes from a minimum to a maximum value. You enter the absolute minimum and maximum.
-};
-
-// Used to allow only one layer edition per main-loop iteration
-enum layer_state{ open, half_closed, closed };
-
-struct layer
+pnt3D pnt3D::newData(float a, float b, float c)
 {
-    layer() :
-        layer_name(""), max_objs(0), layer_type(none) { }
+    x = a; y = b; z = c;
+    return *this;
+}
 
-    layer(const char *name, object_type type, unsigned int capacity) :
+// Parameters: x, y, z (cube's center), width, height, length, rot_H (horizontal rotation)
+cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
+    X(x), Y(y), Z(z), width(w), height(h), length(l), rot_H(rh) { }
+
+// layer class ------------------------------
+
+    // Public ------------------------------
+
+    layer::layer() : layer_name(""), max_objs(0), layer_type(none) { }
+
+    layer::layer(const char *name, object_type type, unsigned int capacity) :
         layer_name(name), max_objs(capacity), layer_type(type)
     {
         mut = new std::mutex;
@@ -110,7 +83,7 @@ struct layer
     }
 
     // Copy constructor
-    layer(const layer &obj)
+    layer::layer(const layer &obj)
     {
         // Main layer data
         layer_name = obj.layer_name;
@@ -259,7 +232,7 @@ struct layer
     }
 
     // Copy assignment operator
-    layer& operator=(const layer &obj)
+    layer& layer::operator=(const layer &obj)
     {
         // Main layer data
         layer_name = obj.layer_name;
@@ -418,7 +391,7 @@ struct layer
         return *this;
     }
 
-    ~layer()
+    layer::~layer()
     {
         delete mut;
 
@@ -438,346 +411,479 @@ struct layer
         delete[] cubes_color_buffer;
     }
 
-    // Main layer data
-    std::string layer_name;
-    unsigned int max_objs;
-    object_type layer_type;
-    std::string layer_type_str = "none";
-    size_t objs_to_print = 0;                    // Number of objects that are going to be printed
-    layer_state state = open;                    // Used for only modifying buffer once per loop
-    bool checkbox_value = true;
-    std::mutex *mut = nullptr;
+    // Points ----------
 
-    // Colors
-    float(*palette)[3] = nullptr;                   // Palette of colors of the layer
-    size_t palette_size = 21;                       // Size of the layer's palette (number of colors)
-    float alpha_channel = 1.0f;
-    const float default_color[3] = { 1., 1., 1. };
-
-    // Points data
-    float(*points_buffer)[3]                = nullptr;      // Stores all the coordinates of all the points of the layer
-    float(*points_color_buffer)[4]          = nullptr;      // Stores the RGBA colors of each point
-    std::string *points_strings             = nullptr;      // Optional data for each point (used in selections)
-    // Lines data
-    float(*lines_buffer)[2][3]              = nullptr;
-    float(*lines_color_buffer)[2][4]        = nullptr;
-    // Triangles
-    float(*triangles_buffer)[3][3]          = nullptr;
-    float(*triangles_color_buffer)[3][4]    = nullptr;
-    // Cubes data
-    float(*cubes_buffer)[12*3][3]           = nullptr;
-    float(*cubes_color_buffer)[12*3][4]     = nullptr;
-
-    // Send new data to the layer's buffers ---------------------------------------------------------
-    // Send points to print. There are 4 ways to specify the colors of the objects sent:
-    //          - Default: If you only pass the number of objects and a pointer to the array, the objects will have the default_color.
-    //          - 'categories': Pass also an array with labels (clusters) for each object (range: [0, number of categories - 1]. Specify the array type as 'categories' (if not specified, it is considered 'categories'). The palette will be used to print each category with a different color.
-    //          - 'colors': Pass an array with colors for each object. Specify the array type as 'colors'.
-    //          - 'gradient': Pass an array with (gradual) values for each object (height, temperature...). Must include the minimum and maximum values (inclusive) (if not specified, minimum is 0 and maximum is 1). Specify the array type as 'gradient'. This coloring method should be used with a palette containing gradual colors.
-
-    int save_points(unsigned int number_points, const float *arr, const float *labels = nullptr, std::string *points_data = nullptr, data_buffer array_type = categories, float min = 0, float max = 1)
+    // Simplest way of sending elements. Specify the number of points and a pointer to the array. Optional: send strings associated with each point (for selection) or define the point's color
+    int layer::save_points(unsigned int number_points, const float (*arr)[3], float R, float G, float B, std::string *points_data)
     {
-        if      (state == closed) return 1;
-        else if (state == half_closed) state = closed;
-
-        if      (layer_type == none) { error_message(1); return 1; }
-        else if (layer_type != points) { error_message(5); return 1; }
-
-        // Get the number of points the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-        if (number_points > max_objs)
-        {
-            error_message(2, number_points);
-            objs_to_print = max_objs;
-        }
-        else objs_to_print = number_points;
-
-        // Write data to buffers (points and colors)
-        float siz = max - min;		// Used for gradients
-        int index;
+        if(first_checks(points, number_points)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        for (int i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding points buffer
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
-            // Set point position in 3D;
-            points_buffer[i][0] = arr[i * 3 + 0];
-            points_buffer[i][1] = arr[i * 3 + 1];
-            points_buffer[i][2] = arr[i * 3 + 2];
+            // Vertex coordinates
+            points_buffer[i][0] = arr[i][0];
+            points_buffer[i][1] = arr[i][1];
+            points_buffer[i][2] = arr[i][2];
 
-            // Set color of the point
-            if		(labels     == nullptr)
-            {
-                points_color_buffer[i][0] = default_color[0];
-                points_color_buffer[i][1] = default_color[1];
-                points_color_buffer[i][2] = default_color[2];
-                points_color_buffer[i][3] = alpha_channel;
-            }
-            else if (array_type == categories)
-            {
-                index = (int)labels[i] % palette_size;
+            // Colors (color by default)
+            points_color_buffer[i][0] = R;
+            points_color_buffer[i][1] = G;
+            points_color_buffer[i][2] = B;
+            points_color_buffer[i][3] = alpha_channel;
 
-                points_color_buffer[i][0] = palette[index][0];
-                points_color_buffer[i][1] = palette[index][1];
-                points_color_buffer[i][2] = palette[index][2];
-                points_color_buffer[i][3] = alpha_channel;
-            }
-            else if	(array_type == colors)
-            {
-                points_color_buffer[i][0] = labels[i * 3 + 0];
-                points_color_buffer[i][1] = labels[i * 3 + 1];
-                points_color_buffer[i][2] = labels[i * 3 + 2];
-                points_color_buffer[i][3] = alpha_channel;
-            }
-            else if (array_type == gradient)
-            {
-                if      (labels[i] <= min) index = 0;
-                else if (labels[i] >= max) index = palette_size - 1;
-                else    index = (int)((labels[i] - min) * (palette_size - 1)) / (int)siz;
-
-                points_color_buffer[i][0] = palette[index][0];
-                points_color_buffer[i][1] = palette[index][1];
-                points_color_buffer[i][2] = palette[index][2];
-                points_color_buffer[i][3] = alpha_channel;
-            }
-
-            // Fill/empty points_strings[] and empty selected_points[]
-            if(points_data != nullptr)
-            {
-                points_strings[i] = points_data[i];
-                //selected_points[i] = 0;
-            }
-            else
-            {
-                points_strings[i] = "";
-                //selected_points[i] = 0;
-            }
+            // Points data (strings associated with each element)
+            if(points_data != nullptr) points_strings[i] = points_data[i];
+            else points_strings[i] = "";
         }
-
         return 0;
     }
 
-    int save_lines(unsigned int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1)
+    // Pass an additional array with labels (clusters) for each object (range: [0, number of categories - 1]. The palette will be used to print each category with a different color.
+    int layer::save_points_categories(unsigned int number_points, const float (*arr)[3], const float *categories, std::string *points_data)
     {
-        if      (state == closed) return 1;
-        else if (state == half_closed) state = closed;
-
-        if      (layer_type == none) { error_message(1); return 1; }
-        else if (layer_type != lines) { error_message(5); return 1; }
-
-        // Get the number of lines the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-        if (number_points - 1 > max_objs)
-        {
-            error_message(3, number_points);
-            objs_to_print = max_objs;
-        }
-        else objs_to_print = --number_points;
-
-        // Write data to buffers (points and colors)
-        float siz = max - min;		// Used for gradients
-        int index = 0;
-        int omitted_segments = 0;
+        if(first_checks(points, number_points)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        for (int i = 0; i < objs_to_print; i++)		// Main loop for filling the corresponding lines buffer
+        int index;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
-            // Check for the line jump
-            if (arr[i * 3 + 3] == 1.2f && arr[i * 3 + 4] == 3.4f && arr[i * 3 + 5] == 5.6f) {
-                omitted_segments += 2;
-                i++;
-                continue;
-            }
+            // Vertex coordinates
+            points_buffer[i][0] = arr[i][0];
+            points_buffer[i][1] = arr[i][1];
+            points_buffer[i][2] = arr[i][2];
 
-            // Save two points (vertex) for each segment
-            lines_buffer[i - omitted_segments][0][0] = arr[i * 3 + 0];
-            lines_buffer[i - omitted_segments][0][1] = arr[i * 3 + 1];
-            lines_buffer[i - omitted_segments][0][2] = arr[i * 3 + 2];
+            // Colors (array of categories + palette)
+            index = (int)categories[i] % palette_size;
 
-            lines_buffer[i - omitted_segments][1][0] = arr[i * 3 + 3];
-            lines_buffer[i - omitted_segments][1][1] = arr[i * 3 + 4];
-            lines_buffer[i - omitted_segments][1][2] = arr[i * 3 + 5];
+            points_color_buffer[i][0] = palette[index][0];
+            points_color_buffer[i][1] = palette[index][1];
+            points_color_buffer[i][2] = palette[index][2];
+            points_color_buffer[i][3] = alpha_channel;
+
+            // Points data (strings associated with each element)
+            if(points_data != nullptr) points_strings[i] = points_data[i];
+            else points_strings[i] = "";
+        }
+        return 0;
+    }
+
+    // Pass an array with colors for each object.
+    int layer::save_points_colors(unsigned int number_points, const float (*arr)[3], const float (*colors)[3], std::string *points_data)
+    {
+        if(first_checks(points, number_points)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates
+            points_buffer[i][0] = arr[i][0];
+            points_buffer[i][1] = arr[i][1];
+            points_buffer[i][2] = arr[i][2];
+
+            // Colors (array of colors)
+            points_color_buffer[i][0] = colors[i][0];
+            points_color_buffer[i][1] = colors[i][1];
+            points_color_buffer[i][2] = colors[i][2];
+            points_color_buffer[i][3] = alpha_channel;
+
+            // Points data (strings associated with each element)
+            if(points_data != nullptr) points_strings[i] = points_data[i];
+            else points_strings[i] = "";
+        }
+        return 0;
+    }
+
+    // Pass an array with (gradual) values for each object (height, temperature...). Must include the minimum and maximum values (inclusive) (if not specified, minimum is 0 and maximum is 1). This coloring method should be used with a palette containing gradual colors.
+    int layer::save_points_gradients(unsigned int number_points, const float (*arr)[3], const float *gradients, float min, float max, std::string *points_data)
+    {
+        if(first_checks(points, number_points)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates
+            points_buffer[i][0] = arr[i][0];
+            points_buffer[i][1] = arr[i][1];
+            points_buffer[i][2] = arr[i][2];
+
+            // Colors (gradients array + palette)
+            if      (gradients[i] <= min) index = 0;
+            else if (gradients[i] >= max) index = palette_size - 1;
+            else    index = (int)((gradients[i] - min) * (palette_size - 1)) / (int)siz;
+
+            points_color_buffer[i][0] = palette[index][0];
+            points_color_buffer[i][1] = palette[index][1];
+            points_color_buffer[i][2] = palette[index][2];
+            points_color_buffer[i][3] = alpha_channel;
+
+            // Points data (strings associated with each element)
+            if(points_data != nullptr) points_strings[i] = points_data[i];
+            else points_strings[i] = "";
+        }
+        return 0;
+    }
+
+    // Lines ----------
+
+    int layer::save_lines(unsigned int number_lines, const float (*arr)[2][3], float R, float G, float B)
+    {
+        if(first_checks(lines, number_lines)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
+
+            // Colors (color by default)
+            lines_color_buffer[i][0][0] = R;
+            lines_color_buffer[i][0][1] = G;
+            lines_color_buffer[i][0][2] = B;
+            lines_color_buffer[i][0][3] = alpha_channel;
+
+            lines_color_buffer[i][1][0] = R;
+            lines_color_buffer[i][1][1] = G;
+            lines_color_buffer[i][1][2] = B;
+            lines_color_buffer[i][1][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    // If number of categories > colors in the palette, the visualizer starts again from the beginning of the pallete
+    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const float (*categories)[2])
+    {
+        if(first_checks(lines, number_lines)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
+
+            // Colors (array of categories + palette)
+            index = (int)categories[i][0] % palette_size;
+
+            lines_color_buffer[i][0][0] = palette[index][0];
+            lines_color_buffer[i][0][1] = palette[index][1];
+            lines_color_buffer[i][0][2] = palette[index][2];
+            lines_color_buffer[i][0][3] = alpha_channel;
+
+            index = (int)categories[i][1] % palette_size;
+
+            lines_color_buffer[i][1][0] = palette[index][0];
+            lines_color_buffer[i][1][1] = palette[index][1];
+            lines_color_buffer[i][1][2] = palette[index][2];
+            lines_color_buffer[i][1][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    int layer::save_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3])
+    {
+        if(first_checks(lines, number_lines)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
 
             // Save colors for each vertex
-            if		(labels == nullptr)
-            {
-                lines_color_buffer[i - omitted_segments][0][0] = default_color[0];
-                lines_color_buffer[i - omitted_segments][0][1] = default_color[1];
-                lines_color_buffer[i - omitted_segments][0][2] = default_color[2];
-                lines_color_buffer[i - omitted_segments][0][3] = alpha_channel;
+            lines_color_buffer[i][0][0] = colors[i][0][0];
+            lines_color_buffer[i][0][1] = colors[i][0][1];
+            lines_color_buffer[i][0][2] = colors[i][0][2];
+            lines_color_buffer[i][0][3] = alpha_channel;
 
-                lines_color_buffer[i - omitted_segments][1][0] = default_color[0];
-                lines_color_buffer[i - omitted_segments][1][1] = default_color[1];
-                lines_color_buffer[i - omitted_segments][1][2] = default_color[2];
-                lines_color_buffer[i - omitted_segments][1][3] = alpha_channel;
-            }
-            else if (array_type == categories)  // labels contains the category of each segment (including line jumps)
-            {
-                index = (int)labels[i] % palette_size;
-
-                lines_color_buffer[i - omitted_segments][0][0] = palette[index][0];
-                lines_color_buffer[i - omitted_segments][0][1] = palette[index][1];
-                lines_color_buffer[i - omitted_segments][0][2] = palette[index][2];
-                lines_color_buffer[i - omitted_segments][0][3] = alpha_channel;
-
-                lines_color_buffer[i - omitted_segments][1][0] = palette[index][0];
-                lines_color_buffer[i - omitted_segments][1][1] = palette[index][1];
-                lines_color_buffer[i - omitted_segments][1][2] = palette[index][2];
-                lines_color_buffer[i - omitted_segments][1][3] = alpha_channel;
-            }
-            else if	(array_type == colors)      // labels contains the color of each segment (including line jumps)
-            {
-                lines_color_buffer[i - omitted_segments][0][0] = labels[i * 3 + 0];
-                lines_color_buffer[i - omitted_segments][0][1] = labels[i * 3 + 1];
-                lines_color_buffer[i - omitted_segments][0][2] = labels[i * 3 + 2];
-                lines_color_buffer[i - omitted_segments][0][3] = alpha_channel;
-
-                lines_color_buffer[i - omitted_segments][1][0] = labels[i * 3 + 0];
-                lines_color_buffer[i - omitted_segments][1][1] = labels[i * 3 + 1];
-                lines_color_buffer[i - omitted_segments][1][2] = labels[i * 3 + 2];
-                lines_color_buffer[i - omitted_segments][1][3] = alpha_channel;
-            }
-            else if (array_type == gradient)
-            {
-                if (labels[i] <= min) index = 0;
-                else if (labels[i] >= max) index = palette_size - 1;
-                else {
-                    index = ((labels[i] - min) * (palette_size - 1)) / siz;
-                }
-
-                lines_color_buffer[i - omitted_segments][0][0] = palette[index][0];
-                lines_color_buffer[i - omitted_segments][0][1] = palette[index][1];
-                lines_color_buffer[i - omitted_segments][0][2] = palette[index][2];
-                lines_color_buffer[i - omitted_segments][0][3] = alpha_channel;
-
-                lines_color_buffer[i - omitted_segments][1][0] = palette[index][0];
-                lines_color_buffer[i - omitted_segments][1][1] = palette[index][1];
-                lines_color_buffer[i - omitted_segments][1][2] = palette[index][2];
-                lines_color_buffer[i - omitted_segments][1][3] = alpha_channel;
-            }
+            lines_color_buffer[i][1][0] = colors[i][1][0];
+            lines_color_buffer[i][1][1] = colors[i][1][1];
+            lines_color_buffer[i][1][2] = colors[i][1][2];
+            lines_color_buffer[i][1][3] = alpha_channel;
         }
-
         return 0;
     }
 
-    int save_triangles(unsigned int number_triangles, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1)
+    int layer::save_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min, float max)
     {
-        if      (state == closed) return 1;
-        else if (state == half_closed) state = closed;
-
-        if      (layer_type == none) { error_message(1); return 1; }
-        else if (layer_type != triangles) { error_message(5); return 1; }
-
-        // Get the number of triangles the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-        if (number_triangles > max_objs) {
-            error_message(2, number_triangles);
-            objs_to_print = max_objs;
-        }
-        else objs_to_print = number_triangles;
-
-        // Write data to buffers (points and colors)
-        float siz = max - min;		// Used for gradients
-        int index;
+        if(first_checks(lines, number_lines)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        for (int i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding points buffer
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
-            // Set triangle position in 3D;
-            triangles_buffer[i][0][0] = arr[i * 9 + 0];
-            triangles_buffer[i][0][1] = arr[i * 9 + 1];
-            triangles_buffer[i][0][2] = arr[i * 9 + 2];
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
 
-            triangles_buffer[i][1][0] = arr[i * 9 + 3];
-            triangles_buffer[i][1][1] = arr[i * 9 + 4];
-            triangles_buffer[i][1][2] = arr[i * 9 + 5];
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
 
-            triangles_buffer[i][2][0] = arr[i * 9 + 6];
-            triangles_buffer[i][2][1] = arr[i * 9 + 7];
-            triangles_buffer[i][2][2] = arr[i * 9 + 8];
+            // Colors (gradients array + palette)
+            if      (gradients[i][0] <= min) index = 0;
+            else if (gradients[i][0] >= max) index = palette_size - 1;
+            else    index = ((gradients[i][0] - min) * (palette_size - 1)) / siz;
 
-            // Set color of the point
-            if		(labels     == nullptr)
-            {
-                triangles_color_buffer[i][0][0] = default_color[0];
-                triangles_color_buffer[i][0][1] = default_color[1];
-                triangles_color_buffer[i][0][2] = default_color[2];
-                triangles_color_buffer[i][0][3] = alpha_channel;
+            lines_color_buffer[i][0][0] = palette[index][0];
+            lines_color_buffer[i][0][1] = palette[index][1];
+            lines_color_buffer[i][0][2] = palette[index][2];
+            lines_color_buffer[i][0][3] = alpha_channel;
 
-                triangles_color_buffer[i][1][0] = default_color[0];
-                triangles_color_buffer[i][1][1] = default_color[1];
-                triangles_color_buffer[i][1][2] = default_color[2];
-                triangles_color_buffer[i][1][3] = alpha_channel;
+            if      (gradients[i][1] <= min) index = 0;
+            else if (gradients[i][1] >= max) index = palette_size - 1;
+            else    index = ((gradients[i][1] - min) * (palette_size - 1)) / siz;
 
-                triangles_color_buffer[i][2][0] = default_color[0];
-                triangles_color_buffer[i][2][1] = default_color[1];
-                triangles_color_buffer[i][2][2] = default_color[2];
-                triangles_color_buffer[i][2][3] = alpha_channel;
-            }
-            else if (array_type == categories)
-            {
-                index = (int)labels[i] % palette_size;
-
-                triangles_color_buffer[i][0][0] = palette[index][0];
-                triangles_color_buffer[i][0][1] = palette[index][1];
-                triangles_color_buffer[i][0][2] = palette[index][2];
-                triangles_color_buffer[i][0][3] = alpha_channel;
-
-                triangles_color_buffer[i][1][0] = palette[index][0];
-                triangles_color_buffer[i][1][1] = palette[index][1];
-                triangles_color_buffer[i][1][2] = palette[index][2];
-                triangles_color_buffer[i][1][3] = alpha_channel;
-
-                triangles_color_buffer[i][2][0] = palette[index][0];
-                triangles_color_buffer[i][2][1] = palette[index][1];
-                triangles_color_buffer[i][2][2] = palette[index][2];
-                triangles_color_buffer[i][2][3] = alpha_channel;
-            }
-            else if	(array_type == colors)
-            {
-                triangles_color_buffer[i][0][0] = labels[i * 3 + 0];
-                triangles_color_buffer[i][0][1] = labels[i * 3 + 1];
-                triangles_color_buffer[i][0][2] = labels[i * 3 + 2];
-                triangles_color_buffer[i][0][3] = alpha_channel;
-
-                triangles_color_buffer[i][1][0] = labels[i * 3 + 0];
-                triangles_color_buffer[i][1][1] = labels[i * 3 + 1];
-                triangles_color_buffer[i][1][2] = labels[i * 3 + 2];
-                triangles_color_buffer[i][1][3] = alpha_channel;
-
-                triangles_color_buffer[i][2][0] = labels[i * 3 + 0];
-                triangles_color_buffer[i][2][1] = labels[i * 3 + 1];
-                triangles_color_buffer[i][2][2] = labels[i * 3 + 2];
-                triangles_color_buffer[i][2][3] = alpha_channel;
-            }
-            else if (array_type == gradient)
-            {
-                if      (labels[i] <= min) index = 0;
-                else if (labels[i] >= max) index = palette_size - 1;
-                else {
-                    index = (int)((labels[i] - min) * (palette_size - 1)) / (int)siz;
-                }
-
-                triangles_color_buffer[i][0][0] = palette[index][0];
-                triangles_color_buffer[i][0][1] = palette[index][1];
-                triangles_color_buffer[i][0][2] = palette[index][2];
-                triangles_color_buffer[i][0][3] = alpha_channel;
-
-                triangles_color_buffer[i][1][0] = palette[index][0];
-                triangles_color_buffer[i][1][1] = palette[index][1];
-                triangles_color_buffer[i][1][2] = palette[index][2];
-                triangles_color_buffer[i][1][3] = alpha_channel;
-
-                triangles_color_buffer[i][2][0] = palette[index][0];
-                triangles_color_buffer[i][2][1] = palette[index][1];
-                triangles_color_buffer[i][2][2] = palette[index][2];
-                triangles_color_buffer[i][2][3] = alpha_channel;
-            }
+            lines_color_buffer[i][1][0] = palette[index][0];
+            lines_color_buffer[i][1][1] = palette[index][1];
+            lines_color_buffer[i][1][2] = palette[index][2];
+            lines_color_buffer[i][1][3] = alpha_channel;
         }
-
         return 0;
     }
 
-    int save_cubes(unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1)
+    // Triangles ----------
+
+    int layer::save_triangles(unsigned int number_triangles, const float (*arr)[3][3], float R, float G, float B)
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (color by default)
+            triangles_color_buffer[i][0][0] = R;
+            triangles_color_buffer[i][0][1] = G;
+            triangles_color_buffer[i][0][2] = B;
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            triangles_color_buffer[i][1][0] = R;
+            triangles_color_buffer[i][1][1] = G;
+            triangles_color_buffer[i][1][2] = B;
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            triangles_color_buffer[i][2][0] = R;
+            triangles_color_buffer[i][2][1] = G;
+            triangles_color_buffer[i][2][2] = B;
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const float (*categories)[3])
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+
+        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (array of categories + palette)
+            index = (int)categories[i][0] % palette_size;
+
+            triangles_color_buffer[i][0][0] = palette[index][0];
+            triangles_color_buffer[i][0][1] = palette[index][1];
+            triangles_color_buffer[i][0][2] = palette[index][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            index = (int)categories[i][1] % palette_size;
+
+            triangles_color_buffer[i][1][0] = palette[index][0];
+            triangles_color_buffer[i][1][1] = palette[index][1];
+            triangles_color_buffer[i][1][2] = palette[index][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            index = (int)categories[i][2] % palette_size;
+
+            triangles_color_buffer[i][2][0] = palette[index][0];
+            triangles_color_buffer[i][2][1] = palette[index][1];
+            triangles_color_buffer[i][2][2] = palette[index][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    int layer::save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3])
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (array of colors)
+            triangles_color_buffer[i][0][0] = colors[i][0][0];
+            triangles_color_buffer[i][0][1] = colors[i][0][1];
+            triangles_color_buffer[i][0][2] = colors[i][0][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            triangles_color_buffer[i][1][0] = colors[i][1][0];
+            triangles_color_buffer[i][1][1] = colors[i][1][1];
+            triangles_color_buffer[i][1][2] = colors[i][1][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            triangles_color_buffer[i][2][0] = colors[i][2][0];
+            triangles_color_buffer[i][2][1] = colors[i][2][1];
+            triangles_color_buffer[i][2][2] = colors[i][2][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    int layer::save_lines_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min, float max)
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (gradients array + palette)
+            if      (gradients[i][0] <= min) index = 0;
+            else if (gradients[i][0] >= max) index = palette_size - 1;
+            else    index = (int)((gradients[i][0] - min) * (palette_size - 1)) / (int)siz;
+
+            triangles_color_buffer[i][0][0] = palette[index][0];
+            triangles_color_buffer[i][0][1] = palette[index][1];
+            triangles_color_buffer[i][0][2] = palette[index][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            if      (gradients[i][1] <= min) index = 0;
+            else if (gradients[i][1] >= max) index = palette_size - 1;
+            else    index = (int)((gradients[i][1] - min) * (palette_size - 1)) / (int)siz;
+
+            triangles_color_buffer[i][1][0] = palette[index][0];
+            triangles_color_buffer[i][1][1] = palette[index][1];
+            triangles_color_buffer[i][1][2] = palette[index][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            if      (gradients[i][2] <= min) index = 0;
+            else if (gradients[i][2] >= max) index = palette_size - 1;
+            else    index = (int)((gradients[i][2] - min) * (palette_size - 1)) / (int)siz;
+
+            triangles_color_buffer[i][2][0] = palette[index][0];
+            triangles_color_buffer[i][2][1] = palette[index][1];
+            triangles_color_buffer[i][2][2] = palette[index][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    // Cubes ----------
+
+    int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, float R, float G, float B)
+    {
+
+    }
+
+    int layer::save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const float (*categories)[3])
+    {
+
+    }
+
+    int layer::save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3][3])
+    {
+
+    }
+
+    int layer::save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float (*gradients)[3], float min, float max)
+    {
+
+    }
+
+    int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, float min, float max)
     {
         if      (state == closed) return 1;
         else if (state == half_closed) state = closed;
@@ -787,7 +893,7 @@ struct layer
 
         // Get the number of cubes the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
         if (number_cubes > max_objs) {
-            error_message(4, number_cubes);
+            error_message(2, number_cubes);
             objs_to_print = max_objs;
         }
         else objs_to_print = number_cubes;
@@ -1017,13 +1123,10 @@ struct layer
         return 0;
     }
 
-    // Send a new palette of colors to replace the current one --------------------------------------
-    // Three modes for sending:
-    //          - RGB values are in the range [0, 255]
-    //          - RGB_01 values are in the range [0, 1]
-    //          - HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (double) in [0, 1.], V (double) in [0, 1.]
+    // Send a new palette of colors to replace the current one ----------
 
-    int save_palette_RGB_01(float *new_palette, int number_colors)
+    // RGB_01 values are in the range [0, 1]
+    int layer::save_palette_RGB_01(float *new_palette, int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1041,7 +1144,8 @@ struct layer
         return 0;
     }
 
-    int save_palette_RGB(float *new_palette, int number_colors)
+    // RGB values are in the range [0, 255]
+    int layer::save_palette_RGB(float *new_palette, int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1059,7 +1163,8 @@ struct layer
         return 0;
     }
 
-    int save_palette_HSV(float *new_palette, int number_colors)
+    // HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (double) in [0, 1.], V (double) in [0, 1.]
+    int layer::save_palette_HSV(float *new_palette, int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1074,14 +1179,14 @@ struct layer
     }
 
     // Get a pointer to the first individual element of the vertex buffer or color buffer without needing to check the layer_type (these functions do that for you)
-    float* get_vertex_ptr()
+    float* layer::get_vertex_ptr()
     {
         if     (layer_type == points)    return &points_buffer[0][0];
         else if(layer_type == lines)     return &lines_buffer[0][0][0];
         else if(layer_type == triangles) return &triangles_buffer[0][0][0];
         else if(layer_type == cubes)     return &cubes_buffer[0][0][0];
     }
-    float* get_colors_ptr()
+    float* layer::get_colors_ptr()
     {
         if     (layer_type == points)    return &points_color_buffer[0][0];
         else if(layer_type == lines)     return &lines_color_buffer[0][0][0];
@@ -1090,7 +1195,7 @@ struct layer
     }
 
     // Change the alpha values from the corresponding color buffer
-    int set_alpha_channel(float alpha_value)
+    int layer::set_alpha_channel(float alpha_value)
     {
         if(layer_type == none) { error_message(1); return 1; }
         else if(alpha_value < 0. || alpha_value > 1.) { error_message(6); return 1; }
@@ -1129,9 +1234,9 @@ struct layer
         return 0;
     }
 
-private:
+    // Private ------------------------------
 
-    void error_message(unsigned int code, unsigned int number_objs = 0)
+    void layer::error_message(unsigned int code, unsigned int number_objs)
     {
         switch(code)
         {
@@ -1139,13 +1244,13 @@ private:
             std::cout << "The layer \"" << layer_name << "\" is of type \"none\". You cannot send data to it until you initialize it with its constructor" << std::endl;
             break;
         case 2:
-            std::cout << "Too many points for the layer \"" << layer_name << "\" (" << number_objs << " > " << max_objs << ')' << std::endl;
+            std::cout << "Too many elements for the layer \"" << layer_name << "\" (" << number_objs << " > " << max_objs << "). Only a number of elements that fit in the layer will be drawn" << std::endl;
             break;
         case 3:
-            std::cout << "Too many lines for the buffer of the layer \"" << layer_name << "\" (" << --number_objs << " > " << max_objs << ')' << std::endl;
+
             break;
         case 4:
-            std::cout << "Too many cubes for the buffer of the layer \"" << layer_name << "\" (" << number_objs << " > " << max_objs << ')' << std::endl;
+
             break;
         case 5:
             std::cout << "The layer \"" << layer_name << "\" is of type \"" << layer_type_str << "\". You cannot send a different type of objects to it" << std::endl;
@@ -1155,7 +1260,7 @@ private:
     }
 
     // Parameters: X, Y (cube's center), x, y (point), rot (radians). It considers x as OpenGL's x, and y as OpenGL's -z.
-    void rotation_H(float &x, float &y, float X, float Y, float rot) {
+    void layer::rotation_H(float &x, float &y, float X, float Y, float rot) {
 
         y = -y;
 
@@ -1172,7 +1277,7 @@ private:
         y = -(hip * sin(beta)) + Y;
     }
 
-    void HSVtoRGB(int H, double S, double V, float output[3])
+    void layer::HSVtoRGB(int H, double S, double V, float output[3])
     {
         // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
 
@@ -1216,6 +1321,23 @@ private:
         output[1] = (Gs + m);
         output[2] = (Bs + m);
     }
-};
 
-#endif
+    // Checks: State of layer (open, half_closed, closed), layer type, number of objects to print.
+    int layer::first_checks(object_type func_type, unsigned int number_elements)
+    {
+        if      (state == closed) return 1;
+        else if (state == half_closed) state = closed;
+
+        if      (layer_type == none) { error_message(1); return 1; }
+        else if (layer_type != func_type) { error_message(5); return 1; }
+
+        if (number_elements > max_objs)
+        {
+            error_message(2, number_elements);
+            objs_to_print = max_objs;
+        }
+        else objs_to_print = number_elements;
+
+        return 0;
+    }
+

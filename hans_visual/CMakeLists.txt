@@ -29,7 +29,9 @@ ADD_COMPILE_DEFINITIONS(IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
 ADD_LIBRARY(${PROJECT_NAME} STATIC
 	src/main.cpp
 	src/toolKit.hpp
-	src/layers.hpp
+	src/toolKit.cpp
+	src/layer.hpp
+	src/layer.cpp
 	src/HansVisual.hpp
 	src/HansVisual.cpp
 	src/controls.hpp

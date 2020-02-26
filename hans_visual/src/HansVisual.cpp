@@ -242,6 +242,41 @@ void HansVisual::fill_data_window(const std::string *data_strings, int num_strin
         data_window[i] = data_strings[i];
 }
 
+void clear_layer(std::string name)
+{
+
+}
+
+void HansVisual::draw_grid(float cell_size, int grid_size, int H, double S, double V)
+{
+    if(grid_size < 1 || cell_size <= 0) return;
+
+    bool grid_exists = false;
+    for(size_t i = 0; i < layersSet.size(); ++i) if(layersSet[i].layer_name == "Grid") grid_exists = true;
+    if(!grid_exists)
+    {
+        // Create grid layer
+    }
+
+    // Create array
+    int num_vertex = 2 * (grid_size + 1);
+
+
+
+    // Eliminar esta metodología:
+    myLines[i][0] = 1.2f;				// This point signals a jump between lines
+    myLines[i][1] = 3.4f;
+    myLines[i][2] = 5.6f;
+
+
+    send_points("Points 2", 12, &pnts[0][0], &points_colors_RGB[0][0], nullptr, colors);
+
+
+
+
+
+}
+
 bool HansVisual::window_is_open() { return window_open; }
 
 void HansVisual::close_window() { window_open = false; }

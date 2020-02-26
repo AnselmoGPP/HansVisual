@@ -46,7 +46,7 @@ using namespace glm;
 //#include "btBulletCollisionCommon.h"
 //#include "btBulletDynamicsCommon.h"
 
-#include "layers.hpp"
+#include "layer.hpp"
 #include "shader.hpp"
 #include "controls.hpp"
 
@@ -56,7 +56,7 @@ class HansVisual
 
     controls cam;
 
-	GLFWwindow* window;			// The window object used to draw
+    GLFWwindow* window;			// The window object used to draw
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
@@ -120,7 +120,7 @@ public:
     // Send array of points to print them
     void send_points(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, std::string *points_data = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
 
-	// Send an array containing the points coordinates you want to bind with lines, and the number of points you want to use, including the gap-points with coordinates (1.2, 3.4, 5.6) (include this number in the number of points).
+    // Send an array containing pairs of vertex, each pair representing the ends of a segment you want to draw
     void send_lines(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
 
     // Send array of triangles (sets of 3 points) to print them
@@ -139,6 +139,12 @@ public:
 
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
+
+    // Clear the contents of a layer
+    void clear_layer(std::string name);
+
+    // Create a layer with a grid (or modify it if already exists). Parameters: Size of one cell's side, number of cells per side, and HSV color.
+    void draw_grid(float cell_size, int grid_size, int H, double S, double V);
 
     // Check whether the window is open
     bool window_is_open();

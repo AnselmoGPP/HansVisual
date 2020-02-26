@@ -6,8 +6,7 @@ int main()
 
     // Different ways of creating a visualizer object
     HansVisual display;
-    HansVisual d(display);
-    display = d;
+    display.draw_grid(1, 30, 230, 1., 1.);
 
     // Add some layers to the visualizer
     display.add_layer("Points 1", points, 20);

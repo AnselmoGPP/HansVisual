@@ -1,4 +1,9 @@
--Put selections in a ImGui window
+-send_XXX divided in more functions
+- Move layer class members to private
+-Send lines by segments
+-Clear layer
+-Select camera type
+Put selections in a ImGui window
 -Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
 - Basic macros for configuring visualizer
 -Axis and grid (create generator functions), center of the sphere (option of the visualizer)
@@ -8,7 +13,6 @@
 -Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
 - Take into account layers of type none when modifying any layer state
 -Can checkboxes be checked just after entering load_buffers()? this way, all the loading process could be avoided
--Create a class for each layer, and unify load_ functions - Data structures for layers - Don't forget to uncomment the buffers_close variable in check_selections
 -Keep points selected after a new scan is drawn in that layer (send_pts())
 -CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
 -Mutex for 2 flows: add_layer and main loop
