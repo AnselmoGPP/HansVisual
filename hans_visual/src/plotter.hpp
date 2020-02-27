@@ -48,7 +48,6 @@ using namespace glm;
 
 #include "layer.hpp"
 #include "shader.hpp"
-#include "plotter.hpp"
 #include "controls.hpp"
 
 class HansVisual

@@ -1,11 +1,24 @@
+Architecture:
+	- Handler
+	- Graphics engine
+	- Layer
+	- Controls
+	- 
+You save vertex in a certain format in a layer (handler > layer).
+Data from layer is sent to graphics engine (layer > handler > graphics engine).
+Controls are managed (controls > handler)
+
+
+---------------------------------------------------------------------------
 - find_layer("lines_1").send_points(...);
+- Draw_grid
 - send_XXX divided in more functions
 - Move layer class members to private
 - Send lines by segments
 - Clear layer
 - Select camera type
 - Put selections in a ImGui window
-- Function for pitch, roll, yaw
+- Function for pitch, roll, yaw - Improve cubes rotation
 -Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
 - Basic macros for configuring visualizer
 -Axis and grid (create generator functions), center of the sphere (option of the visualizer)
@@ -29,13 +42,12 @@
 -Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function
 -Only one free function call per loop (main loop)
 -Reorder surfaces (box planes and planes) so transparencies look right
--Optimizar selección. En lugar de chequear todos los puntos por cada píxel, averigüar la posición de cada punto en la pantalla.
--Improve selection (see sciencesoftcode notes)
+-Optimizar selección. En lugar de chequear todos los puntos por cada píxel, averigüar la posición de cada punto en la pantalla. - Improve selection (see sciencesoftcode notes)
 -Make sure you destroy all the news
--Improve cubes rotation
 -Are multiple windows possible? (1763) - Try many visualizer windows
 - OOP: Encapsulation, abstraction, inheritance, polymorphism
 -http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
+- ImGui as static library
 
 
 ----- Future ---------------------------------------------------------

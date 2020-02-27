@@ -30,7 +30,9 @@ int main()
     // Ways of sending points in no mode (all points have default color)
         toolKit::transform_coordinates(&pnts[0][0], 12);                                             // Transform the points coordinates in a buffer from X-first system to OpenGL system
     display.send_points("Points 1", 12, &pnts[0][0]);                                               // Paint some points in default color (white)
+    //display.send_points("Points 1", 12, &pnts[0][0], 1., 1., 1.);
 
+    /*
     // Ways of sending points in mode "categories" (uses layer's palette)
         display.send_palette_HSV("Points 1", &points_colors_HSV[0][0], 12);                         // Change the standard palette of a certain layer. Enter the palette in HSV format
     display.send_points("Points 1", 12, &pnts[0][0], points_categories, nullptr, categories);       // Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
@@ -98,7 +100,7 @@ int main()
         display.send_palette_RGB_01("Cubes 3", &cubes_gradient_palette[0][0], 21);
     display.send_cubes("Cubes 3", 3, myCubes, cubes_gradients, gradient, 0, 0);
     display.send_cubes("Cubes 3", 3, myCubes, cubes_gradients, gradient, 1, 12);
-
+*/
     // ----- Send data to the "data window" ----------------------------------------
 
     std::string additional_data[10] =
