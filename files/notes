@@ -1,9 +1,11 @@
--send_XXX divided in more functions
+- find_layer("lines_1").send_points(...);
+- send_XXX divided in more functions
 - Move layer class members to private
--Send lines by segments
--Clear layer
--Select camera type
-Put selections in a ImGui window
+- Send lines by segments
+- Clear layer
+- Select camera type
+- Put selections in a ImGui window
+- Function for pitch, roll, yaw
 -Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
 - Basic macros for configuring visualizer
 -Axis and grid (create generator functions), center of the sphere (option of the visualizer)

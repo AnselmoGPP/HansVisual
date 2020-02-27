@@ -6,6 +6,10 @@ PROJECT (Shaper)
 
 FIND_PACKAGE(OpenGL REQUIRED)
 
+add_definitions(
+	-std=c++11
+)
+
 ADD_EXECUTABLE(${PROJECT_NAME}
 	src/main.cpp
 	src/header.cpp

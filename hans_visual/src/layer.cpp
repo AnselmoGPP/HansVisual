@@ -8,7 +8,6 @@ pnt3D pnt3D::newData(float a, float b, float c)
     return *this;
 }
 
-// Parameters: x, y, z (cube's center), width, height, length, rot_H (horizontal rotation)
 cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     X(x), Y(y), Z(z), width(w), height(h), length(l), rot_H(rh) { }
 
@@ -441,7 +440,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // Pass an additional array with labels (clusters) for each object (range: [0, number of categories - 1]. The palette will be used to print each category with a different color.
-    int layer::save_points_categories(unsigned int number_points, const float (*arr)[3], const float *categories, std::string *points_data)
+    int layer::save_points_categories(unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data)
     {
         if(first_checks(points, number_points)) return 1;
 
@@ -566,7 +565,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // If number of categories > colors in the palette, the visualizer starts again from the beginning of the pallete
-    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const float (*categories)[2])
+    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2])
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -684,7 +683,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
             // Vertex coordinates (3 per triangle)
             triangles_buffer[i][0][0] = arr[i][0][0];
@@ -718,7 +717,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const float (*categories)[3])
+    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3])
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -726,7 +725,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         int index;
 
-        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
             // Vertex coordinates (3 per triangle)
             triangles_buffer[i][0][0] = arr[i][0][0];
@@ -772,7 +771,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
             // Vertex coordinates (3 per triangle)
             triangles_buffer[i][0][0] = arr[i][0][0];
@@ -815,7 +814,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         int index;
         float siz = max - min;
 
-        for (size_t i = 0; i < number_triangles; i++)			// Main loop for filling the corresponding buffer
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
             // Vertex coordinates (3 per triangle)
             triangles_buffer[i][0][0] = arr[i][0][0];
@@ -865,258 +864,101 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, float R, float G, float B)
     {
-
-    }
-
-    int layer::save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const float (*categories)[3])
-    {
-
-    }
-
-    int layer::save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3][3])
-    {
-
-    }
-
-    int layer::save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float (*gradients)[3], float min, float max)
-    {
-
-    }
-
-    int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, float min, float max)
-    {
-        if      (state == closed) return 1;
-        else if (state == half_closed) state = closed;
-
-        if      (layer_type == none) { error_message(1); return 1; }
-        else if (layer_type != cubes) { error_message(5); return 1; }
-
-        // Get the number of cubes the user wants to show on screen. Check whether the layer maximum size is being reached and, if it is, write to buffer only the maximum possible number of them.
-        if (number_cubes > max_objs) {
-            error_message(2, number_cubes);
-            objs_to_print = max_objs;
-        }
-        else objs_to_print = number_cubes;
-
-        // Write data to buffers (cubes and colors)
-        float X, Y, Z, x, y, z, rot_H, rot_V;
+        if(first_checks(triangles, number_cubes)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
-        // Fill cubes_buffer                            >>> This draws triangles anti-clockwise
-        for (size_t i = 0; i < objs_to_print; i++) {
+        // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
+        fill_cube_vertex(arr);
 
-            X = arr[i].X;
-            Y = arr[i].Y;
-            Z = arr[i].Z;
-            x = arr[i].width / 2;
-            y = arr[i].height / 2;
-            z = arr[i].length / 2;
-            rot_H = arr[i].rot_H;
+        // Colors (color by default)
+        for (size_t j = 0; j < objs_to_print; j++)
+            for (size_t k = 0; k < 12 * 3; k++)        // All the vertex of all triangles in one box
+            {
+                cubes_color_buffer[j][k][0] = R;
+                cubes_color_buffer[j][k][1] = G;
+                cubes_color_buffer[j][k][2] = B;
+                cubes_color_buffer[j][k][3] = alpha_channel;
+            }
 
-            /*
-                        // Computations used with no rotations
-                        float x1 = X - x,   y1 = Y + y,   z1 = Z + z;
-                        float x2 = X - x,   y2 = Y - y,   z2 = Z + z;
-                        float x3 = X + x,   y3 = Y + y,   z3 = Z + z;
-                        float x4 = X + x,   y4 = Y - y,   z4 = Z + z;
-                        float x5 = X + x,   y5 = Y + y,   z5 = Z - z;
-                        float x6 = X + x,   y6 = Y - y,   z6 = Z - z;
-                        float x7 = X - x,   y7 = Y + y,   z7 = Z - z;
-                        float x8 = X - x,   y8 = Y - y,   z8 = Z - z;
-            */
+        return 0;
+    }
 
-            float x1 = -x, y1 = Y + y, z1 = +z;
-            float x2 = -x, y2 = Y - y, z2 = +z;
-            float x3 = +x, y3 = Y + y, z3 = +z;
-            float x4 = +x, y4 = Y - y, z4 = +z;
-            float x5 = +x, y5 = Y + y, z5 = -z;
-            float x6 = +x, y6 = Y - y, z6 = -z;
-            float x7 = -x, y7 = Y + y, z7 = -z;
-            float x8 = -x, y8 = Y - y, z8 = -z;
+    int layer::save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const unsigned int *categories)
+    {
+        if(first_checks(triangles, number_cubes)) return 1;
 
-            rotation_H(x1, z1, X, Z, rot_H);
-            rotation_H(x2, z2, X, Z, rot_H);
-            rotation_H(x3, z3, X, Z, rot_H);
-            rotation_H(x4, z4, X, Z, rot_H);
-            rotation_H(x5, z5, X, Z, rot_H);
-            rotation_H(x6, z6, X, Z, rot_H);
-            rotation_H(x7, z7, X, Z, rot_H);
-            rotation_H(x8, z8, X, Z, rot_H);
+        std::lock_guard<std::mutex> lock(*mut);
 
-            // 1-2-3
-            cubes_buffer[i][0][0] = x1;
-            cubes_buffer[i][0][1] = y1;
-            cubes_buffer[i][0][2] = z1;
-            cubes_buffer[i][1][0] = x2;
-            cubes_buffer[i][1][1] = y2;
-            cubes_buffer[i][1][2] = z2;
-            cubes_buffer[i][2][0] = x3;
-            cubes_buffer[i][2][1] = y3;
-            cubes_buffer[i][2][2] = z3;
-            // 2-4-3
-            cubes_buffer[i][3][0] = x2;
-            cubes_buffer[i][3][1] = y2;
-            cubes_buffer[i][3][2] = z2;
-            cubes_buffer[i][4][0] = x4;
-            cubes_buffer[i][4][1] = y4;
-            cubes_buffer[i][4][2] = z4;
-            cubes_buffer[i][5][0] = x3;
-            cubes_buffer[i][5][1] = y3;
-            cubes_buffer[i][5][2] = z3;
-            // 3-4-5
-            cubes_buffer[i][6][0] = x3;
-            cubes_buffer[i][6][1] = y3;
-            cubes_buffer[i][6][2] = z3;
-            cubes_buffer[i][7][0] = x4;
-            cubes_buffer[i][7][1] = y4;
-            cubes_buffer[i][7][2] = z4;
-            cubes_buffer[i][8][0] = x5;
-            cubes_buffer[i][8][1] = y5;
-            cubes_buffer[i][8][2] = z5;
-            // 4-6-5
-            cubes_buffer[i][9][0] = x4;
-            cubes_buffer[i][9][1] = y4;
-            cubes_buffer[i][9][2] = z4;
-            cubes_buffer[i][10][0] = x6;
-            cubes_buffer[i][10][1] = y6;
-            cubes_buffer[i][10][2] = z6;
-            cubes_buffer[i][11][0] = x5;
-            cubes_buffer[i][11][1] = y5;
-            cubes_buffer[i][11][2] = z5;
-            // 5-6-7
-            cubes_buffer[i][12][0] = x5;
-            cubes_buffer[i][12][1] = y5;
-            cubes_buffer[i][12][2] = z5;
-            cubes_buffer[i][13][0] = x6;
-            cubes_buffer[i][13][1] = y6;
-            cubes_buffer[i][13][2] = z6;
-            cubes_buffer[i][14][0] = x7;
-            cubes_buffer[i][14][1] = y7;
-            cubes_buffer[i][14][2] = z7;
-            // 6-8-7
-            cubes_buffer[i][15][0] = x6;
-            cubes_buffer[i][15][1] = y6;
-            cubes_buffer[i][15][2] = z6;
-            cubes_buffer[i][16][0] = x8;
-            cubes_buffer[i][16][1] = y8;
-            cubes_buffer[i][16][2] = z8;
-            cubes_buffer[i][17][0] = x7;
-            cubes_buffer[i][17][1] = y7;
-            cubes_buffer[i][17][2] = z7;
-            // 7-8-1
-            cubes_buffer[i][18][0] = x7;
-            cubes_buffer[i][18][1] = y7;
-            cubes_buffer[i][18][2] = z7;
-            cubes_buffer[i][19][0] = x8;
-            cubes_buffer[i][19][1] = y8;
-            cubes_buffer[i][19][2] = z8;
-            cubes_buffer[i][20][0] = x1;
-            cubes_buffer[i][20][1] = y1;
-            cubes_buffer[i][20][2] = z1;
-            // 8-2-1
-            cubes_buffer[i][21][0] = x8;
-            cubes_buffer[i][21][1] = y8;
-            cubes_buffer[i][21][2] = z8;
-            cubes_buffer[i][22][0] = x2;
-            cubes_buffer[i][22][1] = y2;
-            cubes_buffer[i][22][2] = z2;
-            cubes_buffer[i][23][0] = x1;
-            cubes_buffer[i][23][1] = y1;
-            cubes_buffer[i][23][2] = z1;
-            // 1-3-7
-            cubes_buffer[i][24][0] = x1;
-            cubes_buffer[i][24][1] = y1;
-            cubes_buffer[i][24][2] = z1;
-            cubes_buffer[i][25][0] = x3;
-            cubes_buffer[i][25][1] = y3;
-            cubes_buffer[i][25][2] = z3;
-            cubes_buffer[i][26][0] = x7;
-            cubes_buffer[i][26][1] = y7;
-            cubes_buffer[i][26][2] = z7;
-            // 3-5-7
-            cubes_buffer[i][27][0] = x3;
-            cubes_buffer[i][27][1] = y3;
-            cubes_buffer[i][27][2] = z3;
-            cubes_buffer[i][28][0] = x5;
-            cubes_buffer[i][28][1] = y5;
-            cubes_buffer[i][28][2] = z5;
-            cubes_buffer[i][29][0] = x7;
-            cubes_buffer[i][29][1] = y7;
-            cubes_buffer[i][29][2] = z7;
-            // 2-8-4
-            cubes_buffer[i][30][0] = x2;
-            cubes_buffer[i][30][1] = y2;
-            cubes_buffer[i][30][2] = z2;
-            cubes_buffer[i][31][0] = x8;
-            cubes_buffer[i][31][1] = y8;
-            cubes_buffer[i][31][2] = z8;
-            cubes_buffer[i][32][0] = x4;
-            cubes_buffer[i][32][1] = y4;
-            cubes_buffer[i][32][2] = z4;
-            // 4-8-6
-            cubes_buffer[i][33][0] = x4;
-            cubes_buffer[i][33][1] = y4;
-            cubes_buffer[i][33][2] = z4;
-            cubes_buffer[i][34][0] = x8;
-            cubes_buffer[i][34][1] = y8;
-            cubes_buffer[i][34][2] = z8;
-            cubes_buffer[i][35][0] = x6;
-            cubes_buffer[i][35][1] = y6;
-            cubes_buffer[i][35][2] = z6;
-        }
+        // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
+        fill_cube_vertex(arr);
 
-        // Fill cubes_color_buffer
-        float siz = max - min;		// Used for gradients
+        // Colors (array of categories + palette)
         int index;
 
-        for (int j = 0; j < number_cubes; j++)
+        for (size_t i = 0; i < objs_to_print; i++)
         {
-            if(labels == nullptr)
-            {
-                for (int k = 0; k < 12 * 3; k++)    // Go through all the points of all triangles in one box
-                {
-                    cubes_color_buffer[j][k][0] = 0.1f;			//default_color[0];
-                    cubes_color_buffer[j][k][1] = 0.9f;			//default_color[1];
-                    cubes_color_buffer[j][k][2] = 0.1f;			//default_color[2];
-                    cubes_color_buffer[j][k][3] = alpha_channel;
-                }
-            }
-            else if(array_type == categories)
-            {
-                index = (int)labels[j] % palette_size;
+            index = categories[i] % palette_size;
 
-                for (int k = 0; k < 12 * 3; k++)
-                {
-                    cubes_color_buffer[j][k][0] = palette[index][0];
-                    cubes_color_buffer[j][k][1] = palette[index][1];
-                    cubes_color_buffer[j][k][2] = palette[index][2];
-                    cubes_color_buffer[j][k][3] = alpha_channel;
-                }
-            }
-            else if(array_type == colors)
+            for (size_t k = 0; k < 12 * 3; k++)        // All the vertex of all triangles in one box
             {
-                for(int k = 0; k < 12 * 3; k++)
-                {
-                    cubes_color_buffer[j][k][0] = labels[j * 3 + 0];
-                    cubes_color_buffer[j][k][1] = labels[j * 3 + 1];
-                    cubes_color_buffer[j][k][2] = labels[j * 3 + 2];
-                    cubes_color_buffer[j][k][3] = alpha_channel;
-                }
+                cubes_color_buffer[i][k][0] = palette[index][0];
+                cubes_color_buffer[i][k][1] = palette[index][1];
+                cubes_color_buffer[i][k][2] = palette[index][2];
+                cubes_color_buffer[i][k][3] = alpha_channel;
             }
-            else if(array_type == gradient)
-            {
-                if      (labels[j] <= min) index = 0;
-                else if (labels[j] >= max) index = palette_size - 1;
-                else index = (int)((labels[j] - min) * (palette_size - 1)) / (int)siz;
+        }
 
-                for(int k = 0; k < 12 * 3; k++)
-                {
-                    cubes_color_buffer[j][k][0] = palette[index][0];
-                    cubes_color_buffer[j][k][1] = palette[index][1];
-                    cubes_color_buffer[j][k][2] = palette[index][2];
-                    cubes_color_buffer[j][k][3] = alpha_channel;
-                }
+        return 0;
+    }
+
+    int layer::save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3])
+    {
+        if(first_checks(triangles, number_cubes)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
+        fill_cube_vertex(arr);
+
+        // Colors (array of colors)
+        for (size_t i = 0; i < objs_to_print; i++)
+            for (size_t k = 0; k < 12 * 3; k++)        // All the vertex of all triangles in one box
+            {
+                cubes_color_buffer[i][k][0] = colors[i][0];
+                cubes_color_buffer[i][k][1] = colors[i][1];
+                cubes_color_buffer[i][k][2] = colors[i][2];
+                cubes_color_buffer[i][k][3] = alpha_channel;
+            }
+
+        return 0;
+    }
+
+    int layer::save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float *gradients, float min, float max)
+    {
+        if(first_checks(triangles, number_cubes)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
+        fill_cube_vertex(arr);
+
+        // Colors (gradients array + palette)
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < objs_to_print; i++)
+        {
+            if      (gradients[i] <= min) index = 0;
+            else if (gradients[i] >= max) index = palette_size - 1;
+            else index = (int)((gradients[i] - min) * (palette_size - 1)) / (int)siz;
+
+            for(int k = 0; k < 12 * 3; k++)        // All the vertex of all triangles in one box
+            {
+                cubes_color_buffer[i][k][0] = palette[index][0];
+                cubes_color_buffer[i][k][1] = palette[index][1];
+                cubes_color_buffer[i][k][2] = palette[index][2];
+                cubes_color_buffer[i][k][3] = alpha_channel;
             }
         }
 
@@ -1341,3 +1183,157 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
+    void layer::fill_cube_vertex(const cube3D *arr)
+    {
+        float X, Y, Z, w, h, l, rot_H, rot_V;           // X,Y,Z: Cube's center.  w,h,l: width, height, length.  rot: Rotations
+
+        for (size_t i = 0; i < objs_to_print; i++)
+        {
+            X = arr[i].X;
+            Y = arr[i].Y;
+            Z = arr[i].Z;
+            w = arr[i].width / 2;
+            h = arr[i].height / 2;
+            l = arr[i].length / 2;
+            rot_H = arr[i].rot_H;
+
+            float x1 = -w, y1 = Y + h, z1 = +l;
+            float x2 = -w, y2 = Y - h, z2 = +l;
+            float x3 = +w, y3 = Y + h, z3 = +l;
+            float x4 = +w, y4 = Y - h, z4 = +l;
+            float x5 = +w, y5 = Y + h, z5 = -l;
+            float x6 = +w, y6 = Y - h, z6 = -l;
+            float x7 = -w, y7 = Y + h, z7 = -l;
+            float x8 = -w, y8 = Y - h, z8 = -l;
+
+            rotation_H(x1, z1, X, Z, rot_H);
+            rotation_H(x2, z2, X, Z, rot_H);
+            rotation_H(x3, z3, X, Z, rot_H);
+            rotation_H(x4, z4, X, Z, rot_H);
+            rotation_H(x5, z5, X, Z, rot_H);
+            rotation_H(x6, z6, X, Z, rot_H);
+            rotation_H(x7, z7, X, Z, rot_H);
+            rotation_H(x8, z8, X, Z, rot_H);
+
+            // 1-2-3
+            cubes_buffer[i][0][0] = x1;
+            cubes_buffer[i][0][1] = y1;
+            cubes_buffer[i][0][2] = z1;
+            cubes_buffer[i][1][0] = x2;
+            cubes_buffer[i][1][1] = y2;
+            cubes_buffer[i][1][2] = z2;
+            cubes_buffer[i][2][0] = x3;
+            cubes_buffer[i][2][1] = y3;
+            cubes_buffer[i][2][2] = z3;
+            // 2-4-3
+            cubes_buffer[i][3][0] = x2;
+            cubes_buffer[i][3][1] = y2;
+            cubes_buffer[i][3][2] = z2;
+            cubes_buffer[i][4][0] = x4;
+            cubes_buffer[i][4][1] = y4;
+            cubes_buffer[i][4][2] = z4;
+            cubes_buffer[i][5][0] = x3;
+            cubes_buffer[i][5][1] = y3;
+            cubes_buffer[i][5][2] = z3;
+            // 3-4-5
+            cubes_buffer[i][6][0] = x3;
+            cubes_buffer[i][6][1] = y3;
+            cubes_buffer[i][6][2] = z3;
+            cubes_buffer[i][7][0] = x4;
+            cubes_buffer[i][7][1] = y4;
+            cubes_buffer[i][7][2] = z4;
+            cubes_buffer[i][8][0] = x5;
+            cubes_buffer[i][8][1] = y5;
+            cubes_buffer[i][8][2] = z5;
+            // 4-6-5
+            cubes_buffer[i][9][0] = x4;
+            cubes_buffer[i][9][1] = y4;
+            cubes_buffer[i][9][2] = z4;
+            cubes_buffer[i][10][0] = x6;
+            cubes_buffer[i][10][1] = y6;
+            cubes_buffer[i][10][2] = z6;
+            cubes_buffer[i][11][0] = x5;
+            cubes_buffer[i][11][1] = y5;
+            cubes_buffer[i][11][2] = z5;
+            // 5-6-7
+            cubes_buffer[i][12][0] = x5;
+            cubes_buffer[i][12][1] = y5;
+            cubes_buffer[i][12][2] = z5;
+            cubes_buffer[i][13][0] = x6;
+            cubes_buffer[i][13][1] = y6;
+            cubes_buffer[i][13][2] = z6;
+            cubes_buffer[i][14][0] = x7;
+            cubes_buffer[i][14][1] = y7;
+            cubes_buffer[i][14][2] = z7;
+            // 6-8-7
+            cubes_buffer[i][15][0] = x6;
+            cubes_buffer[i][15][1] = y6;
+            cubes_buffer[i][15][2] = z6;
+            cubes_buffer[i][16][0] = x8;
+            cubes_buffer[i][16][1] = y8;
+            cubes_buffer[i][16][2] = z8;
+            cubes_buffer[i][17][0] = x7;
+            cubes_buffer[i][17][1] = y7;
+            cubes_buffer[i][17][2] = z7;
+            // 7-8-1
+            cubes_buffer[i][18][0] = x7;
+            cubes_buffer[i][18][1] = y7;
+            cubes_buffer[i][18][2] = z7;
+            cubes_buffer[i][19][0] = x8;
+            cubes_buffer[i][19][1] = y8;
+            cubes_buffer[i][19][2] = z8;
+            cubes_buffer[i][20][0] = x1;
+            cubes_buffer[i][20][1] = y1;
+            cubes_buffer[i][20][2] = z1;
+            // 8-2-1
+            cubes_buffer[i][21][0] = x8;
+            cubes_buffer[i][21][1] = y8;
+            cubes_buffer[i][21][2] = z8;
+            cubes_buffer[i][22][0] = x2;
+            cubes_buffer[i][22][1] = y2;
+            cubes_buffer[i][22][2] = z2;
+            cubes_buffer[i][23][0] = x1;
+            cubes_buffer[i][23][1] = y1;
+            cubes_buffer[i][23][2] = z1;
+            // 1-3-7
+            cubes_buffer[i][24][0] = x1;
+            cubes_buffer[i][24][1] = y1;
+            cubes_buffer[i][24][2] = z1;
+            cubes_buffer[i][25][0] = x3;
+            cubes_buffer[i][25][1] = y3;
+            cubes_buffer[i][25][2] = z3;
+            cubes_buffer[i][26][0] = x7;
+            cubes_buffer[i][26][1] = y7;
+            cubes_buffer[i][26][2] = z7;
+            // 3-5-7
+            cubes_buffer[i][27][0] = x3;
+            cubes_buffer[i][27][1] = y3;
+            cubes_buffer[i][27][2] = z3;
+            cubes_buffer[i][28][0] = x5;
+            cubes_buffer[i][28][1] = y5;
+            cubes_buffer[i][28][2] = z5;
+            cubes_buffer[i][29][0] = x7;
+            cubes_buffer[i][29][1] = y7;
+            cubes_buffer[i][29][2] = z7;
+            // 2-8-4
+            cubes_buffer[i][30][0] = x2;
+            cubes_buffer[i][30][1] = y2;
+            cubes_buffer[i][30][2] = z2;
+            cubes_buffer[i][31][0] = x8;
+            cubes_buffer[i][31][1] = y8;
+            cubes_buffer[i][31][2] = z8;
+            cubes_buffer[i][32][0] = x4;
+            cubes_buffer[i][32][1] = y4;
+            cubes_buffer[i][32][2] = z4;
+            // 4-8-6
+            cubes_buffer[i][33][0] = x4;
+            cubes_buffer[i][33][1] = y4;
+            cubes_buffer[i][33][2] = z4;
+            cubes_buffer[i][34][0] = x8;
+            cubes_buffer[i][34][1] = y8;
+            cubes_buffer[i][34][2] = z8;
+            cubes_buffer[i][35][0] = x6;
+            cubes_buffer[i][35][1] = y6;
+            cubes_buffer[i][35][2] = z6;
+        }
+    }

@@ -23,6 +23,7 @@ struct pnt3D {
 struct cube3D {
     float X, Y, Z, width, height, length, rot_H;      // rotation in radians
 
+    // Parameters: x, y, z (cube's center), width, height, length, rot_H (horizontal rotation)
     cube3D(float x, float y, float z, float w, float h, float l, float rh);
 };
 
@@ -70,24 +71,24 @@ struct layer
     float(*cubes_color_buffer)[12*3][4]     = nullptr;
 
     int save_points(unsigned int number_points, const float (*arr)[3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE, std::string *points_data = nullptr);
-    int save_points_categories(unsigned int number_points, const float (*arr)[3], const float *categories, std::string *points_data = nullptr );
+    int save_points_categories(unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data = nullptr );
     int save_points_colors(unsigned int number_points, const float (*arr)[3], const float (*colors)[3], std::string *points_data = nullptr );
     int save_points_gradients(unsigned int number_points, const float (*arr)[3], const float *gradients, float min = 0, float max = 1, std::string *points_data = nullptr );
 
     int save_lines(unsigned int number_lines, const float (*arr)[2][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
-    int save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const float (*categories)[2]);
+    int save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2]);
     int save_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3]);
     int save_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min = 0, float max = 1);
 
     int save_triangles(unsigned int number_triangles, const float (*arr)[3][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
-    int save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const float (*categories)[3]);
+    int save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3]);
     int save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3]);
     int save_lines_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min = 0, float max = 1);
 
     int save_cubes(unsigned int number_cubes, const cube3D *arr, float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
-    int save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const float (*categories)[3]);
-    int save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3][3]);
-    int save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float (*gradients)[3], float min = 0, float max = 1);
+    int save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const unsigned int *categories);
+    int save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3]);
+    int save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float *gradients, float min = 0, float max = 1);
 
     int save_palette_RGB_01(float *new_palette, int number_colors);
     int save_palette_RGB(float *new_palette, int number_colors);
@@ -102,6 +103,7 @@ private:
     void rotation_H(float &x, float &y, float X, float Y, float rot);
     void HSVtoRGB(int H, double S, double V, float output[3]);
     int first_checks(object_type func_type, unsigned int number_elements);
+    void fill_cube_vertex(const cube3D *arr);
 };
 
 #endif
