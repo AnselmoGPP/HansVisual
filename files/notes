@@ -10,14 +10,18 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
+- Create polyline()
 - find_layer("lines_1").send_points(...);
 - Draw_grid
+- Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
 - Move layer class members to private
 - Send lines by segments
 - Clear layer
 - Select camera type
 - Put selections in a ImGui window
+- Don't stretch the image when changing window size
+- 3D polynomial
 - Function for pitch, roll, yaw - Improve cubes rotation
 -Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
 - Basic macros for configuring visualizer
@@ -49,12 +53,23 @@ Controls are managed (controls > handler)
 -http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
 - ImGui as static library
 
+- Allow relative paths for calling LoadShaders()
+- Cubes complete rotation (rotation method for a point)
+- Parameters window (toolbar) (camera, transparency, axis...)
+- Shaper with loop and without it
+- Ordenar buffer para cubos para perfecta transparencia
+-> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
+-> Selection (or small windows for showing info about objects)
+-> Are mutexes covering every situation?
+
 
 ----- Future ---------------------------------------------------------
 
 - Why the moving points get a different shape (deformation)?
 - Caves
 - Name generator
+- IOs functions (point inside box, parser...)
+- Market moves (gaussian bell?)
 
 ----- Done ---------------------------------------------------------
 

@@ -1,128 +1,71 @@
 #include "toolKit.hpp"
 
-static void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients)
+namespace toolKit
 {
-    // X
-    results[0] = x;
-    // Y
-    results[1] = coefficients[0];
-    for(int i = 1; i < number_of_coefficients; i++)
-        results[1] += coefficients[i] * pow(x, i);
-    // Z
-    results[2] = 0;
-}
 
-static void HSVtoRGB(int H, double S, double V, float output[3])
-{
-    // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
-
-    double C = S * V;
-    double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
-    double m = V - C;
-    double Rs, Gs, Bs;
-
-    if (H >= 0 && H < 60) {
-        Rs = C;
-        Gs = X;
-        Bs = 0;
-    }
-    else if (H >= 60 && H < 120) {
-        Rs = X;
-        Gs = C;
-        Bs = 0;
-    }
-    else if (H >= 120 && H < 180) {
-        Rs = 0;
-        Gs = C;
-        Bs = X;
-    }
-    else if (H >= 180 && H < 240) {
-        Rs = 0;
-        Gs = X;
-        Bs = C;
-    }
-    else if (H >= 240 && H < 300) {
-        Rs = X;
-        Gs = 0;
-        Bs = C;
-    }
-    else {
-        Rs = C;
-        Gs = 0;
-        Bs = X;
-    }
-
-    output[0] = (Rs + m);
-    output[1] = (Gs + m);
-    output[2] = (Bs + m);
-}
-
-static void invert_array(float (*arr)[3], size_t siz)
-{
-    float temp[3];
-
-    for(size_t i = 0; i < siz/2; ++i)
-    {
-        temp[0] = arr[i][0];
-        temp[1] = arr[i][1];
-        temp[2] = arr[i][2];
-
-        arr[i][0] = arr[siz - i][0];
-        arr[i][1] = arr[siz - i][1];
-        arr[i][2] = arr[siz - i][2];
-
-        arr[siz - i][0] = temp[0];
-        arr[siz - i][1] = temp[1];
-        arr[siz - i][2] = temp[2];
-    }
-}
-
-// Main functions ---------------------------------------------------------------
-
-static void convert_HSVtoRGB(float *colors, int num_colors)
+void convert_HSVtoRGB(float (*colors)[3], int num_colors)
 {
     for (int i = 0; i < num_colors; i++)
-        HSVtoRGB(colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2], &colors[i * 3 + 0]);
+        HSVtoRGB(colors[i][0], colors[i][1], colors[i][2], &colors[i][0]);
 }
 
-static void convert_RGB255toRGB(float *colors, int num_colors)
+void convert_RGB255toRGB(float (*colors)[3], int num_colors)
 {
     for (int i = 0; i < num_colors; i++)
     {
-        colors[i * 3 + 0] /= 255;
-        colors[i * 3 + 1] /= 255;
-        colors[i * 3 + 2] /= 255;
+        colors[i][0] /= 255;
+        colors[i][1] /= 255;
+        colors[i][2] /= 255;
     }
 }
 
-// Transform coordinates of points in an array from X-first to OGL system
-static void transform_coordinates(float *points_arr, int number_points)
+void transform_coordinates(float (*points_arr)[3], int number_points)
 {
     float temp;
 
     for (int i = 0; i < number_points; i++)
     {
-        temp = points_arr[i * 3 + 0];
+        temp = points_arr[i][0];
 
-        points_arr[i * 3 + 0] = - points_arr[i * 3 + 1];
-        points_arr[i * 3 + 1] =   points_arr[i * 3 + 2];
-        points_arr[i * 3 + 2] = - temp;
+        points_arr[i][0] = - points_arr[i][1];
+        points_arr[i][1] =   points_arr[i][2];
+        points_arr[i][2] = - temp;
     }
 }
 
-// Given some X values for a polynomial, get the Y values. Pass the minimum and maximum x values, and the number of x values to take inside that range (sample_size) (1 will be added at the end). Pass the coefficients of the polynomial (this determines its grade)
-static void polynomial_graph(float (*result)[3], float min_x, float max_x, int sample_size, float *coefficients, float number_of_coefficients)
+void polynomial_points(float (*result)[3], float min_x, float max_x, unsigned int sample_size, float *coefficients, unsigned int number_of_coefficients)
 {
+    if(min_x > max_x || sample_size == 0 || number_of_coefficients == 0) { std::cout << "Wrong polynomial input data" << std::endl; return; }
+
     float step = (max_x - min_x) / sample_size;
 
-    for(int i = 0; i < sample_size; i++)
+    for(size_t i = 0; i < sample_size; i++)
         polynomial_x(&result[i][0], min_x + step * i, coefficients, number_of_coefficients);
 
     polynomial_x(&result[sample_size][0], max_x, coefficients, number_of_coefficients);
 }
 
-// Fill an array[12][3] with points forming an icosahedron
-static void icosahedron(float side_length, float(*points)[3])
+void polynomial_segments(float (*result)[2][3], float min_x, float max_x, unsigned int sample_size, float *coefficients, unsigned int number_of_coefficients)
+{
+    if(min_x > max_x || sample_size == 0 || number_of_coefficients == 0) { std::cout << "Wrong polynomial input data" << std::endl; return; }
+
+    float step = (max_x - min_x) / sample_size;
+
+    polynomial_x(&result[0][0][0], min_x, coefficients, number_of_coefficients);
+
+    for(size_t i = 1; i < sample_size; i++)
+    {
+        polynomial_x(&result[i][0][0], min_x + step * i, coefficients, number_of_coefficients);
+
+        result[i-1][1][0] = result[i][0][0];
+        result[i-1][1][1] = result[i][0][1];
+        result[i-1][1][2] = result[i][0][2];
+    }
+
+    polynomial_x(&result[sample_size - 1][1][0], max_x, coefficients, number_of_coefficients);
+}
+
+void icosahedron(float side_length, float(*points)[3])
 {
     float S = side_length;
     const double pi = 3.14159265359;
@@ -189,8 +132,7 @@ static void icosahedron(float side_length, float(*points)[3])
     points[11][2] = 0.;
 }
 
-// Fill an array[256][3] with a rainbow palette. Define the Hue range in parameters min and max. Define if you want to invert positions of colors. And you can apply a deformation to the rainbow by taking some point in the spectrum and moving it to another place.lue to red.
-static void fill_rainbow(float (*modified_rainbow)[3], float min = 0, float max = 240, bool inverted = true, float original_lvl = 180, float new_lvl = 100)
+void fill_rainbow(float (*modified_rainbow)[3], float min, float max, bool inverted, float original_lvl, float new_lvl)
 {
     for (int i = 0; i < 256; i++)
     {
@@ -208,9 +150,101 @@ static void fill_rainbow(float (*modified_rainbow)[3], float min = 0, float max 
         }
     }
     //for(int a = 0; a < 256; a++) std::cout << a << ": " << modified_rainbow[a][0] << std::endl;
-    convert_HSVtoRGB(&modified_rainbow[0][0], 256);
+    convert_HSVtoRGB(modified_rainbow, 256);
 
     if(inverted) invert_array(modified_rainbow, 256);
 }
 
-// Get a vector with the points
+void fill_polyline(float (*points)[3], size_t num_points, float (*destination)[2][3])
+{
+    for(int i = 0; i < num_points-1; ++i)
+    {
+        destination[i][0][0] = points[i][0];
+        destination[i][0][1] = points[i][1];
+        destination[i][0][2] = points[i][2];
+
+        destination[i][1][0] = points[i+1][0];
+        destination[i][1][1] = points[i+1][1];
+        destination[i][1][2] = points[i+1][2];
+    }
+}
+
+// Auxiliary functions ---------------------------------------------------------------
+
+void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients)
+{
+    // X
+    results[0] = x;
+    // Y
+    results[1] = coefficients[0];
+    for(int i = 1; i < number_of_coefficients; i++)
+        results[1] += coefficients[i] * pow(x, i);
+    // Z
+    results[2] = 0;
+}
+
+void HSVtoRGB(double H, double S, double V, float output[3])
+{
+    // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
+    double C = S * V;
+    double X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
+    double m = V - C;
+    double Rs, Gs, Bs;
+
+    if (H >= 0 && H < 60) {
+        Rs = C;
+        Gs = X;
+        Bs = 0;
+    }
+    else if (H >= 60 && H < 120) {
+        Rs = X;
+        Gs = C;
+        Bs = 0;
+    }
+    else if (H >= 120 && H < 180) {
+        Rs = 0;
+        Gs = C;
+        Bs = X;
+    }
+    else if (H >= 180 && H < 240) {
+        Rs = 0;
+        Gs = X;
+        Bs = C;
+    }
+    else if (H >= 240 && H < 300) {
+        Rs = X;
+        Gs = 0;
+        Bs = C;
+    }
+    else {
+        Rs = C;
+        Gs = 0;
+        Bs = X;
+    }
+
+    output[0] = (Rs + m);
+    output[1] = (Gs + m);
+    output[2] = (Bs + m);
+}
+
+void invert_array(float (*arr)[3], size_t siz)
+{
+    float temp[3];
+
+    for(size_t i = 0; i < siz/2; ++i)
+    {
+        temp[0] = arr[i][0];
+        temp[1] = arr[i][1];
+        temp[2] = arr[i][2];
+
+        arr[i][0] = arr[siz - i][0];
+        arr[i][1] = arr[siz - i][1];
+        arr[i][2] = arr[siz - i][2];
+
+        arr[siz - i][0] = temp[0];
+        arr[siz - i][1] = temp[1];
+        arr[siz - i][2] = temp[2];
+    }
+}
+
+}

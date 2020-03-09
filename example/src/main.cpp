@@ -6,7 +6,7 @@ int main()
 
     // Different ways of creating a visualizer object
     HansVisual display;
-    display.draw_grid(1, 30, 230, 1., 1.);
+    //display.draw_grid(1, 30, 230, 1., 1.);
 
     // Add some layers to the visualizer
     display.add_layer("Points 1", points, 20);
@@ -27,46 +27,51 @@ int main()
 
     // ----- Send points -----------------------------------------------------------
 
-    // Ways of sending points in no mode (all points have default color)
-        toolKit::transform_coordinates(&pnts[0][0], 12);                                             // Transform the points coordinates in a buffer from X-first system to OpenGL system
-    display.send_points("Points 1", 12, &pnts[0][0]);                                               // Paint some points in default color (white)
-    //display.send_points("Points 1", 12, &pnts[0][0], 1., 1., 1.);
+    // Ways of sending points in no mode (uses default color or color specified by the user)
+    toolKit::transform_coordinates(pnts, 12);                                                   // Transform the points coordinates in a buffer from automotive system to OpenGL system
 
-    /*
+    display.send_points("Points 1", 12, pnts);                                                  // Paint some points in default color (white)
+    display.send_points("Points 1", 12, pnts, 1., 1., 1.);                                      // Specify the color of the points
+    display.send_points("Points 1", 12, pnts, 1., 1., 1., points_names);                        // Add an additional buffer with strings containing info associated to each point (shown when selecting points)
+
     // Ways of sending points in mode "categories" (uses layer's palette)
-        display.send_palette_HSV("Points 1", &points_colors_HSV[0][0], 12);                         // Change the standard palette of a certain layer. Enter the palette in HSV format
-    display.send_points("Points 1", 12, &pnts[0][0], points_categories, nullptr, categories);       // Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
-    display.send_points("Points 1", 12, &pnts[0][0], points_categories, points_names);              // Same functionality as the previous funcion call (by default, it's interpreted as CATEGORIES), but this time we introduced a string with data used in point selection
+    display.send_palette_HSV("Points 1", points_colors_HSV, 12);                                // Change the standard palette of a certain layer. Here, we enter the palette in HSV format
+
+    display.send_points_categories("Points 1", 12, pnts, points_categories);                    // Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
+    display.send_points_categories("Points 1", 12, pnts, points_categories, points_names);      // Same functionality as the previous funcion call, but this time we pass a string with data used in point selection
 
     // Ways of sending points in mode "colors" (user defines colors)
-    display.send_points("Points 2", 12, &pnts[0][0], &points_colors_RGB[0][0], nullptr, colors);        // Paint the points and provide an array with the color of each one in RGB system
-        toolKit::convert_HSVtoRGB(&points_colors_HSV_2[0][0], 12);                                       // Convert an array of colors in HSV system to RGB system, so you can use it in the next send_points()
-    display.send_points("Points 2", 12, &pnts[0][0], &points_colors_HSV_2[0][0], nullptr, colors);      // Paint points and provide an array with the color of each one in RGB system (if it's HSV, first convert it to RGB)
-    display.send_points("Points 2", 256, &points_line_2[0][0], &modified_rainbow[0][0], nullptr, colors);
+    toolKit::convert_HSVtoRGB(points_colors_HSV_2, 12);                                         // Convert an array of colors in HSV system to RGB system, so you can use it in the next function call
+
+    display.send_points_colors("Points 2", 12, pnts, points_colors_RGB);                        // Paint the points and provide an array with the color of each one in RGB system
+    display.send_points_colors("Points 2", 12, pnts, points_colors_HSV_2, points_names);
+    display.send_points_colors("Points 2", 256, points_line, modified_rainbow);
 
     // Ways of sending points in mode "gradient" (color depends on the gradient assigned to each point)
-        display.send_palette_RGB_01("Points 3", &points_gradient_palette[0][0], 21);                    // Change the standard palette of a certain layer. Enter the palette in RGB format (0-1)
-        display.send_palette_RGB("Points 3", &points_gradient_palette[0][0], 21);                       // Change the standard palette of a certain layer. Enter the palette in RGB format (0-255)
-    display.send_points("Points 3", 12, &pnts[0][0], points_gradients, nullptr, gradient, 6, 7);        // Paint points and provide an array with labels for each color. A point's color will depend on the label and range
-    display.send_points("Points 3", 12, &pnts[0][0], points_gradients, nullptr, gradient, 1, 12);       // Same functionality as the previous function call, but now the range is bigger
+    display.send_palette_RGB("Points 3", points_gradient_palette, 21);                          // Change the standard palette of a certain layer. Enter the palette in RGB format (0-255)
+    display.send_palette_RGB_01("Points 3", points_gradient_palette, 21);                       // Change the standard palette of a certain layer. Enter the palette in RGB_01 format (0-1)
+
+    display.send_points_gradients("Points 3", 12, pnts, points_gradients, 6, 7);                // Paint points and provide an array with labels for each color. A point's color will depend on the label and range
+    display.send_points_gradients("Points 3", 12, pnts, points_gradients, 1, 12, points_names); // Same functionality as the previous function call, but now the range is bigger (and we added strings for point selection)
 
     // ----- Send lines ------------------------------------------------------------
 
     // No mode
-    display.send_lines("Lines 1", 111, &myLines[0][0]);
+    display.send_lines("Lines 1", 12, linesCube);
+    display.send_lines("Lines 1", 12, linesCube, 1., 1., 1.);
 
     // Mode "categories"
-    display.send_lines("Lines 1", 111, &myLines[0][0], &lines_categories[0], categories);        // Possible flags: CATEGORIES, COLORS, GRADIENT.
-    display.send_lines("Lines 1", 111, &myLines[0][0], &lines_categories[0]);                    // By default, interpreted as CATEGORIES
+    display.send_lines_categories("Lines 1", 12, linesCube, lines_categories);
 
     // Mode "colors"
-    display.send_lines("Lines 2", 111, &myLines[0][0], &lines_colors[0][0], colors);
+    display.send_lines_colors("Lines 2", 12, linesCube, lines_colors);
 
     // Mode "gradient"
-        display.send_palette_RGB_01("Lines 3", &lines_gradient_palette[0][0], 101);
-    display.send_lines("Lines 3", 111, &myLines[0][0], lines_gradients, gradient, 0, 0);
-    display.send_lines("Lines 3", 111, &myLines[0][0], lines_gradients, gradient, 10, 109);
+    display.send_palette_RGB_01("Lines 3", parable_gradient_palette, 101);
 
+    display.send_lines_gradients("Lines 3", 111, parable, parable_gradients, 0, 0);
+    display.send_lines_gradients("Lines 3", 111, parable, parable_gradients, 10, 40);
+/*
     // ----- Send triangles --------------------------------------------------------
 
     // No mode
@@ -125,6 +130,5 @@ int main()
     }
 */
 
-    while(display.window_is_open()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
-    display.close_window();
+    display.wait();
 }

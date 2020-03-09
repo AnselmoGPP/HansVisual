@@ -1,21 +1,13 @@
-/*
-*	TODO:
-*		- Allow relative paths for calling LoadShaders()
-*       - Cubes complete rotation (rotation method for a point)
-*       - Parameters window (toolbar) (camera, transparency, axis...)
-*       - Shaper with loop and without it
-*       - Ordenar buffer para cubos para perfecta transparencia
-*		-> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
-*		-> Selection (or small windows for showing info about objects)
-*		-> Are mutexes covering every situation?
-*/
-
-#ifndef HANSVISUAL_HPP
-#define HANSVISUAL_HPP
+#ifndef PLOTTER_HPP
+#define PLOTTER_HPP
 
 #define BACKG_R 0.
 #define BACKG_G 0.
 #define BACKG_B 0.14
+#define SEL_R 0.97
+#define SEL_G 0.
+#define SEL_B 1.
+#define SEL_A 0.
 #define PNT_SIZE 35
 #define MAX_PNT_SIZE 500.0f
 #define DESIRED_FPS 60
@@ -63,6 +55,8 @@ class HansVisual
     bool window_open;           // True if main_loop_thread is running. If false, it's out (or will get out asap)
 
     char test[21];
+
+    std::vector<size_t> find_layers(std::string layer_name);
 
     // GUI rendering
     void create_windows();
@@ -117,31 +111,46 @@ public:
 	// Add a new layer. Indicate the element type (points, lines, triangles, cubes), the name and the capacity (number of elements that layer supports)
     void add_layer(const char *name, object_type type, unsigned int capacity);
 
-    // Send array of points to print them
-    void send_points(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, std::string *points_data = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    // Send array of points (float arr[i]) to print them
+    int send_points(std::string layer_name, unsigned int number_points, const float (*arr)[3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE, std::string *points_data = nullptr);
+    int send_points_categories(std::string layer_name, unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data = nullptr );
+    int send_points_colors(std::string layer_name, unsigned int number_points, const float (*arr)[3], const float (*colors)[3], std::string *points_data = nullptr );
+    int send_points_gradients(std::string layer_name, unsigned int number_points, const float (*arr)[3], const float *gradients, float min = 0, float max = 1, std::string *points_data = nullptr );
 
-    // Send an array containing pairs of vertex, each pair representing the ends of a segment you want to draw
-    void send_lines(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    // Send an array containing pairs of vertex (float arr[i][2]), each pair representing the ends of a segment you want to draw
+//    void send_lines(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    int send_lines(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
+    int send_lines_categories(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2]);
+    int send_lines_colors(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3]);
+    int send_lines_gradients(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min = 0, float max = 1);
 
-    // Send array of triangles (sets of 3 points) to print them
-    void send_triangles(std::string layer_name, unsigned int number_triangles, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    // Send array of triangles (float arr[i][3]) to print them
+//    void send_triangles(std::string layer_name, unsigned int number_triangles, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    int send_triangles(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
+    int send_triangles_categories(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3]);
+    int send_triangles_colors(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3]);
+    int send_triangles_gradients(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min = 0, float max = 1);
 
-    // Send array of cubes (cube3D) to print them
-    void send_cubes(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    // Send array of cubes (cube3D arr[i]) to print them
+//    void send_cubes(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
+    int send_cubes(std::string layer_name, unsigned int number_cubes, const cube3D *arr, float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
+    int send_cubes_categories(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const unsigned int *categories);
+    int send_cubes_colors(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float (*colors)[3]);
+    int send_cubes_gradients(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float *gradients, float min = 0, float max = 1);
 
     // Bonus methods --------------------------------
 
-    void send_palette_RGB_01(std::string layer_name, float *new_palette, int number_colors);
+    int send_palette_RGB_01(std::string layer_name, float (*new_palette)[3], int number_colors);
 
-    void send_palette_RGB(std::string layer_name, float *new_palette, int number_colors);
+    int send_palette_RGB(std::string layer_name, float (*new_palette)[3], int number_colors);
 
-    void send_palette_HSV(std::string layer_name, float *new_palette, int number_colors);
+    int send_palette_HSV(std::string layer_name, float (*new_palette)[3], int number_colors);
 
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
 
     // Clear the contents of a layer
-    void clear_layer(std::string name);
+    int clear_layer(std::string layer_name);
 
     // Create a layer with a grid (or modify it if already exists). Parameters: Size of one cell's side, number of cells per side, and HSV color.
     void draw_grid(float cell_size, int grid_size, int H, double S, double V);
@@ -151,6 +160,9 @@ public:
 
     // Close the window
     void close_window();
+
+    // Waits until the display is closed
+    void wait();
 };
 
 #endif

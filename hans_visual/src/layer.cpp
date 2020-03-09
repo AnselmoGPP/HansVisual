@@ -805,7 +805,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min, float max)
+    int layer::save_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min, float max)
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -968,7 +968,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Send a new palette of colors to replace the current one ----------
 
     // RGB_01 values are in the range [0, 1]
-    int layer::save_palette_RGB_01(float *new_palette, int number_colors)
+    int layer::save_palette_RGB_01(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -978,16 +978,16 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         for(int i = 0; i < palette_size; i++)
         {
-            palette[i][0] = new_palette[i * 3 + 0];
-            palette[i][1] = new_palette[i * 3 + 1];
-            palette[i][2] = new_palette[i * 3 + 2];
+            palette[i][0] = new_palette[i][0];
+            palette[i][1] = new_palette[i][1];
+            palette[i][2] = new_palette[i][2];
         }
 
         return 0;
     }
 
     // RGB values are in the range [0, 255]
-    int layer::save_palette_RGB(float *new_palette, int number_colors)
+    int layer::save_palette_RGB(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -997,16 +997,16 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         for(int i = 0; i < palette_size; i++)
         {
-            palette[i][0] = new_palette[i * 3 + 0] / 255;
-            palette[i][1] = new_palette[i * 3 + 1] / 255;
-            palette[i][2] = new_palette[i * 3 + 2] / 255;
+            palette[i][0] = new_palette[i][0] / 255;
+            palette[i][1] = new_palette[i][1] / 255;
+            palette[i][2] = new_palette[i][2] / 255;
         }
 
         return 0;
     }
 
     // HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (double) in [0, 1.], V (double) in [0, 1.]
-    int layer::save_palette_HSV(float *new_palette, int number_colors)
+    int layer::save_palette_HSV(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1015,7 +1015,11 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         palette = new float[palette_size][3];
 
         for(int i = 0; i < palette_size; i++)
-            HSVtoRGB(new_palette[i * 3 + 0], new_palette[i * 3 + 1], new_palette[i * 3 + 2], &palette[i][0]);
+        {
+            //std::cout << new_palette[i][0] << ", " << new_palette[i][1] << ", " << new_palette[i][2] << std::endl;
+            HSVtoRGB(new_palette[i][0], new_palette[i][1], new_palette[i][2], &palette[i][0]);
+            //std::cout << palette[i][0] << ", " << palette[i][1] << ", " << palette[i][2] << std::endl;
+        }
 
         return 0;
     }
@@ -1119,12 +1123,11 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         y = -(hip * sin(beta)) + Y;
     }
 
-    void layer::HSVtoRGB(int H, double S, double V, float output[3])
+    void layer::HSVtoRGB(double H, double S, double V, float output[3])
     {
         // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
-
         double C = S * V;
-        double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
+        double X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
         double m = V - C;
         double Rs, Gs, Bs;
 
