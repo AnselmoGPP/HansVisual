@@ -121,15 +121,21 @@ public:
 //    void send_lines(std::string layer_name, unsigned int number_points, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
     int send_lines(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
     int send_lines_categories(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2]);
+    int send_lines_categories(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const unsigned int  *categories);
     int send_lines_colors(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3]);
+    int send_lines_colors(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[3]);
     int send_lines_gradients(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min = 0, float max = 1);
+    int send_lines_gradients(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float  *gradients,     float min = 0, float max = 1);
 
     // Send array of triangles (float arr[i][3]) to print them
 //    void send_triangles(std::string layer_name, unsigned int number_triangles, const float *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
     int send_triangles(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE);
     int send_triangles_categories(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3]);
+    int send_triangles_categories(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const unsigned int  *categories);
     int send_triangles_colors(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3]);
+    int send_triangles_colors(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3]);
     int send_triangles_gradients(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min = 0, float max = 1);
+    int send_triangles_gradients(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float  *gradients,     float min = 0, float max = 1);
 
     // Send array of cubes (cube3D arr[i]) to print them
 //    void send_cubes(std::string layer_name, unsigned int number_cubes, const cube3D *arr, const float *labels = nullptr, data_buffer array_type = categories, float min = 0, float max = 1);
@@ -163,6 +169,8 @@ public:
 
     // Waits until the display is closed
     void wait();
+
+    void get_layer_names(std::vector<std::string> &list);
 };
 
 #endif

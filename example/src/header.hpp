@@ -27,14 +27,14 @@ extern float parable_gradients[100][2];
 
 // Triangle buffers
 extern float triangs[4][3][3];
-extern float triangles_categories[4];
-extern float triangles_colors[4][3];
+extern unsigned int triangles_categories[4][3];
+extern float triangles_colors[4][3][3];
 extern float triangles_gradient_palette[11][3];
 extern float triangles_gradients[4];
 
 // Cube buffers
 extern cube3D myCubes[3];
-extern float cubes_categories[3];
+extern unsigned int cubes_categories[3];
 extern float cubes_colors[3][3];
 extern float cubes_gradient_palette[21][3];
 extern float cubes_gradients[3];

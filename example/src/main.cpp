@@ -71,40 +71,42 @@ int main()
 
     display.send_lines_gradients("Lines 3", 111, parable, parable_gradients, 0, 0);
     display.send_lines_gradients("Lines 3", 111, parable, parable_gradients, 10, 40);
-/*
+
     // ----- Send triangles --------------------------------------------------------
 
     // No mode
-    display.send_triangles("Triangles 1", 4, &triangs[0][0][0]);
+    display.send_triangles("Triangles 1", 4, triangs);
+    display.send_triangles("Triangles 1", 4, triangs, 1., 1., 1.);
 
     // Mode "categories"
-    display.send_triangles("Triangles 1", 4, &triangs[0][0][0], &triangles_categories[0], categories);		// Possible flags: CATEGORIES, COLORS, GRADIENT.
-    display.send_triangles("Triangles 1", 4, &triangs[0][0][0], &triangles_categories[0]);					// By default, interpreted as CATEGORIES
+    display.send_triangles_categories("Triangles 1", 4, triangs, triangles_categories);
 
     // Mode "colors"
-    display.send_triangles("Triangles 2", 4, &triangs[0][0][0], &triangles_colors[0][0], colors);
+    display.send_triangles_colors("Triangles 2", 4, triangs, triangles_colors);
 
     // Mode "gradient"
-        display.send_palette_RGB_01("Triangles 3", &triangles_gradient_palette[0][0], 11);
-    display.send_triangles("Triangles 3", 4, &triangs[0][0][0], triangles_gradients, gradient, 0, 0);
-    display.send_triangles("Triangles 3", 4, &triangs[0][0][0], triangles_gradients, gradient, 0, 10);
+    display.send_palette_RGB_01("Triangles 3", triangles_gradient_palette, 11);
+
+    display.send_triangles_gradients("Triangles 3", 4, triangs, triangles_gradients, 0, 0);
+    display.send_triangles_gradients("Triangles 3", 4, triangs, triangles_gradients, 0, 10);
 
     // ----- Send cubes ------------------------------------------------------------
 
     // No mode
     display.send_cubes("Cubes 1", 3, myCubes);											// Load boxes on the visualizer
+    display.send_cubes("Cubes 1", 3, myCubes, 1., 1., 1.);
 
     // Mode "categories"
-    display.send_cubes("Cubes 1", 3, myCubes, cubes_categories, categories);			// Possible flags: CATEGORIES, COLORS, GRADIENT.
-    display.send_cubes("Cubes 1", 3, myCubes, cubes_categories);						// By default, interpreted as CATEGORIES
-
+    display.send_cubes_categories("Cubes 1", 3, myCubes, cubes_categories);
+/*
     // Mode "colors"
-    display.send_cubes("Cubes 2", 3, myCubes, &cubes_colors[0][0], colors);
+    display.send_cubes_colors("Cubes 2", 3, myCubes, cubes_colors);
 
     // Mode "gradient"
-        display.send_palette_RGB_01("Cubes 3", &cubes_gradient_palette[0][0], 21);
-    display.send_cubes("Cubes 3", 3, myCubes, cubes_gradients, gradient, 0, 0);
-    display.send_cubes("Cubes 3", 3, myCubes, cubes_gradients, gradient, 1, 12);
+    display.send_palette_RGB_01("Cubes 3", cubes_gradient_palette, 21);
+
+    display.send_cubes_gradients("Cubes 3", 3, myCubes, cubes_gradients, 0, 0);
+    display.send_cubes_gradients("Cubes 3", 3, myCubes, cubes_gradients, 1, 12);
 */
     // ----- Send data to the "data window" ----------------------------------------
 

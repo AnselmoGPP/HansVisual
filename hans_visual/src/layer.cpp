@@ -422,6 +422,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
             // Vertex coordinates
+
             points_buffer[i][0] = arr[i][0];
             points_buffer[i][1] = arr[i][1];
             points_buffer[i][2] = arr[i][2];
@@ -585,19 +586,48 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             lines_buffer[i][1][2] = arr[i][1][2];
 
             // Colors (array of categories + palette)
-            index = (int)categories[i][0] % palette_size;
+            for(size_t j = 0; j < 2; ++j)
+            {
+                index = (int)categories[i][j] % palette_size;
 
-            lines_color_buffer[i][0][0] = palette[index][0];
-            lines_color_buffer[i][0][1] = palette[index][1];
-            lines_color_buffer[i][0][2] = palette[index][2];
-            lines_color_buffer[i][0][3] = alpha_channel;
+                lines_color_buffer[i][j][0] = palette[index][0];
+                lines_color_buffer[i][j][1] = palette[index][1];
+                lines_color_buffer[i][j][2] = palette[index][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
+        }
+        return 0;
+    }
 
-            index = (int)categories[i][1] % palette_size;
+    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int  *categories)
+    {
+        if(first_checks(lines, number_lines)) return 1;
 
-            lines_color_buffer[i][1][0] = palette[index][0];
-            lines_color_buffer[i][1][1] = palette[index][1];
-            lines_color_buffer[i][1][2] = palette[index][2];
-            lines_color_buffer[i][1][3] = alpha_channel;
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
+
+            // Colors (array of categories + palette)
+            index = (int)categories[i] % palette_size;
+
+            for(size_t j = 0; j < 2; ++j)
+            {
+                lines_color_buffer[i][j][0] = palette[index][0];
+                lines_color_buffer[i][j][1] = palette[index][1];
+                lines_color_buffer[i][j][2] = palette[index][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
         }
         return 0;
     }
@@ -620,15 +650,42 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             lines_buffer[i][1][2] = arr[i][1][2];
 
             // Save colors for each vertex
-            lines_color_buffer[i][0][0] = colors[i][0][0];
-            lines_color_buffer[i][0][1] = colors[i][0][1];
-            lines_color_buffer[i][0][2] = colors[i][0][2];
-            lines_color_buffer[i][0][3] = alpha_channel;
+            for(size_t j = 0; j < 2; ++j)
+            {
+                lines_color_buffer[i][j][0] = colors[i][j][0];
+                lines_color_buffer[i][j][1] = colors[i][j][1];
+                lines_color_buffer[i][j][2] = colors[i][j][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
+        }
+        return 0;
+    }
 
-            lines_color_buffer[i][1][0] = colors[i][1][0];
-            lines_color_buffer[i][1][1] = colors[i][1][1];
-            lines_color_buffer[i][1][2] = colors[i][1][2];
-            lines_color_buffer[i][1][3] = alpha_channel;
+    int layer::save_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[3])
+    {
+        if(first_checks(lines, number_lines)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
+
+            // Save colors for each vertex
+            for(size_t j = 0; j < 2; ++j)
+            {
+                lines_color_buffer[i][j][0] = colors[i][0];
+                lines_color_buffer[i][j][1] = colors[i][1];
+                lines_color_buffer[i][j][2] = colors[i][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
         }
         return 0;
     }
@@ -654,23 +711,53 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             lines_buffer[i][1][2] = arr[i][1][2];
 
             // Colors (gradients array + palette)
-            if      (gradients[i][0] <= min) index = 0;
-            else if (gradients[i][0] >= max) index = palette_size - 1;
-            else    index = ((gradients[i][0] - min) * (palette_size - 1)) / siz;
+            for(size_t j = 0; j < 2; ++j)
+            {
+                if      (gradients[i][j] <= min) index = 0;
+                else if (gradients[i][j] >= max) index = palette_size - 1;
+                else    index = ((gradients[i][j] - min) * (palette_size - 1)) / siz;
 
-            lines_color_buffer[i][0][0] = palette[index][0];
-            lines_color_buffer[i][0][1] = palette[index][1];
-            lines_color_buffer[i][0][2] = palette[index][2];
-            lines_color_buffer[i][0][3] = alpha_channel;
+                lines_color_buffer[i][j][0] = palette[index][0];
+                lines_color_buffer[i][j][1] = palette[index][1];
+                lines_color_buffer[i][j][2] = palette[index][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
+        }
+        return 0;
+    }
 
-            if      (gradients[i][1] <= min) index = 0;
-            else if (gradients[i][1] >= max) index = palette_size - 1;
-            else    index = ((gradients[i][1] - min) * (palette_size - 1)) / siz;
+    int layer::save_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float *gradients, float min, float max)
+    {
+        if(first_checks(lines, number_lines)) return 1;
 
-            lines_color_buffer[i][1][0] = palette[index][0];
-            lines_color_buffer[i][1][1] = palette[index][1];
-            lines_color_buffer[i][1][2] = palette[index][2];
-            lines_color_buffer[i][1][3] = alpha_channel;
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (2 per line)
+            lines_buffer[i][0][0] = arr[i][0][0];
+            lines_buffer[i][0][1] = arr[i][0][1];
+            lines_buffer[i][0][2] = arr[i][0][2];
+
+            lines_buffer[i][1][0] = arr[i][1][0];
+            lines_buffer[i][1][1] = arr[i][1][1];
+            lines_buffer[i][1][2] = arr[i][1][2];
+
+            // Colors (gradients array + palette)
+            if      (gradients[i] <= min) index = 0;
+            else if (gradients[i] >= max) index = palette_size - 1;
+            else    index = ((gradients[i] - min) * (palette_size - 1)) / siz;
+
+            for(size_t j = 0; j < 2; ++j)
+            {
+                lines_color_buffer[i][j][0] = palette[index][0];
+                lines_color_buffer[i][j][1] = palette[index][1];
+                lines_color_buffer[i][j][2] = palette[index][2];
+                lines_color_buffer[i][j][3] = alpha_channel;
+            }
         }
         return 0;
     }
@@ -765,6 +852,50 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
+    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int *categories)
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (array of categories + palette)
+            index = (int)categories[i] % palette_size;
+
+            triangles_color_buffer[i][0][0] = palette[index][0];
+            triangles_color_buffer[i][0][1] = palette[index][1];
+            triangles_color_buffer[i][0][2] = palette[index][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            triangles_color_buffer[i][1][0] = palette[index][0];
+            triangles_color_buffer[i][1][1] = palette[index][1];
+            triangles_color_buffer[i][1][2] = palette[index][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            triangles_color_buffer[i][2][0] = palette[index][0];
+            triangles_color_buffer[i][2][1] = palette[index][1];
+            triangles_color_buffer[i][2][2] = palette[index][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
     int layer::save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3])
     {
         if(first_checks(triangles, number_triangles)) return 1;
@@ -800,6 +931,46 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             triangles_color_buffer[i][2][0] = colors[i][2][0];
             triangles_color_buffer[i][2][1] = colors[i][2][1];
             triangles_color_buffer[i][2][2] = colors[i][2][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
+    int layer::save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3])
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (array of colors)
+            triangles_color_buffer[i][0][0] = colors[i][0];
+            triangles_color_buffer[i][0][1] = colors[i][1];
+            triangles_color_buffer[i][0][2] = colors[i][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            triangles_color_buffer[i][1][0] = colors[i][0];
+            triangles_color_buffer[i][1][1] = colors[i][1];
+            triangles_color_buffer[i][1][2] = colors[i][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            triangles_color_buffer[i][2][0] = colors[i][0];
+            triangles_color_buffer[i][2][1] = colors[i][1];
+            triangles_color_buffer[i][2][2] = colors[i][2];
             triangles_color_buffer[i][2][3] = alpha_channel;
         }
         return 0;
@@ -860,11 +1031,58 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
+    int layer::save_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float *gradients, float min, float max)
+    {
+        if(first_checks(triangles, number_triangles)) return 1;
+
+        std::lock_guard<std::mutex> lock(*mut);
+
+        int index;
+        float siz = max - min;
+
+        for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
+        {
+            // Vertex coordinates (3 per triangle)
+            triangles_buffer[i][0][0] = arr[i][0][0];
+            triangles_buffer[i][0][1] = arr[i][0][1];
+            triangles_buffer[i][0][2] = arr[i][0][2];
+
+            triangles_buffer[i][1][0] = arr[i][1][0];
+            triangles_buffer[i][1][1] = arr[i][1][1];
+            triangles_buffer[i][1][2] = arr[i][1][2];
+
+            triangles_buffer[i][2][0] = arr[i][2][0];
+            triangles_buffer[i][2][1] = arr[i][2][1];
+            triangles_buffer[i][2][2] = arr[i][2][2];
+
+            // Colors (gradients array + palette)
+            if      (gradients[i] <= min) index = 0;
+            else if (gradients[i] >= max) index = palette_size - 1;
+            else    index = (int)((gradients[i] - min) * (palette_size - 1)) / (int)siz;
+
+            triangles_color_buffer[i][0][0] = palette[index][0];
+            triangles_color_buffer[i][0][1] = palette[index][1];
+            triangles_color_buffer[i][0][2] = palette[index][2];
+            triangles_color_buffer[i][0][3] = alpha_channel;
+
+            triangles_color_buffer[i][1][0] = palette[index][0];
+            triangles_color_buffer[i][1][1] = palette[index][1];
+            triangles_color_buffer[i][1][2] = palette[index][2];
+            triangles_color_buffer[i][1][3] = alpha_channel;
+
+            triangles_color_buffer[i][2][0] = palette[index][0];
+            triangles_color_buffer[i][2][1] = palette[index][1];
+            triangles_color_buffer[i][2][2] = palette[index][2];
+            triangles_color_buffer[i][2][3] = alpha_channel;
+        }
+        return 0;
+    }
+
     // Cubes ----------
 
     int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, float R, float G, float B)
     {
-        if(first_checks(triangles, number_cubes)) return 1;
+        if(first_checks(cubes, number_cubes)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
@@ -881,12 +1099,21 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
                 cubes_color_buffer[j][k][3] = alpha_channel;
             }
 
+        for(size_t a = 0; a < number_cubes; ++a)
+        {
+            std::cout << "------" << std::endl;
+            for(size_t b = 0; b < 12*3; ++b)
+            {
+                std::cout << cubes_buffer[a][b] << std::endl;
+            }
+        }
+
         return 0;
     }
 
     int layer::save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const unsigned int *categories)
     {
-        if(first_checks(triangles, number_cubes)) return 1;
+        if(first_checks(cubes, number_cubes)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
@@ -914,7 +1141,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     int layer::save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3])
     {
-        if(first_checks(triangles, number_cubes)) return 1;
+        if(first_checks(cubes, number_cubes)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 
@@ -936,7 +1163,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     int layer::save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float *gradients, float min, float max)
     {
-        if(first_checks(triangles, number_cubes)) return 1;
+        if(first_checks(cubes, number_cubes)) return 1;
 
         std::lock_guard<std::mutex> lock(*mut);
 

@@ -187,8 +187,6 @@ void HansVisual::send_cubes(std::string layer_name, unsigned int number_cubes, c
 */
 
 
-
-
 int HansVisual::send_points(std::string layer_name, unsigned int number_points, const float (*arr)[3], float R, float G, float B, std::string *points_data)
 {
     std::vector<size_t> found_layers = find_layers(layer_name);
@@ -274,6 +272,20 @@ int HansVisual::send_lines_categories(std::string layer_name, unsigned int numbe
     }
 }
 
+int HansVisual::send_lines_categories(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const unsigned int *categories)
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_lines_categories(number_lines, arr, categories);
+
+        return 0;
+    }
+}
+
 int HansVisual::send_lines_colors(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3])
 {
     std::vector<size_t> found_layers = find_layers(layer_name);
@@ -288,7 +300,35 @@ int HansVisual::send_lines_colors(std::string layer_name, unsigned int number_li
     }
 }
 
+int HansVisual::send_lines_colors(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[3])
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_lines_colors(number_lines, arr, colors);
+
+        return 0;
+    }
+}
+
 int HansVisual::send_lines_gradients(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min, float max)
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_lines_gradients(number_lines, arr, gradients, min, max);
+
+        return 0;
+    }
+}
+
+int HansVisual::send_lines_gradients(std::string layer_name, unsigned int number_lines, const float (*arr)[2][3], const float *gradients, float min, float max)
 {
     std::vector<size_t> found_layers = find_layers(layer_name);
 
@@ -331,7 +371,35 @@ int HansVisual::send_triangles_categories(std::string layer_name, unsigned int n
     }
 }
 
+int HansVisual::send_triangles_categories(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const unsigned int *categories)
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_triangles_categories(number_triangles, arr, categories);
+
+        return 0;
+    }
+}
+
 int HansVisual::send_triangles_colors(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3])
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_triangles_colors(number_triangles, arr, colors);
+
+        return 0;
+    }
+}
+
+int HansVisual::send_triangles_colors(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3])
 {
     std::vector<size_t> found_layers = find_layers(layer_name);
 
@@ -353,7 +421,21 @@ int HansVisual::send_triangles_gradients(std::string layer_name, unsigned int nu
     else
     {
         for(size_t i : found_layers)
-            layersSet[i].save_lines_gradients(number_triangles, arr, gradients, min, max);
+            layersSet[i].save_triangles_gradients(number_triangles, arr, gradients, min, max);
+
+        return 0;
+    }
+}
+
+int HansVisual::send_triangles_gradients(std::string layer_name, unsigned int number_triangles, const float (*arr)[3][3], const float *gradients, float min, float max)
+{
+    std::vector<size_t> found_layers = find_layers(layer_name);
+
+    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
+    else
+    {
+        for(size_t i : found_layers)
+            layersSet[i].save_triangles_gradients(number_triangles, arr, gradients, min, max);
 
         return 0;
     }
@@ -481,7 +563,11 @@ int HansVisual::clear_layer(std::string layer_name)
     if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
     else
     {
-        for(size_t i : found_layers) layersSet[i].objs_to_print = 0;
+        for(size_t i : found_layers)
+        {
+            std::lock_guard<std::mutex> lock(*layersSet[i].mut);
+            layersSet[i].objs_to_print = 0;
+        }
         return 0;
     }
 }
@@ -525,6 +611,11 @@ void HansVisual::wait()
 {
     while(window_is_open())
         std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void HansVisual::get_layer_names(std::vector<std::string> &list)
+{
+    for(layer lay : layersSet) list.push_back(lay.layer_name);
 }
 
 // Private members -------------------------------------------------------
