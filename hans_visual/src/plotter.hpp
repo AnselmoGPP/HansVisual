@@ -42,9 +42,9 @@ using namespace glm;
 #include "shader.hpp"
 #include "controls.hpp"
 
-class HansVisual
+class plotter
 {
-    std::vector<layer> layersSet;
+    std::vector<layer> *layersSet;
 
     controls cam;
 
@@ -55,8 +55,6 @@ class HansVisual
     bool window_open;           // True if main_loop_thread is running. If false, it's out (or will get out asap)
 
     char test[21];
-
-    std::vector<size_t> find_layers(std::string layer_name);
 
     // GUI rendering
     void create_windows();
@@ -98,19 +96,17 @@ class HansVisual
     void fps_control(unsigned int frequency);           // Tell how many fps you want. If they are higher, they will be reduced until the specified fps
 
 public:
-    HansVisual();
-    HansVisual(const HansVisual &obj);
-    HansVisual& operator=(const HansVisual &obj);
-    ~HansVisual();
+    plotter(std::vector<layer> *layers_set);
+    plotter(const plotter &obj);
+    plotter& operator=(const plotter &obj);
+    ~plotter();
+
 
     // Main methods ---------------------------------
 
 	// Create a window and open a new thread that runs the visualizer
     int open_window();
-
-	// Add a new layer. Indicate the element type (points, lines, triangles, cubes), the name and the capacity (number of elements that layer supports)
-    void add_layer(const char *name, object_type type, unsigned int capacity);
-
+/*
     // Send array of points (float arr[i]) to print them
     int send_points(std::string layer_name, unsigned int number_points, const float (*arr)[3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE, std::string *points_data = nullptr);
     int send_points_categories(std::string layer_name, unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data = nullptr );
@@ -151,26 +147,15 @@ public:
     int send_palette_RGB(std::string layer_name, float (*new_palette)[3], int number_colors);
 
     int send_palette_HSV(std::string layer_name, float (*new_palette)[3], int number_colors);
-
+*/
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
-
-    // Clear the contents of a layer
-    int clear_layer(std::string layer_name);
-
-    // Create a layer with a grid (or modify it if already exists). Parameters: Size of one cell's side, number of cells per side, and HSV color.
-    void draw_grid(float cell_size, int grid_size, int H, double S, double V);
 
     // Check whether the window is open
     bool window_is_open();
 
     // Close the window
     void close_window();
-
-    // Waits until the display is closed
-    void wait();
-
-    void get_layer_names(std::vector<std::string> &list);
 };
 
 #endif

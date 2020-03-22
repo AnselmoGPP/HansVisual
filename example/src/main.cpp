@@ -6,7 +6,7 @@ int main()
 
     // Different ways of creating a visualizer object
     HansVisual display;
-    //display.draw_grid(1, 30, 230, 1., 1.);
+    display.draw_grid(1, 30, 230, 1., 1.);
 
     // Add some layers to the visualizer
     display.add_layer("Points 1", points, 20);
@@ -30,32 +30,32 @@ int main()
     // Ways of sending points in no mode (uses default color or color specified by the user)
     toolKit::transform_coordinates(pnts, 12);                                                   // Transform the points coordinates in a buffer from automotive system to OpenGL system
 
-    display.send_points("Points 1", 12, pnts);                                                  // Paint some points in default color (white)
-    display.send_points("Points 1", 12, pnts, 1., 1., 1.);                                      // Specify the color of the points
-    display.send_points("Points 1", 12, pnts, 1., 1., 1., points_names);                        // Add an additional buffer with strings containing info associated to each point (shown when selecting points)
+    display.lay("Points 1").save_points(12, pnts);                                                  // Paint some points in default color (white)
+    display.lay("Points 1").save_points(12, pnts, 1., 1., 1.);                                      // Specify the color of the points
+    display.lay("Points 1").save_points(12, pnts, 1., 1., 1., points_names);                        // Add an additional buffer with strings containing info associated to each point (shown when selecting points)
 
     // Ways of sending points in mode "categories" (uses layer's palette)
-    display.send_palette_HSV("Points 1", points_colors_HSV, 12);                                // Change the standard palette of a certain layer. Here, we enter the palette in HSV format
+    display.lay("Points 1").save_palette_HSV(points_colors_HSV, 12);                                // Change the standard palette of a certain layer. Here, we enter the palette in HSV format
 
-    display.send_points_categories("Points 1", 12, pnts, points_categories);                    // Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
-    display.send_points_categories("Points 1", 12, pnts, points_categories, points_names);      // Same functionality as the previous funcion call, but this time we pass a string with data used in point selection
+    display.lay("Points 1").save_points_categories(12, pnts, points_categories);                    // Paint points using the standard palette and an array of labels for each point (useful for clustering/segmentation)
+    display.lay("Points 1").save_points_categories(12, pnts, points_categories, points_names);      // Same functionality as the previous funcion call, but this time we pass a string with data used in point selection
 
     // Ways of sending points in mode "colors" (user defines colors)
     toolKit::convert_HSVtoRGB(points_colors_HSV_2, 12);                                         // Convert an array of colors in HSV system to RGB system, so you can use it in the next function call
 
-    display.send_points_colors("Points 2", 12, pnts, points_colors_RGB);                        // Paint the points and provide an array with the color of each one in RGB system
-    display.send_points_colors("Points 2", 12, pnts, points_colors_HSV_2, points_names);
-    display.send_points_colors("Points 2", 256, points_line, modified_rainbow);
+    display.lay("Points 2").save_points_colors(12, pnts, points_colors_RGB);                        // Paint the points and provide an array with the color of each one in RGB system
+    display.lay("Points 2").save_points_colors(12, pnts, points_colors_HSV_2, points_names);
+    display.lay("Points 2").save_points_colors(256, points_line, modified_rainbow);
 
     // Ways of sending points in mode "gradient" (color depends on the gradient assigned to each point)
-    display.send_palette_RGB("Points 3", points_gradient_palette, 21);                          // Change the standard palette of a certain layer. Enter the palette in RGB format (0-255)
-    display.send_palette_RGB_01("Points 3", points_gradient_palette, 21);                       // Change the standard palette of a certain layer. Enter the palette in RGB_01 format (0-1)
+    display.lay("Points 3").save_palette_RGB(points_gradient_palette, 21);                          // Change the standard palette of a certain layer. Enter the palette in RGB format (0-255)
+    display.lay("Points 3").save_palette_RGB_01(points_gradient_palette, 21);                       // Change the standard palette of a certain layer. Enter the palette in RGB_01 format (0-1)
 
-    display.send_points_gradients("Points 3", 12, pnts, points_gradients, 6, 7);                // Paint points and provide an array with labels for each color. A point's color will depend on the label and range
-    display.send_points_gradients("Points 3", 12, pnts, points_gradients, 1, 12, points_names); // Same functionality as the previous function call, but now the range is bigger (and we added strings for point selection)
+    display.lay("Points 3").save_points_gradients(12, pnts, points_gradients, 6, 7);                // Paint points and provide an array with labels for each color. A point's color will depend on the label and range
+    display.lay("Points 3").save_points_gradients(12, pnts, points_gradients, 1, 12, points_names); // Same functionality as the previous function call, but now the range is bigger (and we added strings for point selection)
 
     // ----- Send lines ------------------------------------------------------------
-
+/*
     // No mode
     display.send_lines("Lines 1", 12, linesCube);
     display.send_lines("Lines 1", 12, linesCube, 1., 1., 1.);
@@ -98,7 +98,7 @@ int main()
 
     // Mode "categories"
     display.send_cubes_categories("Cubes 1", 3, myCubes, cubes_categories);
-/*
+
     // Mode "colors"
     display.send_cubes_colors("Cubes 2", 3, myCubes, cubes_colors);
 
@@ -107,7 +107,7 @@ int main()
 
     display.send_cubes_gradients("Cubes 3", 3, myCubes, cubes_gradients, 0, 0);
     display.send_cubes_gradients("Cubes 3", 3, myCubes, cubes_gradients, 1, 12);
-*/
+
     // ----- Send data to the "data window" ----------------------------------------
 
     std::string additional_data[10] =
@@ -121,7 +121,7 @@ int main()
     };
 
     display.fill_data_window(additional_data, 7);
-
+*/
 /*
     for(;;)
     {

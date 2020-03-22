@@ -2,7 +2,7 @@
 #define HEADER_HPP
 
 #include "plotter.hpp"
-//#include "HansVisual.hpp"
+#include "HansVisual.hpp"
 #include "toolKit.hpp"
 
 // Point buffers

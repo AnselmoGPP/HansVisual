@@ -1099,15 +1099,6 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
                 cubes_color_buffer[j][k][3] = alpha_channel;
             }
 
-        for(size_t a = 0; a < number_cubes; ++a)
-        {
-            std::cout << "------" << std::endl;
-            for(size_t b = 0; b < 12*3; ++b)
-            {
-                std::cout << cubes_buffer[a][b] << std::endl;
-            }
-        }
-
         return 0;
     }
 
@@ -1305,6 +1296,12 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         }
 
         return 0;
+    }
+
+    void layer::change_name(std::string new_name)
+    {
+        std::lock_guard<std::mutex> lock(*mut);
+        layer_name = new_name;
     }
 
     // Private ------------------------------

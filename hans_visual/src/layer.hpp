@@ -103,6 +103,7 @@ struct layer
     float* get_vertex_ptr();
     float* get_colors_ptr();
     int set_alpha_channel(float alpha_value);
+    void change_name(std::string new_name);
 
 private:
     void error_message(unsigned int code, unsigned int number_objs = 0);

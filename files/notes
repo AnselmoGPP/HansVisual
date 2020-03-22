@@ -12,6 +12,7 @@ Controls are managed (controls > handler)
 ---------------------------------------------------------------------------
 - find_layer("lines_1").send_points(...);
 - Draw_grid
+- add_layer() during execution
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
 - Move layer class members to private
