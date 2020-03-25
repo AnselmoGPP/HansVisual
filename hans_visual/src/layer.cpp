@@ -413,7 +413,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Points ----------
 
     // Simplest way of sending elements. Specify the number of points and a pointer to the array. Optional: send strings associated with each point (for selection) or define the point's color
-    int layer::save_points(unsigned int number_points, const float (*arr)[3], float R, float G, float B, std::string *points_data)
+    int layer::send_points(unsigned int number_points, const float (*arr)[3], float R, float G, float B, std::string *points_data)
     {
         if(first_checks(points, number_points)) return 1;
 
@@ -441,7 +441,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // Pass an additional array with labels (clusters) for each object (range: [0, number of categories - 1]. The palette will be used to print each category with a different color.
-    int layer::save_points_categories(unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data)
+    int layer::send_points_categories(unsigned int number_points, const float (*arr)[3], const unsigned int *categories, std::string *points_data)
     {
         if(first_checks(points, number_points)) return 1;
 
@@ -472,7 +472,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // Pass an array with colors for each object.
-    int layer::save_points_colors(unsigned int number_points, const float (*arr)[3], const float (*colors)[3], std::string *points_data)
+    int layer::send_points_colors(unsigned int number_points, const float (*arr)[3], const float (*colors)[3], std::string *points_data)
     {
         if(first_checks(points, number_points)) return 1;
 
@@ -499,7 +499,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // Pass an array with (gradual) values for each object (height, temperature...). Must include the minimum and maximum values (inclusive) (if not specified, minimum is 0 and maximum is 1). This coloring method should be used with a palette containing gradual colors.
-    int layer::save_points_gradients(unsigned int number_points, const float (*arr)[3], const float *gradients, float min, float max, std::string *points_data)
+    int layer::send_points_gradients(unsigned int number_points, const float (*arr)[3], const float *gradients, float min, float max, std::string *points_data)
     {
         if(first_checks(points, number_points)) return 1;
 
@@ -534,7 +534,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     // Lines ----------
 
-    int layer::save_lines(unsigned int number_lines, const float (*arr)[2][3], float R, float G, float B)
+    int layer::send_lines(unsigned int number_lines, const float (*arr)[2][3], float R, float G, float B)
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -566,7 +566,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // If number of categories > colors in the palette, the visualizer starts again from the beginning of the pallete
-    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2])
+    int layer::send_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int (*categories)[2])
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -599,7 +599,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int  *categories)
+    int layer::send_lines_categories(unsigned int number_lines, const float (*arr)[2][3], const unsigned int  *categories)
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -632,7 +632,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3])
+    int layer::send_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[2][3])
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -661,7 +661,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[3])
+    int layer::send_lines_colors(unsigned int number_lines, const float (*arr)[2][3], const float (*colors)[3])
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -690,7 +690,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min, float max)
+    int layer::send_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float (*gradients)[2], float min, float max)
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -726,7 +726,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float *gradients, float min, float max)
+    int layer::send_lines_gradients(unsigned int number_lines, const float (*arr)[2][3], const float *gradients, float min, float max)
     {
         if(first_checks(lines, number_lines)) return 1;
 
@@ -764,7 +764,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     // Triangles ----------
 
-    int layer::save_triangles(unsigned int number_triangles, const float (*arr)[3][3], float R, float G, float B)
+    int layer::send_triangles(unsigned int number_triangles, const float (*arr)[3][3], float R, float G, float B)
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -804,7 +804,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3])
+    int layer::send_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int (*categories)[3])
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -852,7 +852,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int *categories)
+    int layer::send_triangles_categories(unsigned int number_triangles, const float (*arr)[3][3], const unsigned int *categories)
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -896,7 +896,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3])
+    int layer::send_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3][3])
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -936,7 +936,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3])
+    int layer::send_triangles_colors(unsigned int number_triangles, const float (*arr)[3][3], const float (*colors)[3])
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -976,7 +976,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min, float max)
+    int layer::send_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float (*gradients)[3], float min, float max)
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -1031,7 +1031,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float *gradients, float min, float max)
+    int layer::send_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float *gradients, float min, float max)
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
@@ -1080,7 +1080,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     // Cubes ----------
 
-    int layer::save_cubes(unsigned int number_cubes, const cube3D *arr, float R, float G, float B)
+    int layer::send_cubes(unsigned int number_cubes, const cube3D *arr, float R, float G, float B)
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
@@ -1102,7 +1102,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_cubes_categories(unsigned int number_cubes, const cube3D *arr, const unsigned int *categories)
+    int layer::send_cubes_categories(unsigned int number_cubes, const cube3D *arr, const unsigned int *categories)
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
@@ -1130,7 +1130,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3])
+    int layer::send_cubes_colors(unsigned int number_cubes, const cube3D *arr, const float (*colors)[3])
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
@@ -1152,7 +1152,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    int layer::save_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float *gradients, float min, float max)
+    int layer::send_cubes_gradients(unsigned int number_cubes, const cube3D *arr, const float *gradients, float min, float max)
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
@@ -1186,7 +1186,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Send a new palette of colors to replace the current one ----------
 
     // RGB_01 values are in the range [0, 1]
-    int layer::save_palette_RGB_01(float (*new_palette)[3], int number_colors)
+    int layer::send_palette_RGB_01(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1205,7 +1205,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // RGB values are in the range [0, 255]
-    int layer::save_palette_RGB(float (*new_palette)[3], int number_colors)
+    int layer::send_palette_RGB(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 
@@ -1224,7 +1224,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
 
     // HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (double) in [0, 1.], V (double) in [0, 1.]
-    int layer::save_palette_HSV(float (*new_palette)[3], int number_colors)
+    int layer::send_palette_HSV(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
 

@@ -32,7 +32,10 @@ public:
     int clear_layer(std::string layer_name);
 
     // Create a layer with a grid (or modify it if already exists). Parameters: Size of one cell's side, number of cells per side, and HSV color.
-    void draw_grid(float cell_size, int grid_size, int H, double S, double V);
+    void draw_grid(float cell_size, unsigned int grid_size, float R, float G, float B);
+
+    // Draw axis XYZ. Two systems: OpenGL (true), automotive (false)
+    void draw_axis(float length, bool system);
 
     // Plotter system --------------------------------------------
 

@@ -238,12 +238,12 @@ float triangs[4][3][3] = {
     { { 0.5f,  4.0f,  4.0f}, {-0.5f,  4.0f,  4.0f}, { 0.0f,  4.5f,  3.5f} },
     { { 0.5f,  4.0f, -4.0f}, {-0.5f,  4.0f, -4.0f}, { 0.0f,  4.5f, -3.5f} }
 };
-unsigned int triangles_categories[4][3] = { {0,0,0}, {1,2,3}, {1,1,1}, {4,5,6} };
+unsigned int triangles_categories[4][3] = { {0,0,0}, {0,1,2}, {1,1,1}, {3,4,5} };
 float triangles_colors[4][3][3] = {
-    {1.0f, 0.0f, 0.0f},
-    {0.2f, 0.3f, 0.5f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f}
+    {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+    {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+    {{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+    {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 };
 float triangles_gradient_palette[11][3] = {
     {0.0f, 0.0f, 0.0f},
@@ -302,8 +302,11 @@ void fill_buffers()
         // Fill pnts[] with 12 points forming an icosahedron with diameter 2
         toolKit::icosahedron(2, pnts);
 
+        // Fill array with 256 points
+        for(int i = 0; i < 256; ++i) { points_line[i][0] = 0.06 * i; points_line[i][1] = 0; points_line[i][2] = 0; }
+
         // Fill modified_rainbow with a variation of rainbow colors
-        toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // The same as:  toolKit::fill_rainbow(modified_rainbow)
+        toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // Same as the default call:  toolKit::fill_rainbow(modified_rainbow)
 
         // Create a parable
         float coefficients[3] = {0, 0, 1};      // y = 0 + 0x + 1x²

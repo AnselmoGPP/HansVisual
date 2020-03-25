@@ -19,7 +19,7 @@ namespace toolKit
 
     void convert_HSVtoRGB(float (*colors)[3], int num_colors);
 
-    // Transform coordinates of points in an array from X-first to OGL system
+    // Transform coordinates of points in an array from automotive system to OGL system
     void transform_coordinates(float (*points_arr)[3], int number_points);
 
     // Given some X values for a polynomial, get the points (float results[sample_size+1][3]) (Z=0) (sample_size = number of segments). Pass the minimum and maximum x values, and the number of x values to take inside that range (sample_size) (1 more value will be added at the end). Pass the coefficients of the polynomial (this determines its grade)

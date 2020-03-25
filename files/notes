@@ -10,8 +10,9 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
-- find_layer("lines_1").send_points(...);
+
 - Draw_grid
+- Delete_layer
 - add_layer() during execution
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
@@ -52,6 +53,7 @@ Controls are managed (controls > handler)
 - OOP: Encapsulation, abstraction, inheritance, polymorphism
 -http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
 - ImGui as static library
+- Improve speed by passing directly arrays to OGL
 
 - Allow relative paths for calling LoadShaders()
 - Cubes complete rotation (rotation method for a point)
@@ -78,3 +80,4 @@ Controls are managed (controls > handler)
 - add_points, add_lines, add_triangles & add_cubes only callable once per layer per loop
 - Create polyline()
 - Clear layer
+- find_layer("lines_1").send_points(...);

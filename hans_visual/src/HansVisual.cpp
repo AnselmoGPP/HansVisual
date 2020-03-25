@@ -43,32 +43,101 @@ int HansVisual::clear_layer(std::string layer_name)
     }
 }
 
-// <<<<<<<<<<<<<<
-void HansVisual::draw_grid(float cell_size, int grid_size, int H, double S, double V)
+void HansVisual::draw_grid(float cell_size, unsigned int grid_size, float R, float G, float B)
 {
-    /*
     if(grid_size < 1 || cell_size <= 0) return;
 
-    bool grid_exists = false;
-    for(size_t i = 0; i < layersSet.size(); ++i) if(layersSet[i].layer_name == "Grid") grid_exists = true;
-    if(!grid_exists)
+    unsigned int num_lines = 2 * (grid_size + 1);
+    float side_length = cell_size * grid_size;
+    float initial_coord = -(grid_size * cell_size / 2);
+    float z0 = 0;
+
+    float (*grid)[2][3] = new float[num_lines][2][3];
+
+    for(size_t i = 0; i < num_lines/2; ++i)
     {
-        // Create grid layer
+        grid[i][0][0] =  initial_coord + i * cell_size;
+        grid[i][0][1] =  z0;
+        grid[i][0][2] =  initial_coord;
+
+        grid[i][1][0] =  initial_coord + i * cell_size;
+        grid[i][1][1] =  z0;
+        grid[i][1][2] = -initial_coord;
+
+
+        grid[num_lines - 1 - i][0][0] =  initial_coord;
+        grid[num_lines - 1 - i][0][1] =  z0;
+        grid[num_lines - 1 - i][0][2] =  initial_coord + i * cell_size;
+
+        grid[num_lines - 1 - i][1][0] = -initial_coord;
+        grid[num_lines - 1 - i][1][1] =  z0;
+        grid[num_lines - 1 - i][1][2] =  initial_coord + i * cell_size;
     }
 
-    // Create array
-    int num_vertex = 2 * (grid_size + 1);
+    add_layer("Grid", lines, num_lines);
+    lay("Grid").send_lines(num_lines, grid, R, G, B);
+    delete[] grid;
+}
 
+void HansVisual::draw_axis(float length, bool system)
+{
+    float axis[3][2][3];
 
+    if(system)
+    {
+        axis[0][0][0] = 0;
+        axis[0][0][1] = 0;
+        axis[0][0][2] = 0;
+        axis[0][1][0] = length;
+        axis[0][1][1] = 0;
+        axis[0][1][2] = 0;
 
-    // Eliminar esta metodología:
-    myLines[i][0] = 1.2f;				// This point signals a jump between lines
-    myLines[i][1] = 3.4f;
-    myLines[i][2] = 5.6f;
+        axis[1][0][0] = 0;
+        axis[1][0][1] = 0;
+        axis[1][0][2] = 0;
+        axis[1][1][0] = 0;
+        axis[1][1][1] = length;
+        axis[1][1][2] = 0;
 
+        axis[3][0][0] = 0;
+        axis[3][0][1] = 0;
+        axis[3][0][2] = 0;
+        axis[3][1][0] = 0;
+        axis[3][1][1] = 0;
+        axis[3][1][2] = length;
+    }
+    else
+    {
+        axis[0][0][0] = 0;
+        axis[0][0][1] = 0;
+        axis[0][0][2] = 0;
+        axis[0][1][0] = length;
+        axis[0][1][1] = 0;
+        axis[0][1][2] = 0;
 
-    send_points("Points 2", 12, &pnts[0][0], &points_colors_RGB[0][0], nullptr, colors);
-*/
+        axis[1][0][0] = 0;
+        axis[1][0][1] = 0;
+        axis[1][0][2] = 0;
+        axis[1][1][0] = 0;
+        axis[1][1][1] = length;
+        axis[1][1][2] = 0;
+
+        axis[3][0][0] = 0;
+        axis[3][0][1] = 0;
+        axis[3][0][2] = 0;
+        axis[3][1][0] = 0;
+        axis[3][1][1] = 0;
+        axis[3][1][2] = length;
+    }
+
+    float colors[3][3] = {
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}
+    };
+
+    add_layer("Axis", lines, 3);
+    lay("Axis").send_lines_colors(3, axis, colors);
 }
 
 // Display system -------------------------------------
