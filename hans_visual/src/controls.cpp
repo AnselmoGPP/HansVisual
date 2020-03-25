@@ -96,7 +96,7 @@ void controls::computeMatricesFromInputs_FPS(GLFWwindow* window) {
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated, so here it's disabled instead.
 
 	// >>> Projection matrix : 45° Field of View, 4:3 ratio, Display range (near/far clipping plane) : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 1000.0f);
+	ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 	// >>> Camera matrix
 	ViewMatrix = glm::lookAt(
 		position,           // Camera is here
@@ -118,7 +118,7 @@ void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
 
     // >>> Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	float FoV = initialFoV;    //float FoV = - 5 * glfwGetMouseWheel();
-	ProjectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 1000.0f);
+	ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 
 
 	// Get current time and time difference

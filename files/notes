@@ -10,10 +10,9 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
-
-- Draw_grid
-- Delete_layer
-- add_layer() during execution
+- No layers with same name (forbiden)
+- add_layer() and delete_layer() during execution
+- Extract class for selection and GUI
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
 - Move layer class members to private
@@ -81,3 +80,4 @@ Controls are managed (controls > handler)
 - Create polyline()
 - Clear layer
 - find_layer("lines_1").send_points(...);
+- Draw_grid Draw_axis

@@ -23,7 +23,6 @@ int main()
     display.add_layer("Cubes 2", cubes, 50);
     display.add_layer("Cubes 3", cubes, 50);
 
-
     // Show the visualizer's window
     display.open_window();
 

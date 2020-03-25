@@ -9,10 +9,11 @@ class HansVisual
 {
     std::vector<layer> layersSet;
     plotter display;
+    std::mutex *mut;                    // Used in add_layer() and delete_layer()
 
     layer emptyLayer;
 
-    std::vector<size_t> find_layers(std::string layer_name);        // Used in clear_layer()
+    int find_layer(std::string layer_name);
 
 public:
     HansVisual();
@@ -25,8 +26,11 @@ public:
     // Fill a vector<string> with the names of all layers
     void get_layer_names(std::vector<std::string> &list);
 
-    // Add a new layer to layerSet (only before calling open_window()). Indicate the element type (points, lines, triangles, cubes), name and capacity (number of elements that layer supports)
+    // Add a new layer to layerSet. Indicate the element type (points, lines, triangles, cubes), name and capacity (number of elements that layer supports)
     void add_layer(const char *name, object_type type, unsigned int capacity);
+
+    // Delete an existing layer
+    int delete_layer(const char *layer_name);
 
     // Empty the contents from a layer
     int clear_layer(std::string layer_name);

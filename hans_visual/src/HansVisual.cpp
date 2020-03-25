@@ -1,6 +1,6 @@
 #include "HansVisual.hpp"
 
-HansVisual::HansVisual() : display(&layersSet)
+HansVisual::HansVisual() : display(&layersSet, mut), mut(nullptr)
 {
 
 }
@@ -24,23 +24,32 @@ void HansVisual::get_layer_names(std::vector<std::string> &list)
 // <<<<<<<<<<<<<< Make this function work after open_window())
 void HansVisual::add_layer(const char *name, object_type type, unsigned int capacity)
 {
+    std::lock_guard<std::mutex> lock(*mut);
     layersSet.push_back(layer(name, type, capacity));
+}
+
+// <<<<<<<<<<<<<< Make this function work after open_window())
+int HansVisual::delete_layer(const char *layer_name)
+{
+    int layer_num = find_layer(layer_name);
+
+    if(layer_num >= 0)
+    {
+        display.delete_buffer(layer_num);
+    }
+    else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
 }
 
 int HansVisual::clear_layer(std::string layer_name)
 {
-    std::vector<size_t> found_layers = find_layers(layer_name);
+    int layer_num = find_layer(layer_name);
 
-    if(found_layers.size() == 0) { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
-    else
+    if(layer_num >= 0)
     {
-        for(size_t i : found_layers)
-        {
-            std::lock_guard<std::mutex> lock(*layersSet[i].mut);
-            layersSet[i].objs_to_print = 0;
-        }
-        return 0;
+        std::lock_guard<std::mutex> lock(*layersSet[layer_num].mut);
+        layersSet[layer_num].objs_to_print = 0;
     }
+    else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
 }
 
 void HansVisual::draw_grid(float cell_size, unsigned int grid_size, float R, float G, float B)
@@ -82,7 +91,9 @@ void HansVisual::draw_grid(float cell_size, unsigned int grid_size, float R, flo
 void HansVisual::draw_axis(float length, bool system)
 {
     float axis[3][2][3];
+    float colors[3][3];
 
+    // OpenGL coordinate system
     if(system)
     {
         axis[0][0][0] = 0;
@@ -99,19 +110,32 @@ void HansVisual::draw_axis(float length, bool system)
         axis[1][1][1] = length;
         axis[1][1][2] = 0;
 
-        axis[3][0][0] = 0;
-        axis[3][0][1] = 0;
-        axis[3][0][2] = 0;
-        axis[3][1][0] = 0;
-        axis[3][1][1] = 0;
-        axis[3][1][2] = length;
+        axis[2][0][0] = 0;
+        axis[2][0][1] = 0;
+        axis[2][0][2] = 0;
+        axis[2][1][0] = 0;
+        axis[2][1][1] = 0;
+        axis[2][1][2] = length;
+
+        colors[0][0] = 1.0;
+        colors[0][1] = 0.0;
+        colors[0][2] = 0.0;
+
+        colors[1][0] = 0.0;
+        colors[1][1] = 1.0;
+        colors[1][2] = 0.0;
+
+        colors[2][0] = 0.0;
+        colors[2][1] = 0.0;
+        colors[2][2] = 1.0;
     }
+    // Automotive coordinate system
     else
     {
         axis[0][0][0] = 0;
         axis[0][0][1] = 0;
         axis[0][0][2] = 0;
-        axis[0][1][0] = length;
+        axis[0][1][0] = -length;
         axis[0][1][1] = 0;
         axis[0][1][2] = 0;
 
@@ -122,19 +146,25 @@ void HansVisual::draw_axis(float length, bool system)
         axis[1][1][1] = length;
         axis[1][1][2] = 0;
 
-        axis[3][0][0] = 0;
-        axis[3][0][1] = 0;
-        axis[3][0][2] = 0;
-        axis[3][1][0] = 0;
-        axis[3][1][1] = 0;
-        axis[3][1][2] = length;
-    }
+        axis[2][0][0] = 0;
+        axis[2][0][1] = 0;
+        axis[2][0][2] = 0;
+        axis[2][1][0] = 0;
+        axis[2][1][1] = 0;
+        axis[2][1][2] = -length;
 
-    float colors[3][3] = {
-        {1.0, 0.0, 0.0},
-        {0.0, 1.0, 0.0},
-        {0.0, 0.0, 1.0}
-    };
+        colors[0][0] = 0.0;
+        colors[0][1] = 1.0;
+        colors[0][2] = 0.0;
+
+        colors[1][0] = 0.0;
+        colors[1][1] = 0.0;
+        colors[1][2] = 1.0;
+
+        colors[2][0] = 1.0;
+        colors[2][1] = 0.0;
+        colors[2][2] = 0.0;
+    }
 
     add_layer("Axis", lines, 3);
     lay("Axis").send_lines_colors(3, axis, colors);
@@ -161,12 +191,10 @@ void HansVisual::wait()
 
 // Private ------------------------------------------
 
-std::vector<size_t> HansVisual::find_layers(std::string layer_name)
+int HansVisual::find_layer(std::string layer_name)
 {
-    std::vector<size_t> found;
+    for (size_t i = 0; i < layersSet.size(); ++i)
+        if (layersSet[i].layer_name == layer_name) return i;
 
-    for(size_t i = 0; i < layersSet.size(); ++i)
-        if(layersSet[i].layer_name == layer_name) found.push_back(i);
-
-    return found;
+    return -1
 }

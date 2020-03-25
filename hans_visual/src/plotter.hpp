@@ -45,6 +45,7 @@ using namespace glm;
 class plotter
 {
     std::vector<layer> *layersSet;
+    std::mutex *layersSet_mut;
 
     controls cam;
 
@@ -95,8 +96,14 @@ class plotter
     std::chrono::high_resolution_clock::time_point time_1, time_2;
     void fps_control(unsigned int frequency);           // Tell how many fps you want. If they are higher, they will be reduced until the specified fps
 
+    // ID buffers
+    GLuint *vertexbuffersIDs;
+    GLuint *colorbuffersIDs;
+    GLuint *selectionSquareID;
+    GLuint *selectionSquareColorID;
+
 public:
-    plotter(std::vector<layer> *layers_set);
+    plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);
     plotter(const plotter &obj);
     plotter& operator=(const plotter &obj);
     ~plotter();
@@ -109,6 +116,11 @@ public:
 
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
+
+    void add_buffer();
+
+    // Deletes one buffer. Call this function only
+    void delete_buffer(size_t buff_num);
 
     // Check whether the window is open
     bool window_is_open();

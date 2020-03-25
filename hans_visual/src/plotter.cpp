@@ -2,10 +2,8 @@
 
 // Main public members ---------------------------------------------------
 
-plotter::plotter(std::vector<layer> *layers_set)
+plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSet_mut(layers_set_mutex)
 {
-     layersSet = layers_set;
-
      char test2[21] = { 0x3c, 0x3c, 0x3c, 0x20, 0x20, 0x48, 0x61,
                         0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
                         0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
@@ -30,6 +28,10 @@ plotter::plotter(std::vector<layer> *layers_set)
     MinDistance = 0.01;
     selection_color[0] = SEL_R;  selection_color[1] = SEL_G;  selection_color[2] = SEL_B;  selection_color[3] = SEL_A;
     selection_square = layer("Sel. square", points, 0);
+
+    // OGL buffers filling for being able to call delete_buffer() at any moment
+    vertexbuffersIDs = nullptr;
+    colorbuffersIDs = nullptr;
 }
 
 plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
@@ -134,6 +136,32 @@ void plotter::fill_data_window(const std::string *data_strings, int num_strings)
 
     for (int i = 0; i < num_strings; i++)
         data_window[i] = data_strings[i];
+}
+
+void plotter::add_buffer()
+{
+
+}
+
+void plotter::delete_buffer(size_t buff_num)
+{
+    std::lock_guard<std::mutex> lock(*layersSet_mut);
+
+    if(vertexbuffersIDs == nullptr) layersSet->erase(layersSet->begin() + buff_num);
+    else
+    {
+        glDeleteBuffers(layersSet->size(), vertexbuffersIDs);
+        glDeleteBuffers(layersSet->size(), colorbuffersIDs);
+        delete vertexbuffersIDs;
+        delete colorbuffersIDs;
+
+        layersSet->erase(layersSet->begin() + buff_num);
+
+        vertexbuffersIDs = new GLuint[layersSet->size()];
+        glGenBuffers(layersSet->size(), vertexbuffersIDs);
+        colorbuffersIDs = new GLuint[layersSet->size()];
+        glGenBuffers(layersSet->size(), colorbuffersIDs);
+    }
 }
 
 bool plotter::window_is_open() { return window_open; }
@@ -254,15 +282,19 @@ int  plotter::main_loop_thread()
     */
     // ------------------------------------
 
-    GLuint *vertexbuffersIDs = new GLuint[layersSet->size()];    // The first buffer is for the selected points
-    glGenBuffers(layersSet->size(), vertexbuffersIDs);
-    GLuint *colorbuffersIDs = new GLuint[layersSet->size()];
-    glGenBuffers(layersSet->size(), colorbuffersIDs);
+    {
+        std::lock_guard<std::mutex> lock(*layersSet_mut);
 
-    GLuint *selectionSquareID = new GLuint;
-    glGenBuffers(1, selectionSquareID);
-    GLuint *selectionSquareColorID = new GLuint;
-    glGenBuffers(1, selectionSquareColorID);
+        vertexbuffersIDs = new GLuint[layersSet->size()];    // The first buffer is for the selected points
+        glGenBuffers(layersSet->size(), vertexbuffersIDs);
+        colorbuffersIDs = new GLuint[layersSet->size()];
+        glGenBuffers(layersSet->size(), colorbuffersIDs);
+
+        selectionSquareID = new GLuint;
+        glGenBuffers(1, selectionSquareID);
+        selectionSquareColorID = new GLuint;
+        glGenBuffers(1, selectionSquareColorID);
+    }
 
     // ------------------------------------
     do
@@ -303,6 +335,7 @@ int  plotter::main_loop_thread()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        std::lock_guard<std::mutex> lock(*layersSet_mut);
         load_buffers(vertexbuffersIDs, colorbuffersIDs);
 
         glDisableVertexAttribArray(0);
@@ -339,8 +372,8 @@ int  plotter::main_loop_thread()
     ImGui::DestroyContext();
 
     // Cleanup VBO and shader
-    glDeleteBuffers(layersSet->size(), vertexbuffersIDs);
-    glDeleteBuffers(layersSet->size(), colorbuffersIDs);
+    glDeleteBuffers(layersSet->size(), vertexbuffersIDs);           delete vertexbuffersIDs;    vertexbuffersIDs = nullptr;
+    glDeleteBuffers(layersSet->size(), colorbuffersIDs);            delete colorbuffersIDs;     colorbuffersIDs  = nullptr;
     glDeleteBuffers(1, selectionSquareID);
     glDeleteBuffers(1, selectionSquareColorID);
 
