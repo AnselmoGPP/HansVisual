@@ -5,6 +5,21 @@ HansVisual::HansVisual() : display(&layersSet, &mut)
 
 }
 
+HansVisual::HansVisual(const HansVisual &obj) : layersSet(obj.layersSet), display(&layersSet, &mut)
+{
+
+}
+
+HansVisual& HansVisual::operator=(const HansVisual &obj)
+{
+    layersSet = obj.layersSet;
+    display = obj.display;
+
+    return *this;
+}
+
+
+
 // Layer system ---------------------------------------
 
 layer & HansVisual::lay(std::string layer_name)

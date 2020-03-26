@@ -45,7 +45,6 @@ struct layer
     std::string layer_name;
     unsigned int max_objs;
     object_type layer_type;
-    std::string layer_type_str = "none";
     size_t objs_to_print = 0;                    // Number of objects that are going to be printed
     layer_state state = open;                    // Used for only modifying buffer once per loop
     bool checkbox_value = true;
@@ -55,20 +54,6 @@ struct layer
     float(*palette)[3] = nullptr;                   // Palette of colors of the layer
     size_t palette_size = 21;                       // Size of the layer's palette (number of colors)
     float alpha_channel = 1.0f;
-
-    // Points data
-    float(*points_buffer)[3]                = nullptr;      // Stores all the coordinates of all the points of the layer
-    float(*points_color_buffer)[4]          = nullptr;      // Stores the RGBA colors of each point
-    std::string *points_strings             = nullptr;      // Optional data for each point (used in selections)
-    // Lines data
-    float(*lines_buffer)[2][3]              = nullptr;
-    float(*lines_color_buffer)[2][4]        = nullptr;
-    // Triangles
-    float(*triangles_buffer)[3][3]          = nullptr;
-    float(*triangles_color_buffer)[3][4]    = nullptr;
-    // Cubes data
-    float(*cubes_buffer)[12*3][3]           = nullptr;
-    float(*cubes_color_buffer)[12*3][4]     = nullptr;
 
     // Send array of points (float arr[i]) to print them
     int send_points(unsigned int number_points, const float (*arr)[3], float R = DEFAULT_RED, float G = DEFAULT_GREEN, float B = DEFAULT_BLUE, std::string *points_data = nullptr);
@@ -110,12 +95,28 @@ struct layer
     int set_alpha_channel(float alpha_value);
     void change_name(std::string new_name);
 
+    // Points data
+    float(*points_buffer)[3]                = nullptr;      // Stores all the coordinates of all the points of the layer
+    float(*points_color_buffer)[4]          = nullptr;      // Stores the RGBA colors of each point
+    std::string *points_strings             = nullptr;      // Optional data for each point (used in selections)
+    // Lines data
+    float(*lines_buffer)[2][3]              = nullptr;
+    float(*lines_color_buffer)[2][4]        = nullptr;
+    // Triangles
+    float(*triangles_buffer)[3][3]          = nullptr;
+    float(*triangles_color_buffer)[3][4]    = nullptr;
+    // Cubes data
+    float(*cubes_buffer)[12*3][3]           = nullptr;
+    float(*cubes_color_buffer)[12*3][4]     = nullptr;
+
 private:
+
     void error_message(unsigned int code, unsigned int number_objs = 0);
     void rotation_H(float &x, float &y, float X, float Y, float rot);
     void HSVtoRGB(double H, double S, double V, float output[3]);
     int first_checks(object_type func_type, unsigned int number_elements);
     void fill_cube_vertex(const cube3D *arr);
+    std::string layer_type_str();
 };
 
 #endif

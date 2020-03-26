@@ -6,7 +6,9 @@ int main()
 {
     fill_buffers();
 
-    HansVisual display;
+    HansVisual display_1;
+    HansVisual display_2(display_1);
+    HansVisual display = display_2;
 
     display.draw_grid(6, 41, 0.0f, 0.0f, 0.4f);
     display.draw_axis(10, true);
@@ -112,16 +114,27 @@ int main()
     display.lay("Cubes 3").send_cubes_gradients(3, myCubes, cubes_gradients, 0, 0);
     //display.lay("Cubes 3").send_cubes_gradients(3, myCubes, cubes_gradients, 1, 12);        // (black to blue boxes)
 
+    // ----- Delete layers this way ------------------------------------------------
+
+    //display.delete_layer("Points 1");
+    //display.delete_layer("Lines 2");
+    //display.delete_layer("Triangles 3");
+    //display.delete_layer("Cubes 1");
+
     // ----- Send data to the "data window" ----------------------------------------
 
     std::string additional_data[10] =
     {
         "You can send data to this \"data window\"",
-        "You only have to call the method \"fill_data_window\"",
+        "Just call the method \"fill_data_window\"",
         "Pass a pointer to an array of X strings to it",
         "The method will publish one string per line",
         "The empty strings (=\"\") won't be published",
-        "", "", "", "", ""
+        "",
+        "",
+        "",
+        "",
+        ""
     };
 
     display.fill_data_window(additional_data, 7);

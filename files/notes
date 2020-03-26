@@ -10,8 +10,8 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
-- No layers with same name (forbiden)
-- add_layer() and delete_layer() during execution
+- Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
+- Check correcteness of mutexes. Check the std::mutex *mut members.
 - Extract class for selection and GUI
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
@@ -21,7 +21,6 @@ Controls are managed (controls > handler)
 - Select camera type
 - Put selections in a ImGui window
 - Don't stretch the image when changing window size
-- 3D polynomial
 - Singleton
 - Function for pitch, roll, yaw - Improve cubes rotation
 -Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
@@ -74,6 +73,7 @@ Controls are managed (controls > handler)
 - IOs functions (point inside box, parser...)
 - Market moves (gaussian bell?)
 - Simular wave function
+- 3D polynomial
 
 ----- Done ---------------------------------------------------------
 
@@ -82,3 +82,4 @@ Controls are managed (controls > handler)
 - Clear layer
 - find_layer("lines_1").send_points(...);
 - Draw_grid Draw_axis
+- add_layer() and delete_layer() during execution

@@ -8,8 +8,9 @@
 class HansVisual
 {
     std::vector<layer> layersSet;
-    plotter display;
     std::mutex mut;                    // Used in add_layer() and delete_layer()
+
+    plotter display;
 
     layer emptyLayer;
 
@@ -17,6 +18,9 @@ class HansVisual
 
 public:
     HansVisual();
+    HansVisual(const HansVisual &obj);
+    HansVisual& operator=(const HansVisual &obj);
+    ~HansVisual() = default;
 
     // Layer system ----------------------------------------------
 

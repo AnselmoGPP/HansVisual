@@ -1,13 +1,14 @@
 #ifndef CONTROLS_HPP
 #define CONTROLS_HPP
 
-#define WINDOW_WIDTH    1920/2      //1024
-#define WINDOW_HEIGHT   1080/2      //768
+#define WINDOW_WIDTH    1920/2      // 1024
+#define WINDOW_HEIGHT   1080/2      // 768
 #define FPS     1       // Not used
 #define SPHERE  2       // Not used
 #define NEAR_CLIP_PLANE 0.1f
 #define FAR_CLIP_PLANE 1000.0f
-#define ASPECT_RATIO 4.0f/3.0f
+#define ASPECT_RATIO 16.f/9.f       // 4.0f/3.0f
+#define ADAPTATIVE_ASPECT_RATIO 1
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

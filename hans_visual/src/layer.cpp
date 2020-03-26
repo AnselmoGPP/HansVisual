@@ -56,26 +56,22 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         // Fill the buffers depending on the layer type (points, lines, triangles, cubes)
         if(layer_type == points)
         {
-            layer_type_str = "points";
             points_buffer = new float[max_objs][3];
             points_color_buffer = new float[max_objs][4];
             points_strings = new std::string[max_objs];
         }
         if(layer_type == lines)
         {
-            layer_type_str = "lines";
             lines_buffer = new float[max_objs][2][3];
             lines_color_buffer = new float[max_objs][2][4];
         }
         if(layer_type == triangles)
         {
-            layer_type_str = "triangles";
             triangles_buffer = new float[max_objs][3][3];
             triangles_color_buffer = new float[max_objs][3][4];
         }
         if(layer_type == cubes)
         {
-            layer_type_str = "cubes";
             cubes_buffer = new float[max_objs][12*3][3];
             cubes_color_buffer = new float[max_objs][12*3][4];
         }
@@ -88,7 +84,6 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         layer_name = obj.layer_name;
         max_objs = obj.max_objs;
         layer_type = obj.layer_type;
-        layer_type_str = obj.layer_type_str;
         objs_to_print = obj.objs_to_print;
         state = obj.state;
         checkbox_value = obj.checkbox_value;
@@ -237,7 +232,6 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         layer_name = obj.layer_name;
         max_objs = obj.max_objs;
         layer_type = obj.layer_type;
-        layer_type_str = obj.layer_type_str;
         objs_to_print = obj.objs_to_print;
         state = obj.state;
         checkbox_value = obj.checkbox_value;
@@ -1323,7 +1317,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
             break;
         case 5:
-            std::cout << "The layer \"" << layer_name << "\" is of type \"" << layer_type_str << "\". You cannot send a different type of objects to it" << std::endl;
+            std::cout << "The layer \"" << layer_name << "\" is of type \"" << layer_type_str() << "\". You cannot send a different type of objects to it" << std::endl;
         case 6:
             std::cout << "Cannot modify the alpha channel of layer \"" << layer_name << "\". The alpha channel must be in the range [0, 1]" << std::endl;
         }
@@ -1563,4 +1557,12 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             cubes_buffer[i][35][1] = y6;
             cubes_buffer[i][35][2] = z6;
         }
+    }
+
+    std::string layer::layer_type_str()
+    {
+        if(layer_type == points) return "points";
+        else if(layer_type == lines) return "lines";
+        else if(layer_type == triangles) return "triangles";
+        else if(layer_type == cubes) return "cubes";
     }
