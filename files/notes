@@ -15,6 +15,7 @@ Controls are managed (controls > handler)
 - Extract class for selection and GUI
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
+- resize_buffer_set() independiente de layersSet->size() (poner variable miembro en plotter class)
 - Move layer class members to private
 - Send lines by segments
 - Select camera type

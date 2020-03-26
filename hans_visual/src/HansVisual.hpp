@@ -9,7 +9,7 @@ class HansVisual
 {
     std::vector<layer> layersSet;
     plotter display;
-    std::mutex *mut;                    // Used in add_layer() and delete_layer()
+    std::mutex mut;                    // Used in add_layer() and delete_layer()
 
     layer emptyLayer;
 

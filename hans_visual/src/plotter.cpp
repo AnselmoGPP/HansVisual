@@ -138,29 +138,21 @@ void plotter::fill_data_window(const std::string *data_strings, int num_strings)
         data_window[i] = data_strings[i];
 }
 
-void plotter::add_buffer()
+void plotter::resize_buffer_set(size_t new_size)
 {
-
-}
-
-void plotter::delete_buffer(size_t buff_num)
-{
-    std::lock_guard<std::mutex> lock(*layersSet_mut);
-
-    if(vertexbuffersIDs == nullptr) layersSet->erase(layersSet->begin() + buff_num);
-    else
+    if(vertexbuffersIDs != nullptr)
     {
         glDeleteBuffers(layersSet->size(), vertexbuffersIDs);
         glDeleteBuffers(layersSet->size(), colorbuffersIDs);
-        delete vertexbuffersIDs;
-        delete colorbuffersIDs;
 
-        layersSet->erase(layersSet->begin() + buff_num);
+        delete[] vertexbuffersIDs;
+        delete[] colorbuffersIDs;
 
-        vertexbuffersIDs = new GLuint[layersSet->size()];
-        glGenBuffers(layersSet->size(), vertexbuffersIDs);
-        colorbuffersIDs = new GLuint[layersSet->size()];
-        glGenBuffers(layersSet->size(), colorbuffersIDs);
+        vertexbuffersIDs = new GLuint[new_size];
+        colorbuffersIDs  = new GLuint[new_size];
+
+        glGenBuffers(new_size, vertexbuffersIDs);
+        glGenBuffers(new_size, colorbuffersIDs);
     }
 }
 
@@ -286,13 +278,13 @@ int  plotter::main_loop_thread()
         std::lock_guard<std::mutex> lock(*layersSet_mut);
 
         vertexbuffersIDs = new GLuint[layersSet->size()];    // The first buffer is for the selected points
-        glGenBuffers(layersSet->size(), vertexbuffersIDs);
         colorbuffersIDs = new GLuint[layersSet->size()];
-        glGenBuffers(layersSet->size(), colorbuffersIDs);
-
         selectionSquareID = new GLuint;
-        glGenBuffers(1, selectionSquareID);
         selectionSquareColorID = new GLuint;
+
+        glGenBuffers(layersSet->size(), vertexbuffersIDs);
+        glGenBuffers(layersSet->size(), colorbuffersIDs);
+        glGenBuffers(1, selectionSquareID);
         glGenBuffers(1, selectionSquareColorID);
     }
 
@@ -372,13 +364,14 @@ int  plotter::main_loop_thread()
     ImGui::DestroyContext();
 
     // Cleanup VBO and shader
-    glDeleteBuffers(layersSet->size(), vertexbuffersIDs);           delete vertexbuffersIDs;    vertexbuffersIDs = nullptr;
-    glDeleteBuffers(layersSet->size(), colorbuffersIDs);            delete colorbuffersIDs;     colorbuffersIDs  = nullptr;
+    glDeleteBuffers(layersSet->size(), vertexbuffersIDs);       delete[] vertexbuffersIDs;    vertexbuffersIDs = nullptr;
+    glDeleteBuffers(layersSet->size(), colorbuffersIDs);        delete[] colorbuffersIDs;     colorbuffersIDs  = nullptr;
     glDeleteBuffers(1, selectionSquareID);
     glDeleteBuffers(1, selectionSquareColorID);
 
     glDeleteProgram(programID);
     glDeleteProgram(programID_selection);
+
     glDeleteVertexArrays(1, &VertexArrayID);
 
     // Close OpenGL window and terminate GLFW

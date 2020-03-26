@@ -117,10 +117,8 @@ public:
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
     void fill_data_window(const std::string *data_strings, int num_strings);
 
-    void add_buffer();
-
-    // Deletes one buffer. Call this function only
-    void delete_buffer(size_t buff_num);
+    // Resize the buffer set        (Call this just before resizing layersSet) (Use layersSet.mutex have thread under control)
+    void resize_buffer_set(size_t new_size);
 
     // Check whether the window is open
     bool window_is_open();

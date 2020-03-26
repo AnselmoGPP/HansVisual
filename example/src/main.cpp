@@ -1,32 +1,24 @@
 #include "header.hpp"
 
+//#define DELETE 1
+
 int main()
 {
     fill_buffers();
 
-    // Different ways of creating a visualizer object
     HansVisual display;
+
     display.draw_grid(6, 41, 0.0f, 0.0f, 0.4f);
     display.draw_axis(10, true);
-
-    // Add some layers to the visualizer
-    display.add_layer("Points 1", points, 20);
-    display.add_layer("Points 2", points, 256);
-    display.add_layer("Points 3", points, 20);
-    display.add_layer("Lines 1", lines, 150);
-    display.add_layer("Lines 2", lines, 150);
-    display.add_layer("Lines 3", lines, 150);
-    display.add_layer("Triangles 1", triangles, 50);
-    display.add_layer("Triangles 2", triangles, 50);
-    display.add_layer("Triangles 3", triangles, 50);
-    display.add_layer("Cubes 1", cubes, 50);
-    display.add_layer("Cubes 2", cubes, 50);
-    display.add_layer("Cubes 3", cubes, 50);
 
     // Show the visualizer's window
     display.open_window();
 
     // ----- Send points -----------------------------------------------------------
+
+    display.add_layer("Points 1", points, 20);
+    display.add_layer("Points 2", points, 256);
+    display.add_layer("Points 3", points, 20);
 
     // No mode (uses default color or color specified by the user) (white points)
       toolKit::transform_coordinates(pnts, 12);                                                     // Transform the points coordinates in a buffer from automotive system to OpenGL system
@@ -53,6 +45,10 @@ int main()
 
     // ----- Send lines ------------------------------------------------------------
 
+    display.add_layer("Lines 1", lines, 150);
+    display.add_layer("Lines 2", lines, 150);
+    display.add_layer("Lines 3", lines, 150);
+
     // No mode (white cube)
     display.lay("Lines 1").send_lines(12, linesCube);                                                   // (White points)
     display.lay("Lines 1").send_lines(12, linesCube, 1., 1., 1.);                                       // (White points)
@@ -73,6 +69,10 @@ int main()
 
     // ----- Send triangles --------------------------------------------------------
 
+    display.add_layer("Triangles 1", triangles, 50);
+    display.add_layer("Triangles 2", triangles, 50);
+    display.add_layer("Triangles 3", triangles, 50);
+
     // No mode
     display.lay("Triangles 1").send_triangles(4, triangs);                                              // (White triangles)
     display.lay("Triangles 1").send_triangles(4, triangs, 1., 1., 1.);                                  // (White triangles)
@@ -92,6 +92,10 @@ int main()
     // display.lay("Triangles 3").send_triangles_gradients(unsigned int number_triangles, const float (*arr)[3][3], const float *gradients, float min = 0, float max = 1);
 
     // ----- Send cubes ------------------------------------------------------------
+
+    display.add_layer("Cubes 1", cubes, 50);
+    display.add_layer("Cubes 2", cubes, 50);
+    display.add_layer("Cubes 3", cubes, 50);
 
     // No mode
     display.lay("Cubes 1").send_cubes(3, myCubes);											// (White boxes)

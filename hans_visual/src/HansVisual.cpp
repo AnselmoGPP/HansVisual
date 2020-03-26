@@ -1,6 +1,6 @@
 #include "HansVisual.hpp"
 
-HansVisual::HansVisual() : display(&layersSet, mut), mut(nullptr)
+HansVisual::HansVisual() : display(&layersSet, &mut)
 {
 
 }
@@ -21,21 +21,24 @@ void HansVisual::get_layer_names(std::vector<std::string> &list)
     for(layer lay : layersSet) list.push_back(lay.layer_name);
 }
 
-// <<<<<<<<<<<<<< Make this function work after open_window())
 void HansVisual::add_layer(const char *name, object_type type, unsigned int capacity)
 {
-    std::lock_guard<std::mutex> lock(*mut);
+    for(size_t i = 0; i < layersSet.size(); ++i)
+        if(layersSet[i].layer_name == name) { std::cout << "Layer \"" << name << "\" already exists" << std::endl; return; }
+
+    std::lock_guard<std::mutex> lock(mut);
+    display.resize_buffer_set(layersSet.size() + 1);
     layersSet.push_back(layer(name, type, capacity));
 }
 
-// <<<<<<<<<<<<<< Make this function work after open_window())
 int HansVisual::delete_layer(const char *layer_name)
 {
     int layer_num = find_layer(layer_name);
-
     if(layer_num >= 0)
     {
-        display.delete_buffer(layer_num);
+        std::lock_guard<std::mutex> lock(mut);
+        display.resize_buffer_set(layersSet.size() - 1);
+        layersSet.erase(layersSet.begin() + layer_num);
     }
     else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
 }
@@ -196,5 +199,5 @@ int HansVisual::find_layer(std::string layer_name)
     for (size_t i = 0; i < layersSet.size(); ++i)
         if (layersSet[i].layer_name == layer_name) return i;
 
-    return -1
+    return -1;
 }

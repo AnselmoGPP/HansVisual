@@ -5,70 +5,70 @@
 float pnts[12][3];
 unsigned int points_categories[12] = { 0,1,2,3,4,5,6,7,8,10,10,10 };
 float points_colors_HSV[12][3] = {
-    20.0f,  1.0f, 1.0f,
-    40.0f,  1.0f, 1.0f,
-    60.0f,  1.0f, 1.0f,
-    80.0f,  1.0f, 1.0f,
-    100.0f, 1.0f, 1.0f,
-    120.0f, 1.0f, 1.0f,
-    140.0f, 1.0f, 1.0f,
-    160.0f, 1.0f, 1.0f,
-    180.0f, 1.0f, 1.0f,
-    200.0f, 1.0f, 1.0f,
-    220.0f, 1.0f, 1.0f,
-    240.0f, 1.0f, 1.0f
+    {20.0f,  1.0f, 1.0f},
+    {40.0f,  1.0f, 1.0f},
+    {60.0f,  1.0f, 1.0f},
+    {80.0f,  1.0f, 1.0f},
+    {100.0f, 1.0f, 1.0f},
+    {120.0f, 1.0f, 1.0f},
+    {140.0f, 1.0f, 1.0f},
+    {160.0f, 1.0f, 1.0f},
+    {180.0f, 1.0f, 1.0f},
+    {200.0f, 1.0f, 1.0f},
+    {220.0f, 1.0f, 1.0f},
+    {240.0f, 1.0f, 1.0f}
 };
 float points_colors_HSV_2[12][3] = {
-255-28.0f,  1.0f, 1.0f,
-255-36.0f,  1.0f, 1.0f,
-255-36.0f,  1.0f, 1.0f,
-255-43.0f,  1.0f, 1.0f,
-255-43.0f, 1.0f, 1.0f,
-255-43.0f, 1.0f, 1.0f,
-255-84.0f, 1.0f, 1.0f,
-255-239.0f, 1.0f, 1.0f,
-255-239.0f, 1.0f, 1.0f,
-255-166.0f, 1.0f, 1.0f,
-255-169.0f, 1.0f, 1.0f,
-255-169.0f, 1.0f, 1.0f
+    {255-28.0f,  1.0f, 1.0f},
+    {255-36.0f,  1.0f, 1.0f},
+    {255-36.0f,  1.0f, 1.0f},
+    {255-43.0f,  1.0f, 1.0f},
+    {255-43.0f,  1.0f, 1.0f},
+    {255-43.0f,  1.0f, 1.0f},
+    {255-84.0f,  1.0f, 1.0f},
+    {255-239.0f, 1.0f, 1.0f},
+    {255-239.0f, 1.0f, 1.0f},
+    {255-166.0f, 1.0f, 1.0f},
+    {255-169.0f, 1.0f, 1.0f},
+    {255-169.0f, 1.0f, 1.0f}
 };
 float points_colors_RGB[12][3] = {
-1.0f, 0.0f, 0.0f,
-1.0f, 0.0f, 0.0f,
-1.0f, 0.0f, 0.0f,
-1.0f, 0.0f, 0.0f,
-0.0f, 1.0f, 0.0f,
-0.0f, 1.0f, 0.0f,
-0.0f, 1.0f, 0.0f,
-0.0f, 1.0f, 0.0f,
-0.0f, 0.0f, 1.0f,
-0.0f, 0.0f, 1.0f,
-0.0f, 0.0f, 1.0f,
-0.0f, 0.0f, 1.0f
+    {1.0f, 0.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f},
+    {0.0f, 0.0f, 1.0f},
+    {0.0f, 0.0f, 1.0f},
+    {0.0f, 0.0f, 1.0f}
 };
 float modified_rainbow[256][3];
 float points_gradient_palette[21][3] = {
-    0.0f, 0.0f, 0.00f,
-    0.0f, 0.0f, 0.05f,
-    0.0f, 0.0f, 0.10f,
-    0.0f, 0.0f, 0.15f,
-    0.0f, 0.0f, 0.20f,
-    0.0f, 0.0f, 0.25f,
-    0.0f, 0.0f, 0.30f,
-    0.0f, 0.0f, 0.35f,
-    0.0f, 0.0f, 0.40f,
-    0.0f, 0.0f, 0.45f,
-    0.0f, 0.0f, 0.50f,
-    0.0f, 0.0f, 0.55f,
-    0.0f, 0.0f, 0.60f,
-    0.0f, 0.0f, 0.65f,
-    0.0f, 0.0f, 0.70f,
-    0.0f, 0.0f, 0.75f,
-    0.0f, 0.0f, 0.80f,
-    0.0f, 0.0f, 0.85f,
-    0.0f, 0.0f, 0.90f,
-    0.0f, 0.0f, 0.95f,
-    0.0f, 0.0f, 1.00f
+    {0.0f, 0.0f, 0.00f},
+    {0.0f, 0.0f, 0.05f},
+    {0.0f, 0.0f, 0.10f},
+    {0.0f, 0.0f, 0.15f},
+    {0.0f, 0.0f, 0.20f},
+    {0.0f, 0.0f, 0.25f},
+    {0.0f, 0.0f, 0.30f},
+    {0.0f, 0.0f, 0.35f},
+    {0.0f, 0.0f, 0.40f},
+    {0.0f, 0.0f, 0.45f},
+    {0.0f, 0.0f, 0.50f},
+    {0.0f, 0.0f, 0.55f},
+    {0.0f, 0.0f, 0.60f},
+    {0.0f, 0.0f, 0.65f},
+    {0.0f, 0.0f, 0.70f},
+    {0.0f, 0.0f, 0.75f},
+    {0.0f, 0.0f, 0.80f},
+    {0.0f, 0.0f, 0.85f},
+    {0.0f, 0.0f, 0.90f},
+    {0.0f, 0.0f, 0.95f},
+    {0.0f, 0.0f, 1.00f}
 };
 float points_gradients[12] = { 1,2,3,4,5,6,7,8,9,10,11,12 };
 float points_line[256][3];
@@ -299,16 +299,16 @@ float cubes_gradients[3] = { 2, 6, 12 };
 
 void fill_buffers()
 {
-        // Fill pnts[] with 12 points forming an icosahedron with diameter 2
-        toolKit::icosahedron(2, pnts);
+    // Fill pnts[] with 12 points forming an icosahedron with diameter 2
+    toolKit::icosahedron(2, pnts);
 
-        // Fill array with 256 points
-        for(int i = 0; i < 256; ++i) { points_line[i][0] = 0.06 * i; points_line[i][1] = 0; points_line[i][2] = 0; }
+    // Fill array with 256 points
+    for(int i = 0; i < 256; ++i) { points_line[i][0] = 0.06 * i; points_line[i][1] = 3; points_line[i][2] = 0; }
 
-        // Fill modified_rainbow with a variation of rainbow colors
-        toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // Same as the default call:  toolKit::fill_rainbow(modified_rainbow)
+    // Fill modified_rainbow with a variation of rainbow colors
+    toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // Same as the default call:  toolKit::fill_rainbow(modified_rainbow)
 
-        // Create a parable
-        float coefficients[3] = {0, 0, 1};      // y = 0 + 0x + 1x²
-        toolKit::polynomial_segments(parable, -10, 10, 100, coefficients, 3);
+    // Create a parable
+    float coefficients[3] = {0, 0, 1};      // y = 0 + 0x + 1x²
+    toolKit::polynomial_segments(parable, -10, 10, 100, coefficients, 3);
 }
