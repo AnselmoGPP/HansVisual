@@ -10,6 +10,8 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
+> por qué open_window tiene que estar en init_GLFW?
+> Por qué no desaparece el mouse en FP camera?
 > Correct copy constructors and copy assignment operators overloading
 - Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
 - Check correcteness of mutexes. Check the std::mutex *mut members.

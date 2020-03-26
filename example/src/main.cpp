@@ -18,8 +18,9 @@ int main()
     display.open_window();
 
     // ----- Send points -----------------------------------------------------------
-
+    std::cout << "OOO" << std::endl;
     display.add_layer("Points 1", points, 20);
+    std::cout << "OOO" << std::endl;
     display.add_layer("Points 2", points, 256);
     display.add_layer("Points 3", points, 20);
 

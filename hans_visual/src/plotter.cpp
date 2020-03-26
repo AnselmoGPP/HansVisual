@@ -4,16 +4,11 @@
 
 plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSet_mut(layers_set_mutex)
 {
-     char test2[21] = { 0x3c, 0x3c, 0x3c, 0x20, 0x20, 0x48, 0x61,
-                        0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
-                        0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
-     for(int i = 0; i < 21; i++) test[i] = test2[i];
-
     // Create the first layer (Selections)
     layersSet->push_back(layer("Selections", points, 0));
 
-    window = nullptr;
-    window_open = false;
+    //window = nullptr;
+    //window_open = false;
 
     // GUI state
     show_checkboxes = 1;
@@ -40,9 +35,7 @@ plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
 
     //cam = obj.cam;
 
-    window_open = false;
-
-    for(int i = 0; i < 21; ++i) test[i] = obj.test[i];
+    win.window_open = false;
 
     // GUI state
     show_checkboxes = obj.show_checkboxes;
@@ -69,8 +62,6 @@ plotter& plotter::operator=(const plotter &obj)
 
     //window = obj.window;
     display_w = obj.display_w;  display_h = obj.display_h;
-
-    for(int i = 0; i < 21; ++i) test[i] = obj.test[i];
 
     // GUI state
     show_checkboxes = obj.show_checkboxes;
@@ -101,25 +92,11 @@ plotter::~plotter()
 
 int  plotter::open_window()
 {
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        getchar();
-        return -1;
-    }
-
-    glfwWindowHint(GLFW_SAMPLES, ANTIALIASING);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, VERSION_GLFW);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, VERSION_GLFW);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);			// To make MacOS happy; should not be needed
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    win.init_GLFW();
 
     std::thread running(&plotter::main_loop_thread, this);
     running.detach();
 
-    window_open = true;
     return 0;
 }
 
@@ -156,24 +133,16 @@ void plotter::resize_buffer_set(size_t new_size)
     }
 }
 
-bool plotter::window_is_open() { return window_open; }
+bool plotter::window_is_open() { return win.window_open; }
 
-void plotter::close_window() { window_open = false; }
+void plotter::close_window() { win.window_open = false; }
 
 // Private members -------------------------------------------------------
 
 int  plotter::main_loop_thread()
 {
-    // Open a window and create its OpenGL context
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, test, NULL, NULL);
-    if (window == NULL) {
-        fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
-        getchar();
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
+    win.open_window();
+std::cout << "XXX" << std::endl;
     // Initialize GLEW
     glewExperimental = true;										// Needed for core profile
     if (glewInit() != GLEW_OK) {
@@ -182,7 +151,7 @@ int  plotter::main_loop_thread()
         glfwTerminate();
         return -1;
     }
-
+    std::cout << "XXX" << std::endl;
     // ------------------------------------
 
     // GUI
@@ -195,17 +164,17 @@ int  plotter::main_loop_thread()
     ImGui::StyleColorsDark();		//ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(win.window, true);
     const char* glsl_version = VERSION_GLFW_for_IMGUI;
     ImGui_ImplOpenGL3_Init(glsl_version);
-
+    std::cout << "XXX" << std::endl;
     // ------------------------------------
 
-    cam.adjustments(window);
+    cam.adjustments(win.window);
 
     // Set the mouse at the center of the screen
     glfwPollEvents();
-    glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    glfwSetCursorPos(win.window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
     glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);     // Background color
 
@@ -232,7 +201,7 @@ int  plotter::main_loop_thread()
     glLineWidth(2.0);
     GLfloat lineWidthRange[2];                  // GPU implementation dependent
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
-
+    std::cout << "XXX" << std::endl;
     // ------------------------------------
 
     // Vertex array object (VAO)
@@ -292,9 +261,9 @@ int  plotter::main_loop_thread()
     do
     {
         time_1 = std::chrono::high_resolution_clock::now();
-        if(!window_open) break;
+        if(!win.window_open) break;
 
-        glfwGetFramebufferSize(window, &display_w, &display_h);
+        win.GetFramebufferSize(&display_w, &display_h);
         glViewport(0, 0, display_w, display_h);                 // Arguments: Lower left
         glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
@@ -306,7 +275,7 @@ int  plotter::main_loop_thread()
         {
             std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions puts the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from different visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
             camera = &cam;
-            if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
+            if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(win.window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
         
 			ProjectionMatrix = cam.getProjectionMatrix();
 			ViewMatrix = cam.getViewMatrix();
@@ -345,8 +314,7 @@ int  plotter::main_loop_thread()
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Swap buffers
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        win.SwapBuffers_PollEvents();
 
         for(layer &lay : *layersSet) lay.state = open;
 
@@ -354,7 +322,7 @@ int  plotter::main_loop_thread()
         fps_control(DESIRED_FPS);
     }
     // Check if the ESC key was pressed or the window was closed
-    while ((glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0) && window_open);
+    while ((glfwGetKey(win.window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(win.window) == 0) && win.window_open);
 
     // ------------------------------------
 
@@ -374,10 +342,8 @@ int  plotter::main_loop_thread()
 
     glDeleteVertexArrays(1, &VertexArrayID);
 
-    // Close OpenGL window and terminate GLFW
-    glfwTerminate();
+    win.Terminate();
 
-    window_open = false;
     return 0;
 }
 
