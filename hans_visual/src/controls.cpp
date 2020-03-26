@@ -5,7 +5,7 @@ std::mutex cam_mut;
 
 controls::controls(int mode) : camera_mode(mode) {
 
-	if (camera_mode == FPS) {
+	if (camera_mode == 1) {
         position = glm::vec3(0, 15, 0);     // Initial position : on +Z use (0, 0, 5)
 		horizontalAngle = 3.14f;			// Initial horizontal angle : toward -Z use 3.14f
 		verticalAngle = -3.14f / 2;			// Initial vertical angle : for none use 0
@@ -13,7 +13,7 @@ controls::controls(int mode) : camera_mode(mode) {
 		speed = 5.0f;						// 3 units / second
 		mouseSpeed = 0.001f;
 	}
-	else if (camera_mode == SPHERE) {
+	else if (camera_mode == 2) {
 		//position = glm::vec3( 0, 15, 0 );
 		horizontalAngle = 3.14f;
 		verticalAngle = 3.14f / 2;
@@ -34,9 +34,9 @@ glm::mat4 controls::getViewMatrix() { return ViewMatrix; }
 glm::mat4 controls::getProjectionMatrix() { return ProjectionMatrix; }
 
 void controls::computeMatricesFromInputs(GLFWwindow* window) {
-    if      (camera_mode == FPS) computeMatricesFromInputs_FPS(window);
+    if      (camera_mode == 1) computeMatricesFromInputs_FPS(window);
 	else
-        if  (camera_mode == SPHERE) computeMatricesFromInputs_spherical(window);
+        if  (camera_mode == 2) computeMatricesFromInputs_spherical(window);
 }
 
 // FPS controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_DISABLED
@@ -187,10 +187,10 @@ void controls::adjustments(GLFWwindow *window) {
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);			// Ensure we can capture the escape key being pressed below
 
-	if (camera_mode == FPS)
+	if (camera_mode == 1)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);	// Hide the mouse and enable unlimited movement. Use GLFW_CURSOR_DISABLED/HIDDEN/NORMAL.
 	else
-	if (camera_mode == SPHERE)
+	if (camera_mode == 2)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 

@@ -3,8 +3,7 @@
 
 #define WINDOW_WIDTH    1920/2      // 1024
 #define WINDOW_HEIGHT   1080/2      // 768
-#define FPS     1       // Not used
-#define SPHERE  2       // Not used
+#define CAM_MODE    2               // 1: First person,  2: Sphere
 #define NEAR_CLIP_PLANE 0.1f
 #define FAR_CLIP_PLANE 1000.0f
 #define ASPECT_RATIO 16.f/9.f       // 4.0f/3.0f
@@ -55,7 +54,7 @@ class controls {
 public:
 	glm::vec3 position;
 	int camera_mode;
-	controls(int mode = SPHERE);
+	controls(int mode = CAM_MODE);
 	void adjustments(GLFWwindow *window);
 	void computeMatricesFromInputs(GLFWwindow* window);
 

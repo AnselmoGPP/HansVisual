@@ -6,9 +6,10 @@ int main()
 {
     fill_buffers();
 
-    HansVisual display_1;
-    HansVisual display_2(display_1);
-    HansVisual display = display_2;
+    HansVisual display;
+    //HansVisual display_1;
+    //HansVisual display_2(display_1);
+    //display = display_2;
 
     display.draw_grid(6, 41, 0.0f, 0.0f, 0.4f);
     display.draw_axis(10, true);

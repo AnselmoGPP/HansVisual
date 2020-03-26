@@ -10,9 +10,13 @@ Controls are managed (controls > handler)
 
 
 ---------------------------------------------------------------------------
+> Correct copy constructors and copy assignment operators overloading
 - Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
 - Check correcteness of mutexes. Check the std::mutex *mut members.
-- Extract class for selection and GUI
+> Extract class for selection, GUI, window creation...
+> More camera modes (plane)
+> Adaptative aspect ratio
+> Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
 - resize_buffer_set() independiente de layersSet->size() (poner variable miembro en plotter class)

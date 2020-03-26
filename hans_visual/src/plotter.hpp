@@ -42,6 +42,12 @@ using namespace glm;
 #include "shader.hpp"
 #include "controls.hpp"
 
+class window_manager
+{
+public:
+    GLFWwindow* window;			// The window object used to draw
+};
+
 class plotter
 {
     std::vector<layer> *layersSet;
