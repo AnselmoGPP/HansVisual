@@ -3,17 +3,21 @@
 controls *camera;		// Pointer used by the callback functions (mouse buttons).
 std::mutex cam_mut;
 
-controls::controls(int mode) : camera_mode(mode) {
+controls::controls(int mode) {
 
-	if (camera_mode == 1) {
+    if (mode == 1)
+    {
+        camera_mode = fp;
         position = glm::vec3(0, 15, 0);     // Initial position : on +Z use (0, 0, 5)
 		horizontalAngle = 3.14f;			// Initial horizontal angle : toward -Z use 3.14f
 		verticalAngle = -3.14f / 2;			// Initial vertical angle : for none use 0
 		initialFoV = 45.0f;					// Initial Field of View
-		speed = 5.0f;						// 3 units / second
+        speed = 15.0f;						// 3 units / second
 		mouseSpeed = 0.001f;
 	}
-	else if (camera_mode == 2) {
+    else if (mode == 2)
+    {
+        camera_mode = sphere;
 		//position = glm::vec3( 0, 15, 0 );
 		horizontalAngle = 3.14f;
 		verticalAngle = 3.14f / 2;
@@ -33,15 +37,16 @@ controls::controls(int mode) : camera_mode(mode) {
 glm::mat4 controls::getViewMatrix() { return ViewMatrix; }
 glm::mat4 controls::getProjectionMatrix() { return ProjectionMatrix; }
 
-void controls::computeMatricesFromInputs(GLFWwindow* window) {
-    if      (camera_mode == 1) computeMatricesFromInputs_FPS(window);
+void controls::computeMatricesFromInputs(GLFWwindow* window)
+{
+    if      (camera_mode == fp) computeMatricesFromInputs_FP(window);
 	else
-        if  (camera_mode == 2) computeMatricesFromInputs_spherical(window);
+        if  (camera_mode == sphere) computeMatricesFromInputs_spherical(window);
 }
 
 // FPS controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_DISABLED
-void controls::computeMatricesFromInputs_FPS(GLFWwindow* window) {
-
+void controls::computeMatricesFromInputs_FP(GLFWwindow* window)
+{
 	// glfwGetTime is called only once, the first time this function is called
 	if (!lastTime) lastTime = glfwGetTime();
 
@@ -77,35 +82,35 @@ void controls::computeMatricesFromInputs_FPS(GLFWwindow* window) {
 	glm::vec3 up = glm::cross(right, direction);
 
 	// Move forward
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		position += direction * deltaTime * speed;
 	}
 	// Move backward
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 		position -= direction * deltaTime * speed;
 	}
 	// Strafe right
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		position += right * deltaTime * speed;
 	}
 	// Strafe left
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		position -= right * deltaTime * speed;
 	}
 
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated, so here it's disabled instead.
 
 	// >>> Projection matrix : 45° Field of View, 4:3 ratio, Display range (near/far clipping plane) : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
+    ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 	// >>> Camera matrix
 	ViewMatrix = glm::lookAt(
-		position,           // Camera is here
-		position + direction, // and looks here : at the same position, plus "direction"
-		up                  // Head is up (set to 0,-1,0 to look upside-down)
+        position,               // Camera is here
+        position + direction,   // and looks here : at the same position, plus "direction"
+        up                      // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
 	// For the next frame, the "last time" will be "now"
-	lastTime = currentTime;
+    lastTime = currentTime;
 }
 
 // Spherical controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_NORMAL
@@ -187,10 +192,10 @@ void controls::adjustments(GLFWwindow *window) {
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);			// Ensure we can capture the escape key being pressed below
 
-	if (camera_mode == 1)
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);	// Hide the mouse and enable unlimited movement. Use GLFW_CURSOR_DISABLED/HIDDEN/NORMAL.
-	else
-	if (camera_mode == 2)
+    if (camera_mode == fp)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	// Hide the mouse and enable unlimited movement. Use GLFW_CURSOR_DISABLED/HIDDEN/NORMAL.
+    else
+    if (camera_mode == sphere)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 

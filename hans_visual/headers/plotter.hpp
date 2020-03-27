@@ -1,23 +1,6 @@
 #ifndef PLOTTER_HPP
 #define PLOTTER_HPP
 
-#define BACKG_R 0.
-#define BACKG_G 0.
-#define BACKG_B 0.14
-#define SEL_R 0.97
-#define SEL_G 0.
-#define SEL_B 1.
-#define SEL_A 0.
-#define PNT_SIZE 35
-#define MAX_PNT_SIZE 500.0f
-#define DESIRED_FPS 60
-#define ANTIALIASING 4      // x4 antialiasing
-#define VERSION_GLFW 3
-#define VERSION_GLFW_for_IMGUI "#version 330"
-#define POLYGON_MODE 0      // Show only the borders of the triangles
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -26,7 +9,6 @@
 #include <chrono>
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
@@ -38,80 +20,11 @@ using namespace glm;
 //#include "btBulletCollisionCommon.h"
 //#include "btBulletDynamicsCommon.h"
 
+#include "_options.hpp"
+#include "window.hpp"
 #include "layer.hpp"
 #include "shader.hpp"
 #include "controls.hpp"
-
-class window_manager
-{
-    char test[21];
-
-public:
-    window_manager() : window(nullptr), window_open(false)
-    {
-        char test2[21] = { 0x3c, 0x3c, 0x3c, 0x20, 0x20, 0x48, 0x61,
-                           0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
-                           0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
-        for(int i = 0; i < 21; i++) test[i] = test2[i];
-    }
-
-    GLFWwindow* window;			// The window object used to draw
-    bool window_open;           // True if main_loop_thread is running. If false, it's out (or will get out asap)
-
-    // Initialize GLFW
-    int init_GLFW()
-    {
-        if (!glfwInit())
-        {
-            fprintf(stderr, "Failed to initialize GLFW\n");
-            getchar();
-            return -1;
-        }
-
-        glfwWindowHint(GLFW_SAMPLES, ANTIALIASING);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, VERSION_GLFW);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, VERSION_GLFW);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);			// To make MacOS happy; should not be needed
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-        window_open = true;
-        return 0;
-    }
-
-    // Open a window
-    int open_window()
-    {
-        // Open a window and create its OpenGL context
-        window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, test, NULL, NULL);
-        if (window == NULL) {
-            fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
-            getchar();
-            glfwTerminate();
-            return -1;
-        }
-        glfwMakeContextCurrent(window);
-
-        //window_open = true;
-        return 0;
-    }
-
-    void SwapBuffers_PollEvents()
-    {
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    void Terminate()
-    {
-        glfwTerminate();
-        window_open = false;
-    }
-
-    void GetFramebufferSize(int *display_w, int *display_h)
-    {
-        glfwGetFramebufferSize(window, display_w, display_h);
-    }
-};
 
 class plotter
 {
@@ -121,11 +34,9 @@ class plotter
     controls cam;
 
     window_manager win;
-    //GLFWwindow* window;			// The window object used to draw
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
-    //bool window_open;           // True if main_loop_thread is running. If false, it's out (or will get out asap)
 
     // GUI rendering
     void create_windows();

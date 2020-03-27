@@ -1,14 +1,12 @@
 #ifndef LAYERS_HPP
 #define LAYERS_HPP
 
-#define DEFAULT_RED 1
-#define DEFAULT_GREEN 1
-#define DEFAULT_BLUE 1
-
 #include <iostream>
 #include <vector>
 #include <mutex>
 #include <cmath>
+
+#include "_options.hpp"
 
 // Store one xyz point (not used)
 struct pnt3D {

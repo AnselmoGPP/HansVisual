@@ -1,14 +1,6 @@
 #ifndef CONTROLS_HPP
 #define CONTROLS_HPP
 
-#define WINDOW_WIDTH    1920/2      // 1024
-#define WINDOW_HEIGHT   1080/2      // 768
-#define CAM_MODE    2               // 1: First person,  2: Sphere
-#define NEAR_CLIP_PLANE 0.1f
-#define FAR_CLIP_PLANE 1000.0f
-#define ASPECT_RATIO 16.f/9.f       // 4.0f/3.0f
-#define ADAPTATIVE_ASPECT_RATIO 1
-
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,11 +11,16 @@ using namespace glm;
 #include <iomanip>
 #include <mutex>
 
+#include "_options.hpp"
+
 class controls;
 extern controls *camera;
 extern std::mutex cam_mut;
 
-class controls {
+class controls
+{
+    GLFWwindow *window;
+
 	// Time
 	float lastTime = 0.0;
 	float currentTime;
@@ -48,13 +45,19 @@ class controls {
 	glm::mat4 ViewMatrix;
 	glm::mat4 ProjectionMatrix;
 
-	void computeMatricesFromInputs_FPS(GLFWwindow*);
+    void computeMatricesFromInputs_FP(GLFWwindow*);
 	void computeMatricesFromInputs_spherical(GLFWwindow*);
 
+    enum cam_system{fp, sphere, plane, fps};
+
 public:
-	glm::vec3 position;
-	int camera_mode;
-	controls(int mode = CAM_MODE);
+    controls(int mode = CAM_MODE);
+    //controls();
+    //controls(GLFWwindow *win, int mode = CAM_MODE);
+    //~controls() = default;
+
+    glm::vec3 position;
+    cam_system camera_mode;
 	void adjustments(GLFWwindow *window);
 	void computeMatricesFromInputs(GLFWwindow* window);
 

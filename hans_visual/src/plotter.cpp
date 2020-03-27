@@ -7,11 +7,8 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) :
     // Create the first layer (Selections)
     layersSet->push_back(layer("Selections", points, 0));
 
-    //window = nullptr;
-    //window_open = false;
-
     // GUI state
-    show_checkboxes = 1;
+    show_checkboxes = 0;
     show_data = 0;
     show_options = 0;
 	data_window_size = 1;
@@ -92,7 +89,7 @@ plotter::~plotter()
 
 int  plotter::open_window()
 {
-    win.init_GLFW();
+    win.open_GLFW_window();
 
     std::thread running(&plotter::main_loop_thread, this);
     running.detach();
@@ -141,17 +138,18 @@ void plotter::close_window() { win.window_open = false; }
 
 int  plotter::main_loop_thread()
 {
-    win.open_window();
-std::cout << "XXX" << std::endl;
-    // Initialize GLEW
-    glewExperimental = true;										// Needed for core profile
-    if (glewInit() != GLEW_OK) {
+    win.MakeContextCurrent();
+
+    // Create the OpenGL context for the GLFW window
+    glewExperimental = true;        // Needed for core profile
+    if (glewInit() != GLEW_OK)
+    {
         fprintf(stderr, "Failed to initialize GLEW\n");
         getchar();
-        glfwTerminate();
+        win.Terminate();
         return -1;
     }
-    std::cout << "XXX" << std::endl;
+
     // ------------------------------------
 
     // GUI
@@ -167,10 +165,11 @@ std::cout << "XXX" << std::endl;
     ImGui_ImplGlfw_InitForOpenGL(win.window, true);
     const char* glsl_version = VERSION_GLFW_for_IMGUI;
     ImGui_ImplOpenGL3_Init(glsl_version);
-    std::cout << "XXX" << std::endl;
+
     // ------------------------------------
 
     cam.adjustments(win.window);
+    win.hide_cursor(true);
 
     // Set the mouse at the center of the screen
     glfwPollEvents();
@@ -181,7 +180,7 @@ std::cout << "XXX" << std::endl;
     glEnable(GL_DEPTH_TEST);					// Enable depth test
     glDepthFunc(GL_LESS);						// Accept fragment if it's closer to the camera than the former one
 
-    // Cull triangles which normal is not towards the camera.
+    // Cull triangles which normal is not towards the camera
     glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
 
@@ -201,7 +200,7 @@ std::cout << "XXX" << std::endl;
     glLineWidth(2.0);
     GLfloat lineWidthRange[2];                  // GPU implementation dependent
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
-    std::cout << "XXX" << std::endl;
+
     // ------------------------------------
 
     // Vertex array object (VAO)
@@ -268,8 +267,7 @@ std::cout << "XXX" << std::endl;
         glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
 
-        // Use our shader
-        glUseProgram(programID);
+        glUseProgram(programID);        // Use our shader
 
         // Compute the MVP matrix from keyboard and mouse input. Also check whether a selection was made.
         {
@@ -277,10 +275,10 @@ std::cout << "XXX" << std::endl;
             camera = &cam;
             if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(win.window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
         
-			ProjectionMatrix = cam.getProjectionMatrix();
-			ViewMatrix = cam.getViewMatrix();
-			ModelMatrix = glm::mat4(1.0);                     // Identity matrix
-			MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+            ProjectionMatrix = cam.getProjectionMatrix();
+            ViewMatrix = cam.getViewMatrix();
+            ModelMatrix = glm::mat4(1.0);                     // Identity matrix
+            MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
             check_selections();
 		}
@@ -288,7 +286,7 @@ std::cout << "XXX" << std::endl;
         // Send our transformation to the currently bound shader, in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 		// Send the position of the camera. Useful for adjusting the size of each point
-		glUniform3fv(Cam_position, 1, &cam.position[0]);
+        glUniform3fv(Cam_position, 1, &cam.position[0]);
         // Send the size of the points
         glUniform1fv(Pnt_size_ID, 1, &point_siz);
 
@@ -717,3 +715,4 @@ void plotter::fps_control(unsigned int frequency)
     duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_1).count();
     //std::cout << "FPS: " << 1000000/duration << '\r';
 }
+

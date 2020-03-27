@@ -1,9 +1,10 @@
 #!/bin/bash
+#./files/rebuild
 
 # Build and compile the visualizer library
 cd _BUILD
 rm CMakeCache.txt cmake_install.cmake Makefile
-rm -r CMakeFiles lib
+rm -r CMakeFiles lib hans_visual
 cmake -G"Unix Makefiles" ..
 make
 

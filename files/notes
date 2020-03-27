@@ -13,9 +13,10 @@ Controls are managed (controls > handler)
 > por qué open_window tiene que estar en init_GLFW?
 > Por qué no desaparece el mouse en FP camera?
 > Correct copy constructors and copy assignment operators overloading
+- Replace glm by Eigen
 - Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
 - Check correcteness of mutexes. Check the std::mutex *mut members.
-> Extract class for selection, GUI, window creation...
+> Extract class for selection, GUI, window creation, shader...
 > More camera modes (plane)
 > Adaptative aspect ratio
 > Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())

@@ -22,7 +22,7 @@ MESSAGE(STATUS "OpenGL library: " ${OPENGL_LIBRARY})
 # Includes (.h) ----------------------------------------
 
 TARGET_INCLUDE_DIRECTORIES( ${PROJECT_NAME} PUBLIC
-	${PROJECT_SOURCE_DIR}/../hans_visual/src
+	${PROJECT_SOURCE_DIR}/../hans_visual/headers
 	${PROJECT_SOURCE_DIR}/../extern/glfw/glfw-3.3/include
 	${PROJECT_SOURCE_DIR}/../extern/glew/glew-2.1.0/include
 	${PROJECT_SOURCE_DIR}/../extern/glm/glm-0.9.9.5
