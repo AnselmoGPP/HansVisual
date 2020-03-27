@@ -62,10 +62,3 @@ void window_manager::GetFramebufferSize(int *display_w, int *display_h)
 {
     glfwGetFramebufferSize(window, display_w, display_h);
 }
-
-void window_manager::hide_cursor(bool hide)
-{
-    // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
-    if(hide) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);     //GLFW_CURSOR_DISABLED: Hide the mouse and enable unlimited movement
-    else     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-}

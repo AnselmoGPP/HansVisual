@@ -1,9 +1,9 @@
-﻿#include "controls.hpp"
+﻿#include "camera.hpp"
 
-controls *camera;		// Pointer used by the callback functions (mouse buttons).
+camera *camHandler;		// Pointer used by the callback functions (mouse buttons).
 std::mutex cam_mut;
 
-controls::controls(int mode) {
+camera::camera(int mode) : window(nullptr) {
 
     if (mode == 1)
     {
@@ -34,18 +34,17 @@ controls::controls(int mode) {
     }
 }
 
-glm::mat4 controls::getViewMatrix() { return ViewMatrix; }
-glm::mat4 controls::getProjectionMatrix() { return ProjectionMatrix; }
+glm::mat4 camera::getViewMatrix() { return ViewMatrix; }
+glm::mat4 camera::getProjectionMatrix() { return ProjectionMatrix; }
 
-void controls::computeMatricesFromInputs(GLFWwindow* window)
+void camera::computeMatricesFromInputs()
 {
-    if      (camera_mode == fp) computeMatricesFromInputs_FP(window);
-	else
-        if  (camera_mode == sphere) computeMatricesFromInputs_spherical(window);
+    if       (camera_mode == fp) computeMatricesFromInputs_FP();
+	else if  (camera_mode == sphere) computeMatricesFromInputs_spherical();
 }
 
 // FPS controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_DISABLED
-void controls::computeMatricesFromInputs_FP(GLFWwindow* window)
+void camera::computeMatricesFromInputs_FP()
 {
 	// glfwGetTime is called only once, the first time this function is called
 	if (!lastTime) lastTime = glfwGetTime();
@@ -114,7 +113,7 @@ void controls::computeMatricesFromInputs_FP(GLFWwindow* window)
 }
 
 // Spherical controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_NORMAL
-void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
+void camera::computeMatricesFromInputs_spherical() {
 	/*
 		Left click: Rotate around a sphere
 		Scroll: Get closer or further
@@ -188,18 +187,38 @@ void controls::computeMatricesFromInputs_spherical(GLFWwindow* window) {
     ypos0 = ypos;
 }
 
-void controls::adjustments(GLFWwindow *window) {
+void camera::associate_window(GLFWwindow *window_in) { window = window_in; }
 
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);			// Ensure we can capture the escape key being pressed below
-
-    if (camera_mode == fp)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	// Hide the mouse and enable unlimited movement. Use GLFW_CURSOR_DISABLED/HIDDEN/NORMAL.
+void camera::sticky_keys(bool sticky)
+{
+    if(sticky)
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);        // Sticky keys: Make sure that any pressed key is captured (such as the escape)
     else
-    if (camera_mode == sphere)
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_FALSE);
 }
 
-void controls::normalize_vec(glm::vec3 &vec) {
+void camera::set_mouse_position_visibility() {
+
+	// Mouse visibility
+    if  (camera_mode == fp)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	// GLFW_CURSOR_DISABLED: Hide the mouse and enable unlimited movement
+    else if
+        (camera_mode == sphere)
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);      // GLFW_CURSOR_DISABLED/HIDDEN/NORMAL
+
+    // Set the mouse at the center of the screen
+    glfwPollEvents();
+    glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+}
+
+void camera::hide_cursor(bool hide)
+{
+    // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
+    if(hide) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);     //GLFW_CURSOR_DISABLED: Hide the mouse and enable unlimited movement
+    else     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void camera::normalize_vec(glm::vec3 &vec) {
 
 	float magnitude = sqrt( (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z) );
 
@@ -208,7 +227,7 @@ void controls::normalize_vec(glm::vec3 &vec) {
 	vec.z /= magnitude;
 }
 
-double controls::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
+double camera::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
 
 	return	(vec1.x - vec2.x) * (vec1.x - vec2.x) +
 			(vec1.y - vec2.y) * (vec1.y - vec2.y) +
@@ -217,46 +236,46 @@ double controls::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
 
 // Callback functions ----------------------------
 
-void controls::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+void camera::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 
 	if		(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-        camera->L_pressed = false;
+        camHandler->L_pressed = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-        camera->L_pressed = true;
-        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
-        camera->ypos = camera->ypos0;
-        camera->xpos = camera->xpos0;
+        camHandler->L_pressed = true;
+        glfwGetCursorPos(window, &camHandler->xpos0, &camHandler->ypos0);
+        camHandler->ypos = camHandler->ypos0;
+        camHandler->xpos = camHandler->xpos0;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
-        camera->R_pressed = false;
+        camHandler->R_pressed = false;
 
-        camera->R_just_released = true;
+        camHandler->R_just_released = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
-        camera->R_pressed = true;
-        glfwGetCursorPos(window, &camera->sel_xpos0, &camera->sel_ypos0);
-        camera->sel_ypos = camera->sel_ypos0;
-        camera->sel_xpos = camera->sel_xpos0;
+        camHandler->R_pressed = true;
+        glfwGetCursorPos(window, &camHandler->sel_xpos0, &camHandler->sel_ypos0);
+        camHandler->sel_ypos = camHandler->sel_ypos0;
+        camHandler->sel_xpos = camHandler->sel_xpos0;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
 	{
-        camera->scroll_pressed = false;
+        camHandler->scroll_pressed = false;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
 	{
-        camera->scroll_pressed = true;
-        glfwGetCursorPos(window, &camera->xpos0, &camera->ypos0);
-        camera->ypos = camera->ypos0;
-        camera->xpos = camera->xpos0;
+        camHandler->scroll_pressed = true;
+        glfwGetCursorPos(window, &camHandler->xpos0, &camHandler->ypos0);
+        camHandler->ypos = camHandler->ypos0;
+        camHandler->xpos = camHandler->xpos0;
 	}
 }
 
-void controls::scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
-    camera->radius -= yOffset * camera->scroll_speed;
-    if (camera->radius < camera->minimum_radius) camera->radius = camera->minimum_radius;
+void camera::scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
+    camHandler->radius -= yOffset * camHandler->scroll_speed;
+    if (camHandler->radius < camHandler->minimum_radius) camHandler->radius = camHandler->minimum_radius;
 }

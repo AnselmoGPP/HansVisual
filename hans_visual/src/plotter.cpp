@@ -22,6 +22,7 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) :
     selection_square = layer("Sel. square", points, 0);
 
     // OGL buffers filling for being able to call delete_buffer() at any moment
+    VertexArraysID = nullptr;
     vertexbuffersIDs = nullptr;
     colorbuffersIDs = nullptr;
 }
@@ -90,6 +91,7 @@ plotter::~plotter()
 int  plotter::open_window()
 {
     win.open_GLFW_window();
+    cam.associate_window(win.window);
 
     std::thread running(&plotter::main_loop_thread, this);
     running.detach();
@@ -114,7 +116,7 @@ void plotter::fill_data_window(const std::string *data_strings, int num_strings)
 
 void plotter::resize_buffer_set(size_t new_size)
 {
-    if(vertexbuffersIDs != nullptr)
+    if(vertexbuffersIDs != nullptr)         // Executed only if VBOs have already been created
     {
         glDeleteBuffers(layersSet->size(), vertexbuffersIDs);
         glDeleteBuffers(layersSet->size(), colorbuffersIDs);
@@ -150,6 +152,9 @@ int  plotter::main_loop_thread()
         return -1;
     }
 
+    cam.sticky_keys(true);
+    cam.set_mouse_position_visibility();
+
     // ------------------------------------
 
     // GUI
@@ -168,93 +173,26 @@ int  plotter::main_loop_thread()
 
     // ------------------------------------
 
-    cam.adjustments(win.window);
-    win.hide_cursor(true);
+    set_gl_options();
 
-    // Set the mouse at the center of the screen
-    glfwPollEvents();
-    glfwSetCursorPos(win.window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-
-    glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);     // Background color
-
-    glEnable(GL_DEPTH_TEST);					// Enable depth test
-    glDepthFunc(GL_LESS);						// Accept fragment if it's closer to the camera than the former one
-
-    // Cull triangles which normal is not towards the camera
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
-
-    // Enable blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Point parameters
-    glEnable(GL_PROGRAM_POINT_SIZE);			// Enable GL_POINTS
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);		// Enable gl_PointSize in the vertex shader
-    glEnable(GL_POINT_SMOOTH);					// For circular points (GPU implementation dependent)
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);	// For circular points (GPU implementation dependent)
-    glPointSize(5.0);							// GL_POINT_SIZE_MAX is GPU implementation dependent
-
-    // Lines parameters
-    if(POLYGON_MODE) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);    // Show only the borders of the triangles
-    glLineWidth(2.0);
-    GLfloat lineWidthRange[2];                  // GPU implementation dependent
-    glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
-
-    // ------------------------------------
-
-    // Vertex array object (VAO)
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    create_VAOs(1);
+    glBindVertexArray(VertexArraysID[0]);
 
     // Create and compile our GLSL program from the shaders				    system("pwd"): /home/hank/dev/OGL/Shaper/_BUILD
     //GLuint programID = LoadShaders(	"//home//hank//src//TransformVertexShader.vertexshader", "//home//hank//src//ColorFragmentShader.fragmentshader");
     GLuint programID = LoadShaders(VertexShaderCode, FragmentShaderCode);
     GLuint programID_selection = LoadShaders(VertexShaderCode2D, FragmentShaderCode);
 
-    // Get a handle for our uniforms: MVP, camera position and coordinates
-    GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint Cam_position = glGetUniformLocation(programID, "Cam_pos");
-    GLuint Pnt_size_ID = glGetUniformLocation(programID, "Pnt_siz");
+    create_uniforms(programID);
 
-    // GL_STATIC_DRAW example -------------
-    /*
-        // Vertex buffer objects (VBO)
-        static const GLfloat g_vertex_buffer_data[] = {
-             0.0f,  0.0f,  0.0f,
-             1.0f,  0.0f,  0.0f,
-             2.0f,  0.0f,  0.0f,
-        };
-        static const GLfloat g_color_buffer_data[] = {
-             1.0f,  0.0f,  0.0f,
-             0.0f,  1.0f,  0.0f,
-             0.0f,  0.0f,  1.0f,
-        };
-        GLuint vertexbuffer;
-        glGenBuffers(1, &vertexbuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-        GLuint colorbuffer;
-        glGenBuffers(1, &colorbuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
-    */
-    // ------------------------------------
+    //gl_static_draw_example();
 
-    {
-        std::lock_guard<std::mutex> lock(*layersSet_mut);
+    create_VBOs(layersSet->size(), layersSet_mut);
 
-        vertexbuffersIDs = new GLuint[layersSet->size()];    // The first buffer is for the selected points
-        colorbuffersIDs = new GLuint[layersSet->size()];
-        selectionSquareID = new GLuint;
-        selectionSquareColorID = new GLuint;
-
-        glGenBuffers(layersSet->size(), vertexbuffersIDs);
-        glGenBuffers(layersSet->size(), colorbuffersIDs);
-        glGenBuffers(1, selectionSquareID);
-        glGenBuffers(1, selectionSquareColorID);
-    }
+    selectionSquareID = new GLuint;
+    selectionSquareColorID = new GLuint;
+    glGenBuffers(1, selectionSquareID);
+    glGenBuffers(1, selectionSquareColorID);
 
     // ------------------------------------
     do
@@ -272,8 +210,8 @@ int  plotter::main_loop_thread()
         // Compute the MVP matrix from keyboard and mouse input. Also check whether a selection was made.
         {
             std::lock_guard<std::mutex> lock_controls(cam_mut);                 // computeMatricesFromInputs() passes 2 functions to GLFW as callbacks (mouseButtonCallback, scrollCallback). Both need an object of type "control" to make changes on it. Since it's not possible to pass that object because we can't modify its argument lists to do so (GLFW functions puts the arguments), I decided to use a global control* (so the callback functions use this object) and a global mutex (to control accesses from different visualizerClass objects to this pointer). Hence, multiple visualizer windows are possible.
-            camera = &cam;
-            if (!io.WantCaptureMouse) cam.computeMatricesFromInputs(win.window);    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
+            camHandler = &cam;
+            if (!io.WantCaptureMouse) cam.computeMatricesFromInputs();    // io.WantCaptureMouse and io.WantCaptureKeyboard flags are true if dear imgui wants to use our inputs (i.e. cursor is hovering a window).
         
             ProjectionMatrix = cam.getProjectionMatrix();
             ViewMatrix = cam.getViewMatrix();
@@ -284,11 +222,11 @@ int  plotter::main_loop_thread()
 		}
 
         // Send our transformation to the currently bound shader, in the "MVP" uniform
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUniformMatrix4fv(unif["MVP"], 1, GL_FALSE, &MVP[0][0]);
 		// Send the position of the camera. Useful for adjusting the size of each point
-        glUniform3fv(Cam_position, 1, &cam.position[0]);
+        glUniform3fv(unif["Cam_pos"], 1, &cam.position[0]);
         // Send the size of the points
-        glUniform1fv(Pnt_size_ID, 1, &point_siz);
+        glUniform1fv(unif["Pnt_size"], 1, &point_siz);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -338,11 +276,40 @@ int  plotter::main_loop_thread()
     glDeleteProgram(programID);
     glDeleteProgram(programID_selection);
 
-    glDeleteVertexArrays(1, &VertexArrayID);
+    glDeleteVertexArrays(1, VertexArraysID);
 
     win.Terminate();
 
     return 0;
+}
+
+void plotter::set_gl_options()
+{
+    glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);     // Background color
+
+    glEnable(GL_DEPTH_TEST);					// Enable depth test
+    glDepthFunc(GL_LESS);						// Accept fragment if it's closer to the camera than the former one
+
+    // Cull triangles which normal is not towards the camera
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
+
+    // Enable blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Point parameters
+    glEnable(GL_PROGRAM_POINT_SIZE);			// Enable GL_POINTS
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);		// Enable gl_PointSize in the vertex shader
+    glEnable(GL_POINT_SMOOTH);					// For circular points (GPU implementation dependent)
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);	// For circular points (GPU implementation dependent)
+    glPointSize(5.0);							// GL_POINT_SIZE_MAX is GPU implementation dependent
+
+    // Lines parameters
+    if(POLYGON_MODE) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);    // Show only the borders of the triangles
+    glLineWidth(2.0);
+    GLfloat lineWidthRange[2];                  // GPU implementation dependent
+    glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
 }
 
 void plotter::create_windows() {
@@ -366,13 +333,13 @@ void plotter::create_windows() {
             ImGui::MenuItem("Sphere", NULL, &cam_sphere);
             if (cam_sphere) {
                 cam_FPS = 0;
-                //camera = controls(SPHERE);
+                //camera = camera(SPHERE);
                 //cam.camera_mode = SPHERE;
             }
             ImGui::MenuItem("FPS", NULL, &cam_FPS);
             if (cam_FPS) {
                 cam_sphere = 0;
-                //camera = controls(FPS);
+                //camera = camera(FPS);
                 //cam.camera_mode = FPS;
             }
             ImGui::EndMenu();
@@ -716,3 +683,50 @@ void plotter::fps_control(unsigned int frequency)
     //std::cout << "FPS: " << 1000000/duration << '\r';
 }
 
+void plotter::gl_static_draw_example()
+{
+    // Vertex buffer objects (VBO)
+    static const GLfloat g_vertex_buffer_data[] = {
+            1.0f,  1.0f,  1.0f,
+            2.0f,  2.0f,  2.0f,
+            3.0f,  3.0f,  3.0f,
+    };
+    static const GLfloat g_color_buffer_data[] = {
+            1.0f,  0.0f,  0.0f,
+            0.0f,  1.0f,  0.0f,
+            0.0f,  0.0f,  1.0f,
+    };
+    GLuint vertexbuffer;
+    glGenBuffers(1, &vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    GLuint colorbuffer;
+    glGenBuffers(1, &colorbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+}
+
+void plotter::create_VAOs(int amount)
+{
+    VertexArraysID = new GLuint[amount];
+    glGenVertexArrays(amount, VertexArraysID);          // Vertex array object (VAO)
+}
+
+void plotter::create_uniforms(GLuint programID)
+{
+    // Get a handle for our uniforms: MVP, camera position and coordinates
+    unif["MVP"] = glGetUniformLocation(programID, "MVP");
+    unif["Cam_pos"] = glGetUniformLocation(programID, "Cam_pos");
+    unif["Pnt_size"] = glGetUniformLocation(programID, "Pnt_siz");
+}
+
+void plotter::create_VBOs(int amount, std::mutex *mut)
+{
+    std::lock_guard<std::mutex> lock(*mut);
+
+    vertexbuffersIDs = new GLuint[amount];    // The first buffer is for the selected points
+    colorbuffersIDs = new GLuint[amount];
+
+    glGenBuffers(amount, vertexbuffersIDs);
+    glGenBuffers(amount, colorbuffersIDs);
+}

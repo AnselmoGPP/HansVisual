@@ -13,11 +13,11 @@ using namespace glm;
 
 #include "_options.hpp"
 
-class controls;
-extern controls *camera;
+class camera;
+extern camera *camHandler;
 extern std::mutex cam_mut;
 
-class controls
+class camera
 {
     GLFWwindow *window;
 
@@ -45,24 +45,28 @@ class controls
 	glm::mat4 ViewMatrix;
 	glm::mat4 ProjectionMatrix;
 
-    void computeMatricesFromInputs_FP(GLFWwindow*);
-	void computeMatricesFromInputs_spherical(GLFWwindow*);
+    void computeMatricesFromInputs_FP();
+	void computeMatricesFromInputs_spherical();
 
     enum cam_system{fp, sphere, plane, fps};
 
 public:
-    controls(int mode = CAM_MODE);
-    //controls();
-    //controls(GLFWwindow *win, int mode = CAM_MODE);
-    //~controls() = default;
+    camera(int mode = CAM_MODE);
+    //camera();
+    //camera(GLFWwindow *win, int mode = CAM_MODE);
+    //~camera() = default;
 
     glm::vec3 position;
     cam_system camera_mode;
-	void adjustments(GLFWwindow *window);
-	void computeMatricesFromInputs(GLFWwindow* window);
 
-	glm::mat4 getViewMatrix();
-	glm::mat4 getProjectionMatrix();
+    void associate_window(GLFWwindow *window_in);
+    void computeMatricesFromInputs();
+    glm::mat4 getViewMatrix();
+    glm::mat4 getProjectionMatrix();
+
+    void sticky_keys(bool sticky);
+    void set_mouse_position_visibility();
+    void hide_cursor(bool hide);
 
 	friend void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 	friend void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);

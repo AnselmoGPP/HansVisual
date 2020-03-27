@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <map>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -24,14 +25,14 @@ using namespace glm;
 #include "window.hpp"
 #include "layer.hpp"
 #include "shader.hpp"
-#include "controls.hpp"
+#include "camera.hpp"
 
 class plotter
 {
     std::vector<layer> *layersSet;
     std::mutex *layersSet_mut;
 
-    controls cam;
+    camera cam;
 
     window_manager win;
     int display_w, display_h;
@@ -78,10 +79,20 @@ class plotter
     void fps_control(unsigned int frequency);           // Tell how many fps you want. If they are higher, they will be reduced until the specified fps
 
     // ID buffers
+    void create_VAOs(int amount);
+    GLuint *VertexArraysID;
+    void create_VBOs(int amount, std::mutex *mut);
     GLuint *vertexbuffersIDs;
     GLuint *colorbuffersIDs;
     GLuint *selectionSquareID;
     GLuint *selectionSquareColorID;
+
+    std::map<std::string, GLuint> unif = { {"MVP", 0}, {"Cam_pos", 0}, {"Pnt_size", 0} };
+    void create_uniforms(GLuint programID);
+
+    int check_glew(int result);
+    void set_gl_options();
+    void gl_static_draw_example();      // Just for illustration purposes
 
 public:
     plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);

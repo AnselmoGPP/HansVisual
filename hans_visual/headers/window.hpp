@@ -30,7 +30,7 @@ public:
 
     // Controls ----------------
 
-    void hide_cursor(bool hide);
+
 };
 
 #endif
