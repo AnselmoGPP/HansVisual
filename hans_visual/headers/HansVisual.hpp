@@ -45,6 +45,9 @@ public:
     // Draw axis XYZ. Two systems: OpenGL (true), automotive (false)
     void draw_axis(float length, bool system);
 
+    // Set layer state (checkbox activated or not)
+    int set_layer_state(std::string layer_name, bool state);
+
     // Plotter system --------------------------------------------
 
     // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.

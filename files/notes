@@ -1,46 +1,42 @@
 Architecture:
-	- Handler
-	- Graphics engine
-	- Layer
+        - Handler (HansVisual)
+        - Layer
+        - Graphics engine (plotter)
+        - Shaders
 	- Controls
-	- 
+	- Camera
+	- GUI
+	- Window
 You save vertex in a certain format in a layer (handler > layer).
 Data from layer is sent to graphics engine (layer > handler > graphics engine).
 Controls are managed (controls > handler)
 
-
 ---------------------------------------------------------------------------
+> Correct copy constructors and copy assignment operators overloading
+- Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
+- Check correcteness of mutexes. Check the std::mutex *mut members. Check mutex usage in layer class
 > Generalize VAO and VBO creation
 > plotter: add_layer y delete_layer podrían unirse a create_VBOs
 > Check unused included standard libraries
 > por qué open_window tiene que estar en init_GLFW?
-> Correct copy constructors and copy assignment operators overloading
 - Replace glm by Eigen
-- Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
-- Check correcteness of mutexes. Check the std::mutex *mut members.
-> Extract class for selection, GUI, window creation, shader...
+
+> Selection problem
+> Extract class for selection, controls, shader...
 > More camera modes (plane)
-> Adaptative aspect ratio
 > Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
 - Functions: model( scale(), rotate(), translate() ), view(), proyection()
 - send_XXX divided in more functions
-- resize_buffer_set() independiente de layersSet->size() (poner variable miembro en plotter class)
 - Move layer class members to private
-- Send lines by segments
-- Select camera type
-- Put selections in a ImGui window
-- Don't stretch the image when changing window size
+> Change camera type in execution time
+> Put selections in a ImGui window
 - Singleton
-- Function for pitch, roll, yaw - Improve cubes rotation
--Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
-- Basic macros for configuring visualizer
--Axis and grid (create generator functions), center of the sphere (option of the visualizer)
--Crear un find_package() para no tener que linkar todas las librerías en el CMake
-- cam.adjustments(window);
-- Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
--Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
-- Take into account layers of type none when modifying any layer state
--Can checkboxes be checked just after entering load_buffers()? this way, all the loading process could be avoided
+> Function for pitch, roll, yaw - Improve cubes rotation
+> Center of the sphere (option of the visualizer)
+> Crear un find_package() para no tener que linkar todas las librerías en el CMake
+> Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
+> Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
+
 -Keep points selected after a new scan is drawn in that layer (send_pts())
 -CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
 -Mutex for 2 flows: add_layer and main loop
@@ -49,8 +45,6 @@ Controls are managed (controls > handler)
 -mut (vec<mutex*>)
 -send_point/lines/triangles/cubes -> Put objects_to_print in mutex
 -lock_points(mut[points][layer]), check_selection > lock_points(mut[pts][i]) (for), load_points > lock_points(mut[pts][i])
--send_palette
--fill_data_window 
 - In check_ray(), don't check already selected points
 -Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function
 -Only one free function call per loop (main loop)
@@ -83,6 +77,7 @@ Controls are managed (controls > handler)
 - Market moves (gaussian bell?)
 - Simular wave function
 - 3D polynomial
+- resize_buffer_set() independiente de layersSet->size() (poner variable miembro en plotter class)
 
 ----- Done ---------------------------------------------------------
 
@@ -92,3 +87,10 @@ Controls are managed (controls > handler)
 - find_layer("lines_1").send_points(...);
 - Draw_grid Draw_axis
 - add_layer() and delete_layer() during execution
+- Adaptative aspect ratio (don't stretch the image when changing window size)
+- Send lines by segments
+- Allow add_layer to be called after opening a window (open_window) / add_layer whenever you want (lock_guard)
+- Basic macros for configuring visualizer
+- Can checkboxes be checked just after entering load_buffers()? this way, all the loading process could be avoided
+- Set layer state
+> Take into account layers of type none when modifying any layer state

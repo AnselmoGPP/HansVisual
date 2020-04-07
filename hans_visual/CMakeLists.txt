@@ -32,7 +32,9 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC
 	src/layer.cpp
 	src/shader.cpp
 	src/plotter.cpp
+	src/selection.cpp
 	src/camera.cpp
+	src/controls.cpp
 	src/gui.cpp
 	src/window.cpp
 	src/toolKit.cpp
@@ -42,7 +44,9 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC
 	headers/layer.hpp
 	headers/shader.hpp
 	headers/plotter.hpp
+	headers/selection.hpp
 	headers/camera.hpp
+	headers/controls.hpp
 	headers/gui.hpp
 	headers/window.hpp
 	headers/toolKit.hpp

@@ -13,6 +13,7 @@ int main()
 
     display.draw_grid(6, 41, 0.0f, 0.0f, 0.4f);
     display.draw_axis(10, true);
+    //display.draw_sphere_center(1);
 
     // Show the visualizer's window
     display.open_window();

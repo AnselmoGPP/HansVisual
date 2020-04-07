@@ -37,14 +37,14 @@ camera::camera(int mode) : window(nullptr) {
 glm::mat4 camera::getViewMatrix() { return ViewMatrix; }
 glm::mat4 camera::getProjectionMatrix() { return ProjectionMatrix; }
 
-void camera::computeMatricesFromInputs()
+void camera::computeMatricesFromInputs(float aspect_ratio)
 {
-    if       (camera_mode == fp) computeMatricesFromInputs_FP();
-	else if  (camera_mode == sphere) computeMatricesFromInputs_spherical();
+    if       (camera_mode == fp) computeMatricesFromInputs_FP(aspect_ratio);
+    else if  (camera_mode == sphere) computeMatricesFromInputs_spherical(aspect_ratio);
 }
 
 // FPS controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_DISABLED
-void camera::computeMatricesFromInputs_FP()
+void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 {
 	// glfwGetTime is called only once, the first time this function is called
 	if (!lastTime) lastTime = glfwGetTime();
@@ -100,7 +100,7 @@ void camera::computeMatricesFromInputs_FP()
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated, so here it's disabled instead.
 
 	// >>> Projection matrix : 45° Field of View, 4:3 ratio, Display range (near/far clipping plane) : 0.1 unit <-> 100 units
-    ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
+    ProjectionMatrix = glm::perspective(glm::radians(FoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 	// >>> Camera matrix
 	ViewMatrix = glm::lookAt(
         position,               // Camera is here
@@ -113,7 +113,7 @@ void camera::computeMatricesFromInputs_FP()
 }
 
 // Spherical controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_NORMAL
-void camera::computeMatricesFromInputs_spherical() {
+void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
 	/*
 		Left click: Rotate around a sphere
 		Scroll: Get closer or further
@@ -122,7 +122,7 @@ void camera::computeMatricesFromInputs_spherical() {
 
     // >>> Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	float FoV = initialFoV;    //float FoV = - 5 * glfwGetMouseWheel();
-	ProjectionMatrix = glm::perspective(glm::radians(FoV), ASPECT_RATIO, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
+    ProjectionMatrix = glm::perspective(glm::radians(FoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 
 
 	// Get current time and time difference

@@ -62,3 +62,8 @@ void window_manager::GetFramebufferSize(int *display_w, int *display_h)
 {
     glfwGetFramebufferSize(window, display_w, display_h);
 }
+
+bool window_manager::scape_conditions()
+{
+    return (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0) && window_open;
+}

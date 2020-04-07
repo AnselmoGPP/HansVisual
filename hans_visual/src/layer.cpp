@@ -1239,6 +1239,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Get a pointer to the first individual element of the vertex buffer or color buffer without needing to check the layer_type (these functions do that for you)
     float* layer::get_vertex_ptr()
     {
+        if (layer_type == none) { error_message(1); return 0; }
+
         if     (layer_type == points)    return &points_buffer[0][0];
         else if(layer_type == lines)     return &lines_buffer[0][0][0];
         else if(layer_type == triangles) return &triangles_buffer[0][0][0];
@@ -1246,6 +1248,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     }
     float* layer::get_colors_ptr()
     {
+        if (layer_type == none) { error_message(1); return 0; }
+
         if     (layer_type == points)    return &points_color_buffer[0][0];
         else if(layer_type == lines)     return &lines_color_buffer[0][0][0];
         else if(layer_type == triangles) return &triangles_color_buffer[0][0][0];
@@ -1256,6 +1260,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     int layer::set_alpha_channel(float alpha_value)
     {
         if(layer_type == none) { error_message(1); return 1; }
+
         else if(alpha_value < 0. || alpha_value > 1.) { error_message(6); return 1; }
         else if(alpha_channel == alpha_value) return 0;
         else alpha_channel = alpha_value;
@@ -1294,6 +1299,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     void layer::change_name(std::string new_name)
     {
+        if (layer_type == none) { error_message(1); return; }
+
         std::lock_guard<std::mutex> lock(*mut);
         layer_name = new_name;
     }

@@ -45,8 +45,8 @@ class camera
 	glm::mat4 ViewMatrix;
 	glm::mat4 ProjectionMatrix;
 
-    void computeMatricesFromInputs_FP();
-	void computeMatricesFromInputs_spherical();
+    void computeMatricesFromInputs_FP(float aspect_ratio);
+    void computeMatricesFromInputs_spherical(float aspect_ratio);
 
     enum cam_system{fp, sphere, plane, fps};
 
@@ -60,7 +60,7 @@ public:
     cam_system camera_mode;
 
     void associate_window(GLFWwindow *window_in);
-    void computeMatricesFromInputs();
+    void computeMatricesFromInputs(float aspect_ratio);
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
 

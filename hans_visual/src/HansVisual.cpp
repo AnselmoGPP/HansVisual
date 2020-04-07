@@ -18,8 +18,6 @@ HansVisual& HansVisual::operator=(const HansVisual &obj)
     return *this;
 }
 
-
-
 // Layer system ---------------------------------------
 
 layer & HansVisual::lay(std::string layer_name)
@@ -186,6 +184,18 @@ void HansVisual::draw_axis(float length, bool system)
 
     add_layer("Axis", lines, 3);
     lay("Axis").send_lines_colors(3, axis, colors);
+}
+
+int HansVisual::set_layer_state(std::string layer_name, bool state)
+{
+    int layer_num = find_layer(layer_name);
+
+    if(layer_num >= 0)
+    {
+        std::lock_guard<std::mutex> lock(*layersSet[layer_num].mut);
+        layersSet[layer_num].checkbox_value = state;
+    }
+    else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
 }
 
 // Display system -------------------------------------

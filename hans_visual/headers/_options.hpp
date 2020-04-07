@@ -18,15 +18,19 @@
 #define MAX_PNT_SIZE 500.0f
 #define DESIRED_FPS 60
 #define POLYGON_MODE 0              // If true, shows only the borders of the triangles
+
+// GUI -------------------------------------
+
 #define VERSION_GLFW_for_IMGUI "#version 330"
+#define SHOW_CHECKBOXES true
+#define SHOW_DATA false
+#define SHOW_OPTIONS false
 
-// Controls options ------------------------
+// Camera options --------------------------
 
-#define CAM_MODE    1               // 1: First person,  2: Sphere,  3: Plane  4: First person shooter
+#define CAM_MODE    2               // 1: First person,  2: Sphere,  3: Plane  4: First person shooter
 #define NEAR_CLIP_PLANE 0.1f
 #define FAR_CLIP_PLANE 1000.0f
-#define ASPECT_RATIO 16.f/9.f       // 4.0f/3.0f
-#define ADAPTATIVE_ASPECT_RATIO 1
 
 //Window options ---------------------------
 

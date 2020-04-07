@@ -14,10 +14,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "imgui.h"
-#include "examples/imgui_impl_glfw.h"
-#include "examples/imgui_impl_opengl3.h"
-
 //#include "btBulletCollisionCommon.h"
 //#include "btBulletDynamicsCommon.h"
 
@@ -26,6 +22,7 @@ using namespace glm;
 #include "layer.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
+#include "gui.hpp"
 
 class plotter
 {
@@ -33,23 +30,12 @@ class plotter
     std::mutex *layersSet_mut;
 
     camera cam;
-
+    my_gui gui;
     window_manager win;
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
 
-    // GUI rendering
-    void create_windows();
-    void create_demo_windows();
-
-    // GUI state
-	bool show_checkboxes = 1;
-	bool show_data = 0;
-	bool show_options = 0;
-    int data_window_size;
-	std::string *data_window;
-	std::mutex mut_fill_data;
     float backg_color[3];
     float point_siz;
 
@@ -89,10 +75,12 @@ class plotter
 
     std::map<std::string, GLuint> unif = { {"MVP", 0}, {"Cam_pos", 0}, {"Pnt_size", 0} };
     void create_uniforms(GLuint programID);
+    void send_uniforms();
 
     int check_glew(int result);
     void set_gl_options();
     void gl_static_draw_example();      // Just for illustration purposes
+    void clear_and_set_background();
 
 public:
     plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);
@@ -106,9 +94,6 @@ public:
 	// Create a window and open a new thread that runs the visualizer
     int open_window();
 
-    // Public GUI method. Publish data in the "data window". Send a pointer to an array of 10 std::strings. The empty strings (="") won't be published.
-    void fill_data_window(const std::string *data_strings, int num_strings);
-
     // Resize the buffer set        (Call this just before resizing layersSet) (Use layersSet.mutex have thread under control)
     void resize_buffer_set(size_t new_size);
 
@@ -117,6 +102,8 @@ public:
 
     // Close the window
     void close_window();
+
+    void fill_data_window(const std::string *data_strings, int num_strings);
 };
 
 #endif
