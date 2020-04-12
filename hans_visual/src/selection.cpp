@@ -1,9 +1,48 @@
-
 #include "selection.hpp"
 
-void selection::check_selections(){
+selection::selection(std::vector<layer> *layers_set, int display_hor) :
+    layersSet(layers_set), display_h(display_hor)
+{
+    //selectionSquareID and selectionSquareColorID are not initialized here. They are initialized by plotter class
 
-    if (cam.R_just_released)
+    MinDistance = 0.01;
+    selection_color[0] = SEL_R;  selection_color[1] = SEL_G;  selection_color[2] = SEL_B;  selection_color[3] = SEL_A;
+    selection_square = layer("Sel. square", points, 5);
+}
+
+selection::selection(const selection &obj)
+{
+    layersSet = obj.layersSet;
+    display_h = obj.display_h;
+
+    selectionSquareID = obj.selectionSquareID;
+    selectionSquareColorID = obj.selectionSquareColorID;
+
+    MinDistance = obj.MinDistance;
+    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
+    selection_square = obj.selection_square;
+    temp_selections = obj.temp_selections;
+}
+
+selection & selection::operator=(const selection &obj)
+{
+    layersSet = obj.layersSet;
+    display_h = obj.display_h;
+
+    selectionSquareID = obj.selectionSquareID;
+    selectionSquareColorID = obj.selectionSquareColorID;
+
+    MinDistance = obj.MinDistance;
+    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
+    selection_square = obj.selection_square;
+    temp_selections = obj.temp_selections;
+
+    return *this;
+}
+
+void selection::check_selections(glm::mat4 *ModelMatrix, glm::mat4 *ViewMatrix, glm::mat4 *ProjectionMatrix)
+{
+    if (camHandler->R_just_released)
     {
     // >>> Fill the MVP arrays for the square selection (projmatrix[], mvmatrix[], viewport[]):
 
@@ -11,12 +50,12 @@ void selection::check_selections(){
         // glGetDoublev(GL_PROJECTION_MATRIX, projmatrix);			// See: glMatrixMode, glPushMatrix, glGet
         // glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
 
-        glm::mat4 modelviewmatrix = ViewMatrix * ModelMatrix;
+        glm::mat4 modelviewmatrix = (*ViewMatrix) * (*ModelMatrix);
 
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)
             {
-                projmatrix[i * 4 + j] = ProjectionMatrix[i][j];
+                projmatrix[i * 4 + j] = (*ProjectionMatrix)[i][j];
                 mvmatrix[i * 4 + j] = modelviewmatrix[i][j];
             }
 
@@ -31,21 +70,21 @@ void selection::check_selections(){
 
         // Check the direction to where you draw the selection square
         signed int xstep, ystep;
-        if(cam.sel_xpos0 <= cam.sel_xpos) xstep = 1;
+        if(camHandler->sel_xpos0 <= camHandler->sel_xpos) xstep = 1;
         else xstep = -1;
-        if(cam.sel_ypos0 <= cam.sel_ypos) ystep = 1;
+        if(camHandler->sel_ypos0 <= camHandler->sel_ypos) ystep = 1;
         else ystep = -1;
 
         // Send a ray for each pixel inside the selection square
-        for(double column = cam.sel_xpos0; ; column += xstep)
+        for(double column = camHandler->sel_xpos0; ; column += xstep)
         {
-            if(xstep == 1 && column > cam.sel_xpos) break;
-            else if(xstep == -1 && column < cam.sel_xpos) break;
+            if(xstep == 1 && column > camHandler->sel_xpos) break;
+            else if(xstep == -1 && column < camHandler->sel_xpos) break;
 
-            for(double row = cam.sel_ypos0; ; row += ystep)
+            for(double row = camHandler->sel_ypos0; ; row += ystep)
             {
-                if(ystep == 1 && row > cam.sel_ypos) break;
-                else if(ystep == -1 && row < cam.sel_ypos) break;
+                if(ystep == 1 && row > camHandler->sel_ypos) break;
+                else if(ystep == -1 && row < camHandler->sel_ypos) break;
 
                 check_ray(column, row);
             }
@@ -74,7 +113,7 @@ void selection::check_selections(){
                     if(layersSet->operator[](i).points_strings[j] != "") std::cout << layersSet->operator[](i).points_strings[j] << std::endl;
         }
 
-        cam.R_just_released = false;
+        camHandler->R_just_released = false;
     }
 }
 
@@ -98,7 +137,7 @@ void selection::check_ray(double xpos, double ypos) {
 
     // Get the direction vector of the pixel ray
     ClickSlope = ClickRayP2 - ClickRayP1;           // Get the direction vector
-    cam.normalize_vec(ClickSlope);                  // Get unitary direction vector
+    camHandler->normalize_vec(ClickSlope);                  // Get unitary direction vector
 
     // Find the closest points by testing which points' rays are close to the clickRay (checks all the points)
     for (size_t i = 0; i < layersSet->size(); i++)
@@ -119,10 +158,10 @@ void selection::check_ray(double xpos, double ypos) {
 
             // Get the direction vector of the point ray
             pointSlope = pointRayP2 - pointRayP1;   // Get the direction vector
-            cam.normalize_vec(pointSlope);          // Get unitary direction vector
+            camHandler->normalize_vec(pointSlope);          // Get unitary direction vector
 
             // Check distance between the ends the direction vector of the pixel ray and the point ray
-            sqrDist = cam.distance_sqr_vec(pointSlope, ClickSlope);
+            sqrDist = camHandler->distance_sqr_vec(pointSlope, ClickSlope);
             if (sqrDist < minSqrDist)
                 temp_selections.push_back(glm::vec3(layersSet->operator[](i).points_buffer[j][0],
                                                     layersSet->operator[](i).points_buffer[j][1],

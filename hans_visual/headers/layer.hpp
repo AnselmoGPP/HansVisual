@@ -29,7 +29,7 @@ struct cube3D {
 enum object_type { points, lines, triangles, cubes, none };
 
 // Used to allow only one layer edition per main-loop iteration
-enum layer_state{ open, half_closed, closed };
+enum layer_state{ open, closed };
 
 struct layer
 {

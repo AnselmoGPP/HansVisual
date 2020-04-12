@@ -9,9 +9,9 @@
 #define BACKG_B 0.14
 
 // Selection
-#define SEL_R 0.97
-#define SEL_G 0.
-#define SEL_B 1.
+#define SEL_R 1.
+#define SEL_G 1.
+#define SEL_B 0.
 #define SEL_A 0.
 
 #define PNT_SIZE 35

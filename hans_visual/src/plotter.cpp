@@ -10,15 +10,12 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) :
     backg_color[0] = BACKG_R;  backg_color[1] = BACKG_G;  backg_color[2] = BACKG_B;
     point_siz = PNT_SIZE;
 
-    // Points selection
-    MinDistance = 0.01;
-    selection_color[0] = SEL_R;  selection_color[1] = SEL_G;  selection_color[2] = SEL_B;  selection_color[3] = SEL_A;
-    selection_square = layer("Sel. square", points, 0);
-
     // OGL buffers filling for being able to call delete_buffer() at any moment
     VertexArraysID = nullptr;
     vertexbuffersIDs = nullptr;
     colorbuffersIDs = nullptr;
+
+    sel = selection(layersSet, display_h);
 }
 
 plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
@@ -28,14 +25,10 @@ plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
     //cam = obj.cam;
     gui = obj.gui;
     win.window_open = false;
+    sel = obj.sel;
 
     for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
     point_siz = obj.point_siz;
-    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
-    temp_selections = obj.temp_selections;
-
-    // Points selection
-    MinDistance = obj.MinDistance;
 }
 
 plotter& plotter::operator=(const plotter &obj)
@@ -45,17 +38,12 @@ plotter& plotter::operator=(const plotter &obj)
     //cam = obj.cam;
     gui = obj.gui;
     //window = obj.window;
+    sel = obj.sel;
+
     display_w = obj.display_w;  display_h = obj.display_h;
 
     for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
     point_siz = obj.point_siz;
-
-    // Points selection
-    for(int i = 0; i < 16; ++i) { projmatrix[i] = obj.projmatrix[i];  mvmatrix[i] = obj.mvmatrix[i]; }
-    for(int i = 0; i < 4; ++i) viewport[i] = obj.viewport[i];
-    MinDistance = obj.MinDistance;
-    for(int i = 0; i < 4; ++i) selection_color[i] = obj.selection_color[i];
-    temp_selections = obj.temp_selections;
 
     return *this;
 }
@@ -143,12 +131,13 @@ int  plotter::main_loop_thread()
 
     create_VBOs(layersSet->size(), layersSet_mut);
 
-    selectionSquareID = new GLuint;
-    selectionSquareColorID = new GLuint;
-    glGenBuffers(1, selectionSquareID);
-    glGenBuffers(1, selectionSquareColorID);
+    sel.selectionSquareID = new GLuint;
+    sel.selectionSquareColorID = new GLuint;
+    glGenBuffers(1, sel.selectionSquareID);
+    glGenBuffers(1, sel.selectionSquareColorID);
 
     // ------------------------------------
+
     do
     {
         time_1 = std::chrono::high_resolution_clock::now();
@@ -169,7 +158,7 @@ int  plotter::main_loop_thread()
             ModelMatrix = glm::mat4(1.0);                     // Identity matrix
             MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-            check_selections();
+            sel.check_selections( &ProjectionMatrix, &ViewMatrix, &ModelMatrix);
 		}
 
         send_uniforms();
@@ -183,7 +172,7 @@ int  plotter::main_loop_thread()
         glDisableVertexAttribArray(1);
 
         glUseProgram(programID_selection);
-        load_selectionSquare(selectionSquareID, selectionSquareColorID);
+        load_selectionSquare(sel.selectionSquareID, sel.selectionSquareColorID);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
@@ -209,8 +198,8 @@ int  plotter::main_loop_thread()
     // Cleanup VBO and shader
     glDeleteBuffers(layersSet->size(), vertexbuffersIDs);       delete[] vertexbuffersIDs;    vertexbuffersIDs = nullptr;
     glDeleteBuffers(layersSet->size(), colorbuffersIDs);        delete[] colorbuffersIDs;     colorbuffersIDs  = nullptr;
-    glDeleteBuffers(1, selectionSquareID);
-    glDeleteBuffers(1, selectionSquareColorID);
+    glDeleteBuffers(1, sel.selectionSquareID);
+    glDeleteBuffers(1, sel.selectionSquareColorID);
 
     glDeleteProgram(programID);
     glDeleteProgram(programID_selection);
@@ -309,13 +298,14 @@ void plotter::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionC
     if(cam.is_R_pressed())
     {
         // Set positions
-        float square[4][2][3];
-        double x, y, x0, y0;
+        //float square[4][2][3];
+        float square[5][3];
+        float x, y, x0, y0;
         x =     (cam.sel_xpos - display_w/2)/(display_w/2);
         x0 =    (cam.sel_xpos0 - display_w/2)/(display_w/2);
         y =    -(cam.sel_ypos - display_h/2)/(display_h/2);
         y0 =   -(cam.sel_ypos0 - display_h/2)/(display_h/2);
-/*
+
         square[0][0] = x0;
         square[0][1] = y0;
         square[0][2] = 0.;
@@ -331,25 +321,25 @@ void plotter::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionC
         square[4][0] = x0;
         square[4][1] = y0;
         square[4][2] = 0.;
-*/
+
         // Set colors
         float square_colors[5][4];
         for(int i = 0; i < 5; i++)
         {
-            square_colors[i][0] = selection_color[0];
-            square_colors[i][1] = selection_color[1];
-            square_colors[i][2] = selection_color[2];
-            square_colors[i][3] = selection_square.alpha_channel;
+            square_colors[i][0] = sel.selection_color[0];
+            square_colors[i][1] = sel.selection_color[1];
+            square_colors[i][2] = sel.selection_color[2];
+            square_colors[i][3] = sel.selection_square.alpha_channel;
         }
 
-        selection_square.send_lines(5, square, selection_color[0], selection_color[1], selection_color[2]);
-
+        sel.selection_square.send_points(5, square, sel.selection_color[0], sel.selection_color[1], sel.selection_color[2]);
+        std::cout << "load: " << sel.selection_square.objs_to_print << std::endl;
 
         glBindBuffer(GL_ARRAY_BUFFER, *selectionSquareID);
-        glBufferData(GL_ARRAY_BUFFER, selection_square.objs_to_print * 3 * sizeof(float), selection_square.get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
+        glBufferData(GL_ARRAY_BUFFER, sel.selection_square.objs_to_print * 3 * sizeof(float), sel.selection_square.get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
 
         glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
-        glBufferData(GL_ARRAY_BUFFER, selection_square.objs_to_print * 4 * sizeof(float), selection_square.get_colors_ptr(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sel.selection_square.objs_to_print * 4 * sizeof(float), sel.selection_square.get_colors_ptr(), GL_DYNAMIC_DRAW);
 
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
@@ -361,7 +351,7 @@ void plotter::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionC
         glBindBuffer(GL_ARRAY_BUFFER, *selectionColorID);
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        glDrawArrays(GL_LINE_STRIP, 0, selection_square.objs_to_print);
+        glDrawArrays(GL_LINE_STRIP, 0, sel.selection_square.objs_to_print);
     }
 }
 

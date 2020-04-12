@@ -21,6 +21,11 @@ Controls are managed (controls > handler)
 > por qué open_window tiene que estar en init_GLFW?
 - Replace glm by Eigen
 
+> Extra flags: checkboxes visible & Number of dimensions
+> load_selection_square() only if layer is open (avoid many loadings per loop)
+> Open, closed, half_closed for avoiding multiple sendings during a loop
+> HansVisualizer should be a wrapper around Basic visualizer: It builds 3D and 2D layers (2 different classes). Flags specify if includes checkboxes...
+> Plotter as parent class -> Sub-classes: 3d generation, 2D generation.
 > Selection problem
 > Extract class for selection, controls, shader...
 > More camera modes (plane)

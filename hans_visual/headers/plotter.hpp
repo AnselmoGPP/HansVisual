@@ -21,6 +21,7 @@ using namespace glm;
 #include "window.hpp"
 #include "layer.hpp"
 #include "shader.hpp"
+#include "selection.hpp"
 #include "camera.hpp"
 #include "gui.hpp"
 
@@ -32,6 +33,7 @@ class plotter
     camera cam;
     my_gui gui;
     window_manager win;
+    selection sel;
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
@@ -44,17 +46,6 @@ class plotter
     glm::mat4 ViewMatrix;
     glm::mat4 ModelMatrix;
     glm::mat4 MVP;
-
-	// Points selection
-    void check_selections();    // Points selection search ( http://www.3dkingdoms.com/selection.html ). Looks for the selected points and print its data, if an array of strings was provided
-    void check_ray(double xpos, double ypos);		// Send a ray from a certain pixel and set the points near to the ray true in selected_points[]
-    double projmatrix[16];
-	double mvmatrix[16];
-	int viewport[4];
-    double MinDistance;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
-    float selection_color[4];
-    layer selection_square;
-    std::vector<glm::vec3> temp_selections;
 
     // In-main-loop functions for loading data to the GPU
     void load_selectionSquare(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
@@ -70,8 +61,6 @@ class plotter
     void create_VBOs(int amount, std::mutex *mut);
     GLuint *vertexbuffersIDs;
     GLuint *colorbuffersIDs;
-    GLuint *selectionSquareID;
-    GLuint *selectionSquareColorID;
 
     std::map<std::string, GLuint> unif = { {"MVP", 0}, {"Cam_pos", 0}, {"Pnt_size", 0} };
     void create_uniforms(GLuint programID);
