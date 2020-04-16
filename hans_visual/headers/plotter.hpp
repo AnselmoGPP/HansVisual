@@ -77,6 +77,7 @@ public:
     plotter& operator=(const plotter &obj);
     ~plotter();
 
+    unsigned int frame_count = 0;
 
     // Main methods ---------------------------------
 

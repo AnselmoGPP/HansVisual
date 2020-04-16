@@ -8,7 +8,7 @@
 class HansVisual
 {
     std::vector<layer> layersSet;
-    std::mutex mut;                    // Used in add_layer() and delete_layer()
+    std::mutex mut;                    // Used in add_layer() and delete_layer() (and in plotter class, in main-loop and in create_VBO())
 
     plotter display;
 
@@ -30,7 +30,7 @@ public:
     // Fill a vector<string> with the names of all layers
     void get_layer_names(std::vector<std::string> &list);
 
-    // Add a new layer to layerSet. Indicate the element type (points, lines, triangles, cubes), name and capacity (number of elements that layer supports)
+    // Add a new layer to layerSet (call it before open_window()). Indicate the element type (points, lines, triangles, cubes), name and capacity (number of elements that layer supports)
     void add_layer(const char *name, object_type type, unsigned int capacity);
 
     // Delete an existing layer

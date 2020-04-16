@@ -5,6 +5,7 @@ std::mutex cam_mut;
 
 camera::camera(int mode) : window(nullptr) {
 
+    // First person
     if (mode == 1)
     {
         camera_mode = fp;
@@ -15,12 +16,13 @@ camera::camera(int mode) : window(nullptr) {
         speed = 15.0f;						// 3 units / second
 		mouseSpeed = 0.001f;
 	}
+    // Sphere
     else if (mode == 2)
     {
         camera_mode = sphere;
 		//position = glm::vec3( 0, 15, 0 );
-		horizontalAngle = 3.14f;
-		verticalAngle = 3.14f / 2;
+        horizontalAngle = 3.14f / 2;        // Initial pos
+        verticalAngle = 3.14f / 2;          // Initial pos
 		initialFoV = 45.0f;
 		speed = 5.f;
 		mouseSpeed = 0.008f;
@@ -39,6 +41,8 @@ glm::mat4 camera::getProjectionMatrix() { return ProjectionMatrix; }
 
 void camera::computeMatricesFromInputs(float aspect_ratio)
 {
+    ProjectionMatrix = glm::perspective(glm::radians(initialFoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
+
     if       (camera_mode == fp) computeMatricesFromInputs_FP(aspect_ratio);
     else if  (camera_mode == sphere) computeMatricesFromInputs_spherical(aspect_ratio);
 }
@@ -97,10 +101,6 @@ void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 		position -= right * deltaTime * speed;
 	}
 
-	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated, so here it's disabled instead.
-
-	// >>> Projection matrix : 45° Field of View, 4:3 ratio, Display range (near/far clipping plane) : 0.1 unit <-> 100 units
-    ProjectionMatrix = glm::perspective(glm::radians(FoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 	// >>> Camera matrix
 	ViewMatrix = glm::lookAt(
         position,               // Camera is here
@@ -116,50 +116,47 @@ void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
 	/*
 		Left click: Rotate around a sphere
-		Scroll: Get closer or further
+        Scroll roll: Get closer or further
 		Scroll click: Normal translation
 	*/
-
-    // >>> Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	float FoV = initialFoV;    //float FoV = - 5 * glfwGetMouseWheel();
-    ProjectionMatrix = glm::perspective(glm::radians(FoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
-
 
 	// Get current time and time difference
 	//currentTime = glfwGetTime();
 	//deltaTime = float(currentTime - lastTime);
 
-	// Detect pressed and released button actions
-	glfwSetMouseButtonCallback(window, mouseButtonCallback);        // The callback function is run only when the mouse left/middle/right-button is pressed or released
+    // Get mouse buttons states
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);    // The callback function is run only when the mouse left/middle/right-button is pressed or released
 
+    // >>>>> Left mouse button <<<<<
     // Get the cursor position only when right or left mouse buttons are pressed
-    if (L_pressed)
-    {
-		glfwGetCursorPos(window, &xpos, &ypos);		// Another option using callback:	glfwSetCursorPosCallback(window, cursorPositionCallback);
-	}
+    if (L_pressed) glfwGetCursorPos(window, &xpos, &ypos);		// Another option using callback:	glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	// Compute angular movement over the sphere
     horizontalAngle -= mouseSpeed * float(xpos - xpos0);
     verticalAngle -= mouseSpeed * float(ypos - ypos0);
 
+    // >>>>> Scroll roll <<<<<
 	glfwSetScrollCallback(window, scrollCallback);
 
 	// Get the position over the sphere
-	position = sphere_center + glm::vec3(radius * cos(verticalAngle) * sin(horizontalAngle),
-		radius * sin(verticalAngle),
-		radius * cos(verticalAngle) * cos(horizontalAngle));
+    position = sphere_center + glm::vec3(
+                radius * cos(verticalAngle) * cos(horizontalAngle),
+                radius * cos(verticalAngle) * sin(horizontalAngle),
+                radius * sin(verticalAngle) );
 
-	// Direction towards the center of the sphere
+    // Direction towards the sphere's center
 	glm::vec3 direction = (sphere_center - position) / radius;
 
-    // Right vector (right from center, taking z as X, and x as Y) (y=0) (used for calculating the Up vector)
-	glm::vec3 right = glm::vec3(sin(horizontalAngle - 3.14f / 2.0f),
-                                0,
-                                cos(horizontalAngle - 3.14f / 2.0f));
+    // Right vector (vector director) (z=0)
+    glm::vec3 right = glm::vec3(
+                cos(horizontalAngle - 3.14f / 2.0f),
+                sin(horizontalAngle - 3.14f / 2.0f),
+                0 );
 
 	// Up vector
 	glm::vec3 up = glm::cross(right, direction);
 
+    // >>>>> Right mouse button <<<<<
 	if (R_pressed)
     {
         glfwGetCursorPos(window, &sel_xpos, &sel_ypos);
@@ -172,6 +169,8 @@ void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
         //sphere_center += right_speed * radius * ( (-right * float(xpos - xpos0)) + (front * float(-ypos + ypos0)) );
 	}
 
+    // >>>>> Scroll is pressed <<<<<
+
 	if (scroll_pressed) 
 	{
 		glfwGetCursorPos(window, &xpos, &ypos);
@@ -182,7 +181,7 @@ void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
 	// >>> View matrix
 		ViewMatrix = glm::lookAt(position, sphere_center, up);
 
-	//lastTime = currentTime;
+    // lastTime = currentTime;
 	xpos0 = xpos;
     ypos0 = ypos;
 }
@@ -252,7 +251,6 @@ void camera::mouseButtonCallback(GLFWwindow *window, int button, int action, int
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
         camHandler->R_pressed = false;
-
         camHandler->R_just_released = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)

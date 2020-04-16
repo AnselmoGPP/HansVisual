@@ -21,6 +21,7 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) :
 plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
 {
     layersSet = obj.layersSet;
+    layersSet_mut = obj.layersSet_mut;
 
     //cam = obj.cam;
     gui = obj.gui;
@@ -34,6 +35,7 @@ plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
 plotter& plotter::operator=(const plotter &obj)
 {
     layersSet = obj.layersSet;
+    layersSet_mut = obj.layersSet_mut;
 
     //cam = obj.cam;
     gui = obj.gui;
@@ -66,10 +68,13 @@ int  plotter::open_window()
 
 void plotter::resize_buffer_set(size_t new_size)
 {
+
     if(vertexbuffersIDs != nullptr)         // Executed only if VBOs have already been created
     {
-        glDeleteBuffers(layersSet->size(), vertexbuffersIDs);
-        glDeleteBuffers(layersSet->size(), colorbuffersIDs);
+        size_t prev_size = layersSet->size();
+
+        glDeleteBuffers(prev_size, vertexbuffersIDs);
+        glDeleteBuffers(prev_size, colorbuffersIDs);
 
         delete[] vertexbuffersIDs;
         delete[] colorbuffersIDs;
@@ -79,6 +84,47 @@ void plotter::resize_buffer_set(size_t new_size)
 
         glGenBuffers(new_size, vertexbuffersIDs);
         glGenBuffers(new_size, colorbuffersIDs);
+
+/*
+        size_t prev_size = layersSet->size();
+
+        if(prev_size < new_size)
+        {
+            GLuint *temp_v = new GLuint[prev_size];
+            GLuint *temp_c = new GLuint[prev_size];
+            for(int i = 0; i < prev_size; ++i)
+            {
+                temp_v[i] = vertexbuffersIDs[i];
+                temp_c[i] = colorbuffersIDs[i];
+            }
+
+            delete[] vertexbuffersIDs;
+            delete[] colorbuffersIDs;
+            vertexbuffersIDs = new GLuint[new_size];
+            colorbuffersIDs  = new GLuint[new_size];
+
+            size_t j = 0;
+            for(j; j < prev_size; ++j)
+            {
+                vertexbuffersIDs[j] = temp_v[j];
+                colorbuffersIDs[j] = temp_c[j];
+            }
+
+            for(j; j < new_size; ++j)
+            {
+                glGenBuffers(1, vertexbuffersIDs + j);
+                glGenBuffers(1, colorbuffersIDs + j);
+            }
+
+            delete[] temp_v;
+            delete[] temp_c;
+        }
+        else if(prev_size > new_size)
+        {
+
+        }
+        else return;
+*/
     }
 }
 
@@ -140,10 +186,13 @@ int  plotter::main_loop_thread()
 
     do
     {
+        std::cout << "\rFrame " << frame_count;
         time_1 = std::chrono::high_resolution_clock::now();
         //if(!win.window_open) break;
 
         clear_and_set_background();
+
+        gui.new_frame();
 
         glUseProgram(programID);        // Use our shader
 
@@ -163,25 +212,28 @@ int  plotter::main_loop_thread()
 
         send_uniforms();
 
-        gui.new_frame();
+//std::cout << layersSet[0][2].layer_name << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[0] << ", " << (layersSet[0][2].get_vertex_ptr())[1] << ", " << (layersSet[0][2].get_vertex_ptr())[2] << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[3] << ", " << (layersSet[0][2].get_vertex_ptr())[4] << ", " << (layersSet[0][2].get_vertex_ptr())[5] << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[6] << ", " << (layersSet[0][2].get_vertex_ptr())[7] << ", " << (layersSet[0][2].get_vertex_ptr())[8] << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[9] << ", " << (layersSet[0][2].get_vertex_ptr())[10] << ", " << (layersSet[0][2].get_vertex_ptr())[11] << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[12] << ", " << (layersSet[0][2].get_vertex_ptr())[13] << ", " << (layersSet[0][2].get_vertex_ptr())[14] << std::endl;
+//std::cout << (layersSet[0][2].get_vertex_ptr())[15] << ", " << (layersSet[0][2].get_vertex_ptr())[16] << ", " << (layersSet[0][2].get_vertex_ptr())[17] << std::endl;
 
         std::lock_guard<std::mutex> lock(*layersSet_mut);
-        load_buffers(vertexbuffersIDs, colorbuffersIDs);
 
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        load_buffers(vertexbuffersIDs, colorbuffersIDs);
 
         glUseProgram(programID_selection);
         load_selectionSquare(sel.selectionSquareID, sel.selectionSquareColorID);
-
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
 
         gui.create_gui_1(layersSet, backg_color, &point_siz);
         gui.render_gui();
 
         // Swap buffers
         win.SwapBuffers_PollEvents();
+
+        ++frame_count;
 
         for(layer &lay : *layersSet) lay.state = open;
 
@@ -290,6 +342,25 @@ void plotter::load_buffers(GLuint *vertexbuffIDs, GLuint *colorbuffIDs)
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glDrawArrays(GL_OBJS, 0, layersSet->operator[](i).objs_to_print * vertex_per_obj);
+/*
+        if(i == 2)
+        {
+            std::cout << layersSet->operator[](i).layer_type << "  "
+                      << layersSet->operator[](i).layer_name << "  "
+                      << layersSet->operator[](i).objs_to_print << "  "
+                      << vertex_per_obj << "  " << GL_OBJS
+                      << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[0] << ", " << (layersSet[0][2].get_vertex_ptr())[1] << ", " << (layersSet[0][2].get_vertex_ptr())[2] << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[3] << ", " << (layersSet[0][2].get_vertex_ptr())[4] << ", " << (layersSet[0][2].get_vertex_ptr())[5] << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[6] << ", " << (layersSet[0][2].get_vertex_ptr())[7] << ", " << (layersSet[0][2].get_vertex_ptr())[8] << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[9] << ", " << (layersSet[0][2].get_vertex_ptr())[10] << ", " << (layersSet[0][2].get_vertex_ptr())[11] << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[12] << ", " << (layersSet[0][2].get_vertex_ptr())[13] << ", " << (layersSet[0][2].get_vertex_ptr())[14] << std::endl;
+            std::cout << (layersSet[0][2].get_vertex_ptr())[15] << ", " << (layersSet[0][2].get_vertex_ptr())[16] << ", " << (layersSet[0][2].get_vertex_ptr())[17] << std::endl;
+
+        }
+*/
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
     }
 }
 
@@ -333,7 +404,6 @@ void plotter::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionC
         }
 
         sel.selection_square.send_points(5, square, sel.selection_color[0], sel.selection_color[1], sel.selection_color[2]);
-        std::cout << "load: " << sel.selection_square.objs_to_print << std::endl;
 
         glBindBuffer(GL_ARRAY_BUFFER, *selectionSquareID);
         glBufferData(GL_ARRAY_BUFFER, sel.selection_square.objs_to_print * 3 * sizeof(float), sel.selection_square.get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
@@ -352,6 +422,9 @@ void plotter::load_selectionSquare(GLuint *selectionSquareID, GLuint *selectionC
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glDrawArrays(GL_LINE_STRIP, 0, sel.selection_square.objs_to_print);
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
     }
 }
 

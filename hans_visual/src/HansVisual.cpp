@@ -74,29 +74,29 @@ void HansVisual::draw_grid(float cell_size, unsigned int grid_size, float R, flo
 
     unsigned int num_lines = 2 * (grid_size + 1);
     float side_length = cell_size * grid_size;
-    float initial_coord = -(grid_size * cell_size / 2);
+    float initial_coord = side_length / 2;
     float z0 = 0;
 
     float (*grid)[2][3] = new float[num_lines][2][3];
 
     for(size_t i = 0; i < num_lines/2; ++i)
     {
-        grid[i][0][0] =  initial_coord + i * cell_size;
-        grid[i][0][1] =  z0;
-        grid[i][0][2] =  initial_coord;
+        grid[i][0][0] =  initial_coord - i * cell_size;
+        grid[i][0][1] =  initial_coord;
+        grid[i][0][2] =  z0;
 
-        grid[i][1][0] =  initial_coord + i * cell_size;
-        grid[i][1][1] =  z0;
-        grid[i][1][2] = -initial_coord;
+        grid[i][1][0] =  initial_coord - i * cell_size;
+        grid[i][1][1] =  -initial_coord;
+        grid[i][1][2] =  z0;
 
 
         grid[num_lines - 1 - i][0][0] =  initial_coord;
-        grid[num_lines - 1 - i][0][1] =  z0;
-        grid[num_lines - 1 - i][0][2] =  initial_coord + i * cell_size;
+        grid[num_lines - 1 - i][0][1] =  initial_coord - i * cell_size;
+        grid[num_lines - 1 - i][0][2] =  z0;
 
         grid[num_lines - 1 - i][1][0] = -initial_coord;
-        grid[num_lines - 1 - i][1][1] =  z0;
-        grid[num_lines - 1 - i][1][2] =  initial_coord + i * cell_size;
+        grid[num_lines - 1 - i][1][1] =  initial_coord - i * cell_size;
+        grid[num_lines - 1 - i][1][2] =  z0;
     }
 
     add_layer("Grid", lines, num_lines);

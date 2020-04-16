@@ -45,7 +45,9 @@ struct layer
     object_type layer_type;
     size_t objs_to_print = 0;                    // Number of objects that are going to be printed
     layer_state state = open;                    // Used for only modifying buffer once per loop
+    bool checkbox_visible = true;
     bool checkbox_value = true;
+    bool dimensions = 3;
     std::mutex *mut = nullptr;
 
     // Colors

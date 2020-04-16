@@ -21,6 +21,8 @@ Controls are managed (controls > handler)
 > por qué open_window tiene que estar en init_GLFW?
 - Replace glm by Eigen
 
+> glDisableVertexAttribArray(0) situation
+> Only open and close states have problems
 > Extra flags: checkboxes visible & Number of dimensions
 > load_selection_square() only if layer is open (avoid many loadings per loop)
 > Open, closed, half_closed for avoiding multiple sendings during a loop
@@ -83,6 +85,7 @@ Controls are managed (controls > handler)
 - Simular wave function
 - 3D polynomial
 - resize_buffer_set() independiente de layersSet->size() (poner variable miembro en plotter class)
+- Add_layer/delete_layer when window has already been opened?
 
 ----- Done ---------------------------------------------------------
 
@@ -99,3 +102,4 @@ Controls are managed (controls > handler)
 - Can checkboxes be checked just after entering load_buffers()? this way, all the loading process could be avoided
 - Set layer state
 > Take into account layers of type none when modifying any layer state
+- Correct grid position and camera position (x,y,z) >> Set new starting position for camera & correct camera movement

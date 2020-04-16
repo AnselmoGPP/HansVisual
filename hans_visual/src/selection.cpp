@@ -7,7 +7,10 @@ selection::selection(std::vector<layer> *layers_set, int display_hor) :
 
     MinDistance = 0.01;
     selection_color[0] = SEL_R;  selection_color[1] = SEL_G;  selection_color[2] = SEL_B;  selection_color[3] = SEL_A;
+
     selection_square = layer("Sel. square", points, 5);
+    selection_square.checkbox_visible = false;
+    selection_square.dimensions = 2;
 }
 
 selection::selection(const selection &obj)
@@ -40,6 +43,15 @@ selection & selection::operator=(const selection &obj)
     return *this;
 }
 
+void selection::draw_selection_square()
+{
+    /*
+    if (cam->R_pressed)
+    {
+        glfwGetCursorPos(window, &sel_xpos, &sel_ypos);
+    */
+}
+
 void selection::check_selections(glm::mat4 *ModelMatrix, glm::mat4 *ViewMatrix, glm::mat4 *ProjectionMatrix)
 {
     if (camHandler->R_just_released)
@@ -60,7 +72,9 @@ void selection::check_selections(glm::mat4 *ModelMatrix, glm::mat4 *ViewMatrix, 
             }
 
     // >>> Forbid new buffers editions in this main-loop iteration. If any buffer is being edited now, there is a lock_guard ahead to avoid conflicts.
-        for (size_t i = 0; i < layersSet->size(); i++) layersSet->operator[](i).state = closed;
+        for (size_t i = 0; i < layersSet->size(); i++)
+            layersSet->operator[](i).state = closed;
+
         // Clear the vector (size = 0, but keeps previous capacity) that will pass the selected points to the layer
         temp_selections.clear();
 

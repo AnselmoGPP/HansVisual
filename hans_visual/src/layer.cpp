@@ -86,7 +86,9 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         layer_type = obj.layer_type;
         objs_to_print = obj.objs_to_print;
         state = obj.state;
+        checkbox_visible = obj.checkbox_visible;
         checkbox_value = obj.checkbox_value;
+        dimensions = obj.dimensions;
         delete mut;
         mut = new std::mutex;
 
@@ -234,7 +236,9 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         layer_type = obj.layer_type;
         objs_to_print = obj.objs_to_print;
         state = obj.state;
+        checkbox_visible = obj.checkbox_visible;
         checkbox_value = obj.checkbox_value;
+        dimensions = obj.dimensions;
         delete mut;
         mut = new std::mutex;
 
@@ -1396,10 +1400,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     int layer::first_checks(object_type func_type, unsigned int number_elements)
     {
         if      (state == closed) return 1;
+        else state = closed;
         //else if (state == half_closed) state = closed;
-        state == closed;
-
-        std::cout << "first checks: " << objs_to_print << "      Type: " << layer_type << std::endl;
 
         if      (layer_type == none) { error_message(1); return 1; }
         else if (layer_type != func_type) { error_message(5); return 1; }
