@@ -49,10 +49,6 @@ public:
     bool scape_conditions();
 
     void GetFramebufferSize(int *display_w, int *display_h);
-
-    // Controls ----------------
-
-
 };
 
 #endif

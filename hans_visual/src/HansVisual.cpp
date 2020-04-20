@@ -36,11 +36,21 @@ void HansVisual::get_layer_names(std::vector<std::string> &list)
 
 void HansVisual::add_layer(const char *name, object_type type, unsigned int capacity)
 {
+    // Check reserved layer names
+    std::string l_name;
+    if(l_name == SELECTION_SQUARE_LAYER_NAME || l_name == SELECTED_POINTS_LAYER_NAME)
+    {
+        std::cout << "Not valid name for a layer (reserved name)" << std::endl;
+        return;
+    }
+
+    // Check whether the name is already being used by another layer
     for(size_t i = 0; i < layersSet.size(); ++i)
         if(layersSet[i].layer_name == name) { std::cout << "Layer \"" << name << "\" already exists" << std::endl; return; }
 
+    // Add the layer to the set
     std::lock_guard<std::mutex> lock(mut);
-    display.resize_buffer_set(layersSet.size() + 1);
+    display.resize_buffer_set(layersSet.size() + 1);        // Empty function
     layersSet.push_back(layer(name, type, capacity));
 }
 
@@ -184,6 +194,18 @@ void HansVisual::draw_axis(float length, bool system)
 
     add_layer("Axis", lines, 3);
     lay("Axis").send_lines_colors(3, axis, colors);
+}
+
+void HansVisual::allow_points_selection()
+{
+    // Add the selection square layer
+    layer sel_sqr(SELECTION_SQUARE_LAYER_NAME, lines, 4);
+    sel_sqr.dimensions = 2;
+    sel_sqr.checkbox_visible = false;
+    layersSet.push_back(sel_sqr);
+
+    // Add the selected points layer
+    layersSet.push_back(layer(SELECTED_POINTS_LAYER_NAME, points, 0));
 }
 
 int HansVisual::set_layer_state(std::string layer_name, bool state)

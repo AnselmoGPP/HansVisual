@@ -1,10 +1,10 @@
 ﻿#include "camera.hpp"
 
-camera *camHandler;		// Pointer used by the callback functions (mouse buttons).
-std::mutex cam_mut;
+//camera *camHandler;		// Pointer used by the callback functions (mouse buttons).
+//std::mutex cam_mut;
 
-camera::camera(int mode) : window(nullptr) {
-
+camera::camera(int mode) : window(nullptr), kc(keys_controller::get_instance())
+{
     // First person
     if (mode == 1)
     {
@@ -29,8 +29,7 @@ camera::camera(int mode) : window(nullptr) {
 
 		sphere_center = glm::vec3(0, 0, 0);
 		radius = 15;
-        L_pressed = false;  R_pressed = false;  scroll_pressed = false;
-		scroll_speed = 1;
+        scroll_speed = 1;
 		minimum_radius = 1;
         right_speed = 0.001;
     }
@@ -57,15 +56,12 @@ void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 	currentTime = glfwGetTime();
 	deltaTime = float(currentTime - lastTime);
 
-	// Get mouse position
-	glfwGetCursorPos(window, &xpos, &ypos);
-
 	// Reset mouse position for next frame
 	glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
 	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(WINDOW_WIDTH / 2 - xpos);
-	verticalAngle += mouseSpeed * float(WINDOW_HEIGHT / 2 - ypos);
+    horizontalAngle += mouseSpeed * float(WINDOW_WIDTH / 2 - kc->xpos);
+    verticalAngle += mouseSpeed * float(WINDOW_HEIGHT / 2 - kc->ypos);
 
 	// >>> Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
@@ -74,7 +70,7 @@ void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 		cos(verticalAngle) * cos(horizontalAngle)
 	);
 
-    // >>> Right vector (right from center, taking z as X, and x as Y) (y = 0)
+    // >>> Right vector (y = 0)
 	glm::vec3 right = glm::vec3(
 		sin(horizontalAngle - 3.14f / 2.0f),
 		0,
@@ -84,22 +80,11 @@ void camera::computeMatricesFromInputs_FP(float aspect_ratio)
 	// >>> Up vector
 	glm::vec3 up = glm::cross(right, direction);
 
-	// Move forward
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		position += direction * deltaTime * speed;
-	}
-	// Move backward
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		position -= direction * deltaTime * speed;
-	}
-	// Strafe right
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		position += right * deltaTime * speed;
-	}
-	// Strafe left
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		position -= right * deltaTime * speed;
-	}
+    // Movement
+    if (kc->up_press || kc->w_press)    position += direction * deltaTime * speed;
+    if (kc->down_press || kc->s_press)  position -= direction * deltaTime * speed;
+    if (kc->right_press || kc->d_press) position += right * deltaTime * speed;
+    if (kc->left_press || kc->a_press)  position -= right * deltaTime * speed;
 
 	// >>> Camera matrix
 	ViewMatrix = glm::lookAt(
@@ -124,28 +109,63 @@ void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
 	//currentTime = glfwGetTime();
 	//deltaTime = float(currentTime - lastTime);
 
-    // Get mouse buttons states
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);    // The callback function is run only when the mouse left/middle/right-button is pressed or released
-
     // >>>>> Left mouse button <<<<<
     // Get the cursor position only when right or left mouse buttons are pressed
-    if (L_pressed) glfwGetCursorPos(window, &xpos, &ypos);		// Another option using callback:	glfwSetCursorPosCallback(window, cursorPositionCallback);
+    ///if (L_pressed) glfwGetCursorPos(window, &xpos, &ypos);
+
+    double pi = 3.1415926536;
 
 	// Compute angular movement over the sphere
-    horizontalAngle -= mouseSpeed * float(xpos - xpos0);
-    verticalAngle -= mouseSpeed * float(ypos - ypos0);
+    if(kc->L_pressed)
+    {
+        horizontalAngle -= mouseSpeed * float(kc->xpos - kc->xpos0);
+        verticalAngle -= mouseSpeed * float(kc->ypos - kc->ypos0);
 
-    // >>>>> Scroll roll <<<<<
-	glfwSetScrollCallback(window, scrollCallback);
+        if      (horizontalAngle > 2*pi)  horizontalAngle -= 2*pi;
+        else if (horizontalAngle < 0) horizontalAngle += 2*pi;
+        if      (verticalAngle > 2*pi)    verticalAngle -= 2*pi;
+        else if (verticalAngle < 0)   verticalAngle += 2*pi;
 
-	// Get the position over the sphere
+        //if(verticalAngle > 3.1416/2 && verticalAngle < 3.1416+(3/2)) horizontalAngle = - horizontalAngle;
+        std::cout << horizontalAngle << ", " << verticalAngle << '\r' << std::flush;
+    }
+
+
+    // Set sphere radius
+    radius -= kc->scroll_yOffset * scroll_speed;
+    if (radius < minimum_radius) radius = minimum_radius;
+    //std::cout << "OUT: " << keys_controller::get_instance()->scroll_yOffset << std::endl;
+
+    // Get the position over the sphere
     position = sphere_center + glm::vec3(
                 radius * cos(verticalAngle) * cos(horizontalAngle),
                 radius * cos(verticalAngle) * sin(horizontalAngle),
                 radius * sin(verticalAngle) );
+    /*
+    if(verticalAngle >= pi/2 && verticalAngle <= (3./2)*pi)
+    {
+        position = sphere_center + glm::vec3(
+                    radius * cos(verticalAngle) * cos(horizontalAngle),
+                    radius * cos(verticalAngle) * sin(horizontalAngle),
+                    radius * sin(verticalAngle) );
+    }
+
+    if(verticalAngle < pi/2 || verticalAngle > (3./2)*pi)
+    {
+        position = sphere_center + glm::vec3(
+                    radius * cos(-verticalAngle) * cos(-horizontalAngle),
+                    radius * cos(-verticalAngle) * sin(-horizontalAngle),
+                    radius * sin(verticalAngle) );
+    }
+
+    if(verticalAngle > (3./2)*pi)
+    {
+
+    }
+*/
 
     // Direction towards the sphere's center
-	glm::vec3 direction = (sphere_center - position) / radius;
+    glm::vec3 direction = (sphere_center - position) / radius;
 
     // Right vector (vector director) (z=0)
     glm::vec3 right = glm::vec3(
@@ -153,37 +173,29 @@ void camera::computeMatricesFromInputs_spherical(float aspect_ratio) {
                 sin(horizontalAngle - 3.14f / 2.0f),
                 0 );
 
-	// Up vector
-	glm::vec3 up = glm::cross(right, direction);
+    // Up vector
+    glm::vec3 up = glm::cross(right, direction);
 
     // >>>>> Right mouse button <<<<<
-	if (R_pressed)
-    {
-        glfwGetCursorPos(window, &sel_xpos, &sel_ypos);
-
+    //if (R_pressed) {
 		// Front vector (y=0) (used for moving the sphere center)
         //glm::vec3 front = glm::vec3(    sin(horizontalAngle + 3.14f),
         //                                0,
         //                                cos(horizontalAngle + 3.14f) );
 
         //sphere_center += right_speed * radius * ( (-right * float(xpos - xpos0)) + (front * float(-ypos + ypos0)) );
-	}
+    //}
 
     // >>>>> Scroll is pressed <<<<<
 
-	if (scroll_pressed) 
+    if (kc->scroll_pressed)
 	{
-		glfwGetCursorPos(window, &xpos, &ypos);
-
-		sphere_center += right_speed * radius * ((-right * float(xpos - xpos0)) + (up * float(ypos - ypos0)));
+        //std::cout << kc->xpos - kc->xpos0 << ", " << kc->ypos - kc->ypos0 << std::endl;
+        sphere_center += right_speed * radius * ((-right * float(kc->xpos - kc->xpos0)) + (up * float(kc->ypos - kc->ypos0)));
 	}
 
 	// >>> View matrix
 		ViewMatrix = glm::lookAt(position, sphere_center, up);
-
-    // lastTime = currentTime;
-	xpos0 = xpos;
-    ypos0 = ypos;
 }
 
 void camera::associate_window(GLFWwindow *window_in) { window = window_in; }
@@ -217,63 +229,3 @@ void camera::hide_cursor(bool hide)
     else     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-void camera::normalize_vec(glm::vec3 &vec) {
-
-	float magnitude = sqrt( (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z) );
-
-	vec.x /= magnitude;
-	vec.y /= magnitude;
-	vec.z /= magnitude;
-}
-
-double camera::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2) {
-
-	return	(vec1.x - vec2.x) * (vec1.x - vec2.x) +
-			(vec1.y - vec2.y) * (vec1.y - vec2.y) +
-			(vec1.z - vec2.z) * (vec1.z - vec2.z);
-}
-
-// Callback functions ----------------------------
-
-void camera::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
-
-	if		(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-	{
-        camHandler->L_pressed = false;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-	{
-        camHandler->L_pressed = true;
-        glfwGetCursorPos(window, &camHandler->xpos0, &camHandler->ypos0);
-        camHandler->ypos = camHandler->ypos0;
-        camHandler->xpos = camHandler->xpos0;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
-	{
-        camHandler->R_pressed = false;
-        camHandler->R_just_released = true;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-	{
-        camHandler->R_pressed = true;
-        glfwGetCursorPos(window, &camHandler->sel_xpos0, &camHandler->sel_ypos0);
-        camHandler->sel_ypos = camHandler->sel_ypos0;
-        camHandler->sel_xpos = camHandler->sel_xpos0;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
-	{
-        camHandler->scroll_pressed = false;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
-	{
-        camHandler->scroll_pressed = true;
-        glfwGetCursorPos(window, &camHandler->xpos0, &camHandler->ypos0);
-        camHandler->ypos = camHandler->ypos0;
-        camHandler->xpos = camHandler->xpos0;
-	}
-}
-
-void camera::scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
-    camHandler->radius -= yOffset * camHandler->scroll_speed;
-    if (camHandler->radius < camHandler->minimum_radius) camHandler->radius = camHandler->minimum_radius;
-}

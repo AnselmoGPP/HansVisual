@@ -80,6 +80,9 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Copy constructor
     layer::layer(const layer &obj)
     {
+        dimensions = obj.dimensions;
+        checkbox_visible = obj.checkbox_visible;
+
         // Main layer data
         layer_name = obj.layer_name;
         max_objs = obj.max_objs;
@@ -230,6 +233,9 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Copy assignment operator
     layer& layer::operator=(const layer &obj)
     {
+        dimensions = obj.dimensions;
+        checkbox_visible = obj.checkbox_visible;
+
         // Main layer data
         layer_name = obj.layer_name;
         max_objs = obj.max_objs;

@@ -12,11 +12,13 @@ int main()
     //display = display_2;
 
     // Generate the layers you will see
+    display.allow_points_selection();
     display.draw_grid(6, 41, 0.0f, 0.0f, 0.4f);
     display.draw_axis(10, true);
     //display.draw_sphere_center(1);
 
     display.add_layer("Points 1",    points, 20);
+
     display.add_layer("Points 2",    points, 256);
     display.add_layer("Points 3",    points, 20);
     display.add_layer("Lines 1",     lines, 150);
@@ -160,16 +162,6 @@ int main()
     };
 
     display.fill_data_window(additional_data, 7);
-
-/*
-    for(;;)
-    {
-        // Why the addition stops at 32.0000? Why greater numbers grow faster (or smallers grow slower)?
-        //std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        for(int j = 0; j < 12; j++) pnts[j][0] += 0.000001;
-        display.send_points("Points 1", 12, &pnts[0][0], points_categories, points_names);
-    }
-*/
 
     display.wait();
 }

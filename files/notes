@@ -74,6 +74,15 @@ Controls are managed (controls > handler)
 -> Are mutexes covering every situation?
 
 
+for(;;)
+{
+    // Why the addition stops at 32.0000? Why greater numbers grow faster (or smallers grow slower)?
+    //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    for(int j = 0; j < 12; j++) pnts[j][0] += 0.000001;
+    display.send_points("Points 1", 12, &pnts[0][0], points_categories, points_names);
+}
+
+
 ----- Future ---------------------------------------------------------
 
 - Simplify the save_() and send_() functions internals (design patterns)

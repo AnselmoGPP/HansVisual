@@ -45,6 +45,9 @@ public:
     // Draw axis XYZ. Two systems: OpenGL (true), automotive (false)
     void draw_axis(float length, bool system);
 
+    // Allow selections (draw selection squares and include a layer with the selected points)
+    void allow_points_selection();
+
     // Set layer state (checkbox activated or not)
     int set_layer_state(std::string layer_name, bool state);
 

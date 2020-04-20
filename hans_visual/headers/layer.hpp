@@ -47,7 +47,7 @@ struct layer
     layer_state state = open;                    // Used for only modifying buffer once per loop
     bool checkbox_visible = true;
     bool checkbox_value = true;
-    bool dimensions = 3;
+    unsigned int dimensions = 3;
     std::mutex *mut = nullptr;
 
     // Colors

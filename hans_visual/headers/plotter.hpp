@@ -24,6 +24,7 @@ using namespace glm;
 #include "selection.hpp"
 #include "camera.hpp"
 #include "gui.hpp"
+#include "controls.hpp"
 
 class plotter
 {
@@ -34,6 +35,7 @@ class plotter
     my_gui gui;
     window_manager win;
     selection sel;
+    keys_controller *kc;
     int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
@@ -48,8 +50,9 @@ class plotter
     glm::mat4 MVP;
 
     // In-main-loop functions for loading data to the GPU
-    void load_selectionSquare(GLuint *selectionitemsIDs, GLuint *selectioncolorsIDs);
-    void load_buffers(GLuint *vertexbuffIDs, GLuint *colorbuffIDs);
+    void load_buffers(std::map<char*, unsigned int> program);
+    void load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
+    void load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
 
     // Frequency (FPS)
     std::chrono::high_resolution_clock::time_point time_1, time_2;
@@ -69,7 +72,7 @@ class plotter
     int check_glew(int result);
     void set_gl_options();
     void gl_static_draw_example();      // Just for illustration purposes
-    void clear_and_set_background();
+    void set_viewport_and_background();
 
 public:
     plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);

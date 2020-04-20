@@ -1,5 +1,5 @@
-#ifndef CONTROLS_HPP
-#define CONTROLS_HPP
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -12,14 +12,16 @@ using namespace glm;
 #include <mutex>
 
 #include "_options.hpp"
+#include "controls.hpp"
 
-class camera;
-extern camera *camHandler;
-extern std::mutex cam_mut;
+//class camera;
+//extern camera *camHandler;
+//extern std::mutex cam_mut;
 
 class camera
 {
     GLFWwindow *window;
+    keys_controller * kc;
 
 	// Time
 	float lastTime = 0.0;
@@ -27,8 +29,8 @@ class camera
 	float deltaTime;
 
 	// Mouse
-	double xpos, ypos, xpos0, ypos0;
-    bool L_pressed, R_pressed, scroll_pressed;
+    //double xpos, ypos, xpos0, ypos0;
+    //bool L_pressed, R_pressed, scroll_pressed;
 
 	// camera parameters
 	float horizontalAngle;
@@ -68,19 +70,14 @@ public:
     void set_mouse_position_visibility();
     void hide_cursor(bool hide);
 
-	friend void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-	friend void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+    //friend void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+    //friend void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
 
 	// Points selection
-	double sel_xpos, sel_ypos, sel_xpos0, sel_ypos0;
-    void normalize_vec(glm::vec3 &vec);                             // Get the unitary vector
-    double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);      // Square distance between 2 points
-    bool R_just_released = false;
-    bool is_R_pressed() { return R_pressed; }
+    //double sel_xpos, sel_ypos, sel_xpos0, sel_ypos0;
 
-    // Callback functions: Get mouse click - Get mouse out/in window - Get cursor position
-    static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-    static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+    //bool R_just_released = false;
+    //bool is_R_pressed() { return R_pressed; }
 };
 
 #endif
