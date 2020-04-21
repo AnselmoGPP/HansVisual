@@ -27,17 +27,32 @@ ADD_COMPILE_DEFINITIONS(IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
 ## visualizer_class -----------------------------------------------------------
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC
-	src/main.cpp
-	src/toolKit.hpp
-	src/layers.hpp
-	src/HansVisual.hpp
+	src/_main.cpp
 	src/HansVisual.cpp
-	src/controls.hpp
-	src/controls.cpp
-	src/shader.hpp
+	src/layer.cpp
 	src/shader.cpp
+	src/plotter.cpp
+	src/selection.cpp
+	src/camera.cpp
+	src/controls.cpp
+	src/gui.cpp
+	src/window.cpp
+	src/toolKit.cpp
 
-	
+	headers/_options.hpp
+	headers/HansVisual.hpp
+	headers/layer.hpp
+	headers/shader.hpp
+	headers/plotter.hpp
+	headers/selection.hpp
+	headers/camera.hpp
+	headers/controls.hpp
+	headers/gui.hpp
+	headers/window.hpp
+	headers/toolKit.hpp
+
+	../files/notes
+
 	../extern/imgui/imgui-1.72b/imgui.cpp
 	../extern/imgui/imgui-1.72b/imgui_demo.cpp
 	../extern/imgui/imgui-1.72b/imgui_draw.cpp
@@ -48,6 +63,7 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC
 
 # Link the include files (.h)
 target_include_directories( ${PROJECT_NAME} PUBLIC
+	headers
 	../extern/glfw/glfw-3.3/include
 	../extern/glm/glm-0.9.9.5
 	../extern/glew/glew-2.1.0/include
