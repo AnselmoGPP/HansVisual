@@ -108,7 +108,8 @@ void my_gui::create_gui_1(std::vector<layer> *layersSet, float *backg_color, flo
         ImGui::Begin("Checkboxes", &show_checkboxes);
 
             for(size_t i = 0; i < layersSet->size(); i++)
-                ImGui::Checkbox((layersSet->operator[](i).layer_name).c_str(), &layersSet->operator[](i).checkbox_value);
+                if(layersSet->operator[](i).checkbox_visible)
+                    ImGui::Checkbox((layersSet->operator[](i).layer_name).c_str(), &layersSet->operator[](i).checkbox_value);
 
         ImGui::End();
     }

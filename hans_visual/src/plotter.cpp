@@ -285,6 +285,7 @@ void plotter::set_gl_options()
     glLineWidth(2.0);
     GLfloat lineWidthRange[2];                  // GPU implementation dependent
     glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidthRange);
+    //std::cout << "Line width range: " << lineWidthRange[1] << ", " << lineWidthRange[2] << std::endl;
 }
 
 void plotter::load_buffers(std::map<char*, unsigned int> program)

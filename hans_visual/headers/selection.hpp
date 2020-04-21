@@ -7,6 +7,18 @@
 #include "camera.hpp"
 #include "controls.hpp"
 
+class selection_square
+{
+
+};
+
+class points_selection
+{
+
+
+};
+
+
 // Struct used for point selection
 class selection
 {
