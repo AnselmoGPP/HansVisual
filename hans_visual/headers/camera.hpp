@@ -23,6 +23,8 @@ class camera
     GLFWwindow *window;
     keys_controller * kc;
 
+    double pi = 3.1415926536;
+
 	// Time
 	float lastTime = 0.0;
 	float currentTime;
@@ -46,6 +48,8 @@ class camera
 
 	glm::mat4 ViewMatrix;
 	glm::mat4 ProjectionMatrix;
+
+    void get_angular_position();
 
     void computeMatricesFromInputs_FP(float aspect_ratio);
     void computeMatricesFromInputs_spherical(float aspect_ratio);

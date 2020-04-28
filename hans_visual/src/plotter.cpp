@@ -2,7 +2,7 @@
 
 // Main public members ---------------------------------------------------
 
-plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSet_mut(layers_set_mutex), sel(selection(layersSet)), kc(keys_controller::get_instance())
+plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSet_mut(layers_set_mutex), kc(keys_controller::get_instance())
 {
     backg_color[0] = BACKG_R;  backg_color[1] = BACKG_G;  backg_color[2] = BACKG_B;
     point_siz = PNT_SIZE;
@@ -21,7 +21,6 @@ plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
     //cam = obj.cam;
     gui = obj.gui;
     win.window_open = false;
-    sel = obj.sel;
 
     for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
     point_siz = obj.point_siz;
@@ -35,7 +34,6 @@ plotter& plotter::operator=(const plotter &obj)
     //cam = obj.cam;
     gui = obj.gui;
     //window = obj.window;
-    sel = obj.sel;
 
     display_w = obj.display_w;  display_h = obj.display_h;
 
@@ -205,8 +203,12 @@ int  plotter::main_loop_thread()
         ModelMatrix = glm::mat4(1.0);                     // Identity matrix
         MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-        // Check whether a selection was made
-        sel.send_selection_square(display_h, display_w);
+        // Individual layers modifiers
+        sqr_sel.send_selection_square(*layersSet, display_h, display_w);
+        pnt_sel.send_selected_points(*layersSet, ModelMatrix, ViewMatrix, ProjectionMatrix);
+
+        //points_selection pnt_sel;
+        //sel.send_selection_square(display_h, display_w);
         //sel.send_selected_points(&ProjectionMatrix, &ViewMatrix, &ModelMatrix, display_h, display_w);    // Points selection search ( http://www.3dkingdoms.com/selection.html ). Looks for the selected points and print its data, if an array of strings was provided
 
         send_uniforms();
@@ -245,8 +247,6 @@ int  plotter::main_loop_thread()
     // Cleanup VBO and shader
     glDeleteBuffers(layersSet->size(), vertexbuffersIDs);       delete[] vertexbuffersIDs;    vertexbuffersIDs = nullptr;
     glDeleteBuffers(layersSet->size(), colorbuffersIDs);        delete[] colorbuffersIDs;     colorbuffersIDs  = nullptr;
-    glDeleteBuffers(1, sel.selectionSquareID);
-    glDeleteBuffers(1, sel.selectionSquareColorID);
 
     glDeleteProgram(program["3D"]);
     glDeleteProgram(program["2D"]);
@@ -266,8 +266,8 @@ void plotter::set_gl_options()
     glDepthFunc(GL_LESS);						// Accept fragment if it's closer to the camera than the former one
 
     // Cull triangles which normal is not towards the camera
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
+    if(CULL_FACES)  glEnable(GL_CULL_FACE);
+    else            glDisable(GL_CULL_FACE);
 
     // Enable blending
     glEnable(GL_BLEND);
@@ -380,11 +380,14 @@ void plotter::load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID
         GL_OBJS = GL_TRIANGLES;
     }
 
+    {
+    std::lock_guard<std::mutex> lock(*lay->mut);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffID);
     glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 3 * sizeof(float), lay->get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
 
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffID);
     glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 4 * sizeof(float), lay->get_colors_ptr(), GL_DYNAMIC_DRAW);
+    }
 
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(0);
@@ -478,8 +481,11 @@ void plotter::send_uniforms()
 
 void plotter::set_viewport_and_background()
 {
-    win.GetFramebufferSize(&display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);                 // Arguments: Lower left
+    win.GetFramebufferSize(&display_w, &display_h);     // Get frame buffer size (window pixels)
+    glViewport(0, 0, display_w, display_h);             // Set viewport size: Lower left corner, top right corner
+    //glGetIntegerv(GL_VIEWPORT, viewport);             // Get viewport size: int viewport[4]
+
     glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
 }
+

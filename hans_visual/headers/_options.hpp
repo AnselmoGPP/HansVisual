@@ -15,6 +15,7 @@
 #define MAX_PNT_SIZE 500.0f
 #define DESIRED_FPS 60
 #define POLYGON_MODE 0              // If true, shows only the borders of the triangles
+#define CULL_FACES false
 
 // Selection -------------------------------
 
@@ -23,6 +24,7 @@
 #define SEL_B 0.
 #define SEL_A 1.
 #define MIN_DISTANCE 0.01
+#define STRINGS_EXTRACTION true
 
 // GUI -------------------------------------
 

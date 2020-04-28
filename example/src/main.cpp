@@ -18,7 +18,6 @@ int main()
     //display.draw_sphere_center(1);
 
     display.add_layer("Points 1",    points, 20);
-
     display.add_layer("Points 2",    points, 256);
     display.add_layer("Points 3",    points, 20);
     display.add_layer("Lines 1",     lines, 150);
@@ -162,6 +161,6 @@ int main()
     };
 
     display.fill_data_window(additional_data, 7);
-
+//std::cout << "END" << std::endl;
     display.wait();
 }

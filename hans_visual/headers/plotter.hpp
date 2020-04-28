@@ -34,7 +34,6 @@ class plotter
     camera cam;
     my_gui gui;
     window_manager win;
-    selection sel;
     keys_controller *kc;
     int display_w, display_h;
 
@@ -73,6 +72,10 @@ class plotter
     void set_gl_options();
     void gl_static_draw_example();      // Just for illustration purposes
     void set_viewport_and_background();
+
+    // Individual layer modifiers
+    selection_square sqr_sel;
+    points_selection pnt_sel;
 
 public:
     plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);
