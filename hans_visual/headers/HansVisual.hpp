@@ -68,6 +68,8 @@ public:
     // Waits until the display is closed
     void wait();
 
+    // Get the camera position (X,Y,Z) in OpenGL coordinate system
+    void get_cam_position(float *position);
 };
 
 #endif

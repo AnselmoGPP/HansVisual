@@ -220,7 +220,7 @@ int HansVisual::set_layer_state(std::string layer_name, bool state)
     else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
 }
 
-// Display system -------------------------------------
+// Plotter system -------------------------------------
 
 void HansVisual::fill_data_window(const std::string *data_strings, int num_strings)
 {
@@ -237,6 +237,11 @@ void HansVisual::wait()
 {
     while(display.window_is_open())
         std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void HansVisual::get_cam_position(float *position)
+{
+    display.getCamPosition(position);
 }
 
 // Private ------------------------------------------

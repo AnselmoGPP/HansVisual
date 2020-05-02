@@ -7,6 +7,9 @@ window_manager::window_manager() : window(nullptr), window_open(false)
                        0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
                        0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
     for(int i = 0; i < 21; i++) test[i] = test2[i];
+
+    display_w = WINDOW_WIDTH;
+    display_h = WINDOW_HEIGHT;
 }
 
 window_manager::~window_manager() = default;
@@ -29,7 +32,7 @@ int window_manager::open_GLFW_window()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, test, NULL, NULL);
+    window = glfwCreateWindow(display_w, display_h, test, NULL, NULL);
     if (window == NULL) {
         fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
         getchar();
@@ -58,9 +61,9 @@ void window_manager::Terminate()
     window_open = false;
 }
 
-void window_manager::GetFramebufferSize(int *display_w, int *display_h)
+void window_manager::GetFramebufferSize()
 {
-    glfwGetFramebufferSize(window, display_w, display_h);
+    glfwGetFramebufferSize(window, &display_w, &display_h);
 }
 
 bool window_manager::scape_conditions()

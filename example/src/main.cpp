@@ -2,6 +2,9 @@
 
 //#define DELETE 1
 
+int test();
+int perlin_1();
+
 int main()
 {
     fill_buffers();

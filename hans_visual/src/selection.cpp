@@ -151,8 +151,10 @@ void points_selection::send_selected_points(std::vector<layer> &layersSet, const
             pass_points_to_selection_layer(sel);
 
             if(strings_extraction)
+            {
                 //pass_strings_to_window();
                 pass_strings_to_console();
+            }
         }
     }
 }
@@ -378,5 +380,8 @@ void points_selection::pass_strings_to_console()
 {
     std::cout << "\n----- " << selections_repo.size() << " selections -----" << std::endl;
     for(size_t i = 0; i < strings_repo.size(); i++)
+    {
+        //std::cout << selections_repo[i][0] << ", " << selections_repo[i][1] << ", " << selections_repo[i][2] << std::endl;
         if(strings_repo[i] != "") std::cout << strings_repo[i] << std::endl;
+    }
 }

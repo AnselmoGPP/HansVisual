@@ -35,7 +35,6 @@ class plotter
     my_gui gui;
     window_manager win;
     keys_controller *kc;
-    int display_w, display_h;
 
     int main_loop_thread();		// The thread where the visualizer is run
 
@@ -70,8 +69,9 @@ class plotter
 
     int check_glew(int result);
     void set_gl_options();
-    void gl_static_draw_example();      // Just for illustration purposes
     void set_viewport_and_background();
+    void gl_static_draw_example();      // Illustration purposes
+    void print_data();                  // Debugging purposes
 
     // Individual layer modifiers
     selection_square sqr_sel;
@@ -100,6 +100,8 @@ public:
     void close_window();
 
     void fill_data_window(const std::string *data_strings, int num_strings);
+
+    void getCamPosition(float *position);
 };
 
 #endif

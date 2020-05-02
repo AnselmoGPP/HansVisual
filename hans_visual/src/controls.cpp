@@ -13,7 +13,7 @@ keys_controller * keys_controller::get_instance()
 
 void keys_controller::update_key_states(GLFWwindow *window)
 {
-    // Get cursor position
+    // Get cursor position  -  Cursor position given by the mouse: Origin: top-left, X: to the right, Y: downwards
     xpos0 = xpos;
     ypos0 = ypos;
     glfwGetCursorPos(window, &xpos, &ypos);     // Another option using callback:	glfwSetCursorPosCallback(window, cursorPositionCallback);
@@ -30,16 +30,29 @@ void keys_controller::update_key_states(GLFWwindow *window)
     glfwSetScrollCallback(window, scrollCallback);              // The callback function is run only when the scroll is rolled
 
     // Keys states
-    (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)     ? up_press = true       : up_press = false;
-    (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)   ? down_press = true     : down_press = false;
+    (glfwGetKey(window, GLFW_KEY_UP)    == GLFW_PRESS)  ? up_press = true       : up_press = false;
+    (glfwGetKey(window, GLFW_KEY_DOWN)  == GLFW_PRESS)  ? down_press = true     : down_press = false;
     (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)  ? right_press = true    : right_press = false;
-    (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)   ? left_press = true     : left_press = false;
-    (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)      ? w_press = true        : w_press = false;
-    (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)      ? s_press = true        : s_press = false;
-    (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)      ? d_press = true        : d_press = false;
-    (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)      ? a_press = true        : a_press = false;
+    (glfwGetKey(window, GLFW_KEY_LEFT)  == GLFW_PRESS)  ? left_press = true     : left_press = false;
+    (glfwGetKey(window, GLFW_KEY_W)     == GLFW_PRESS)  ? w_press = true        : w_press = false;
+    (glfwGetKey(window, GLFW_KEY_S)     == GLFW_PRESS)  ? s_press = true        : s_press = false;
+    (glfwGetKey(window, GLFW_KEY_D)     == GLFW_PRESS)  ? d_press = true        : d_press = false;
+    (glfwGetKey(window, GLFW_KEY_A)     == GLFW_PRESS)  ? a_press = true        : a_press = false;
 
-    glfwPollEvents();
+    if(cursor_pos[0] != 0 || cursor_pos[1] != 0)
+    {
+        glfwSetCursorPos(window, cursor_pos[0], cursor_pos[1]);
+        cursor_pos[0] = 0;
+        cursor_pos[1] = 0;
+    }
+
+    if(poll_events) glfwPollEvents();
+}
+
+bool keys_controller::setCursorPosInNextKeyUpdate(int width, int height)
+{
+    cursor_pos[0] = width;
+    cursor_pos[1] = height;
 }
 
 // Callback functions ----------------------------

@@ -15,6 +15,7 @@ class keys_controller           // Singleton class
 {
     static keys_controller *controls;
 
+    int cursor_pos[2] = {0, 0};
 protected:
 
     keys_controller() = default;
@@ -24,10 +25,12 @@ public:
     static keys_controller *get_instance();
 
     void update_key_states(GLFWwindow *window);
+    //void SetCursorPos(GLFWwindow *window, int width, int height);
+    bool setCursorPosInNextKeyUpdate(int width, int height);
+    bool poll_events = false;
 
     // Cursor position
-    double xpos, ypos, xpos0, ypos0;
-    //double sel_xpos, sel_ypos;        // <<<<<<< NOT NECESSARY
+    double xpos = 0, ypos = 0, xpos0 = 0, ypos0 = 0;
     double sel_xpos0, sel_ypos0;
 
     // Mouse
@@ -38,7 +41,6 @@ public:
     // Keys
     bool up_press, down_press, right_press, left_press;
     bool w_press, s_press, d_press, a_press;
-
 };
 
 #endif

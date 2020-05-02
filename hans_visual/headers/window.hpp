@@ -41,6 +41,7 @@ public:
 
     GLFWwindow *window;             // The window object used to draw
     bool window_open;               // This is set True when the window is opened. User can set it False at will (useful in the main-loop)
+    int display_w, display_h;       // Window size in pixels (width, height)
 
     int  open_GLFW_window();        // Open a window using GLFW
     void MakeContextCurrent();      // Makes the context of the specified window current for the calling thread
@@ -48,7 +49,7 @@ public:
     void Terminate();               // Terminates the GLFW library (destroys windows and cursors, frees allocated resources, restores modified gamma ramps)
     bool scape_conditions();
 
-    void GetFramebufferSize(int *display_w, int *display_h);
+    void GetFramebufferSize();
 };
 
 #endif

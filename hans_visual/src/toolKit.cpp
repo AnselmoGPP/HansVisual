@@ -142,6 +142,7 @@ void fill_rainbow(float (*modified_rainbow)[3], float min, float max, bool inver
             modified_rainbow[i][1] = 1.;
             modified_rainbow[i][2] = 1.;
         }
+        else
         if (i > new_lvl)            // Color range (60, 240]
         {
             modified_rainbow[i][0] = original_lvl + (i-new_lvl) * (max-original_lvl)/(255.-new_lvl);
@@ -237,14 +238,14 @@ void invert_array(float (*arr)[3], size_t siz)
         temp[1] = arr[i][1];
         temp[2] = arr[i][2];
 
-        arr[i][0] = arr[siz - i][0];
-        arr[i][1] = arr[siz - i][1];
-        arr[i][2] = arr[siz - i][2];
+        arr[i][0] = arr[siz-1 - i][0];
+        arr[i][1] = arr[siz-1 - i][1];
+        arr[i][2] = arr[siz-1 - i][2];
 
-        arr[siz - i][0] = temp[0];
-        arr[siz - i][1] = temp[1];
-        arr[siz - i][2] = temp[2];
+        arr[siz-1 - i][0] = temp[0];
+        arr[siz-1 - i][1] = temp[1];
+        arr[siz-1 - i][2] = temp[2];
     }
 }
 
-}
+}   // End of namespace

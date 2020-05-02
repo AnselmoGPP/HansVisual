@@ -303,7 +303,10 @@ void fill_buffers()
     toolKit::icosahedron(2, pnts);
 
     // Fill array with 256 points
-    for(int i = 0; i < 256; ++i) { points_line[i][0] = 0.06 * i; points_line[i][1] = 6; points_line[i][2] = 0; }
+    for(int i = 0; i < 256; ++i)
+    {
+        points_line[i][0] = 0.06 * i; points_line[i][1] = 6; points_line[i][2] = 0;
+    }
 
     // Fill modified_rainbow with a variation of rainbow colors
     toolKit::fill_rainbow(modified_rainbow, 0, 240, true, 180, 100);    // Same as the default call:  toolKit::fill_rainbow(modified_rainbow)

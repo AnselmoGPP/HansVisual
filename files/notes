@@ -16,11 +16,20 @@ Controls are managed (controls > handler)
 - Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
 - Check correcteness of mutexes. Check the std::mutex *mut members. Check mutex usage in layer class
 > Generalize VAO and VBO creation
-> plotter: add_layer y delete_layer podrían unirse a create_VBOs
+> plotter: add_layer y delete_layer podrían unirse a create_VBOsLeft click6
 > Check unused included standard libraries
 > por qué open_window tiene que estar en init_GLFW?
 - Replace glm by Eigen
 
+- Direct data loading onto layers
+- glfwSetCursorPosition() has fixed values for its arguments (display width and height)
+- Change camera type with P
+- Sphere center signal
+- point_strings (layer class) optional (save space)
+- Get world camera position
+- Renombrar mutex
+- fps camera
+- Manual
 > glDisableVertexAttribArray(0) situation
 > Only open and close states have problems
 > Extra flags: checkboxes visible & Number of dimensions
@@ -72,6 +81,7 @@ Controls are managed (controls > handler)
 -> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
 -> Selection (or small windows for showing info about objects)
 -> Are mutexes covering every situation?
+- Seleccionar mientras seleccionas -> Peta
 
 
 for(;;)

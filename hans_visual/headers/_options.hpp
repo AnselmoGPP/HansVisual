@@ -29,15 +29,18 @@
 // GUI -------------------------------------
 
 #define VERSION_GLFW_for_IMGUI "#version 330"
-#define SHOW_CHECKBOXES true
+#define SHOW_CHECKBOXES false
 #define SHOW_DATA false
 #define SHOW_OPTIONS false
 
 // Camera options --------------------------
 
-#define CAM_MODE    2               // 1: First person,  2: Sphere,  3: Plane  4: First person shooter  5: Zenith
+#define CAM_MODE    1               // 0: First person,  1: Sphere,  2: Plane  3: First person shooter  4: Zenith  5: Zenith sphere
 #define NEAR_CLIP_PLANE 0.1f
 #define FAR_CLIP_PLANE 1000.0f
+    // Sphere
+    #define ENABLE_SCROLL_SPEEDUP true
+    #define SCROLL_SPEEDUP 0.1f
 
 //Window options ---------------------------
 

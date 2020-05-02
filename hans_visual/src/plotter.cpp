@@ -35,8 +35,6 @@ plotter& plotter::operator=(const plotter &obj)
     gui = obj.gui;
     //window = obj.window;
 
-    display_w = obj.display_w;  display_h = obj.display_h;
-
     for(int i = 0; i < 3; ++i) backg_color[i] = obj.backg_color[i];
     point_siz = obj.point_siz;
 
@@ -182,8 +180,7 @@ int  plotter::main_loop_thread()
 
     do
     {
-        //std::cout << "\rFrame " << frame_count;
-        //std::cout << "---------- " << frame_count << std::endl;
+        print_data();
 
         time_1 = std::chrono::high_resolution_clock::now();
         //if(!win.window_open) break;
@@ -193,10 +190,10 @@ int  plotter::main_loop_thread()
         gui.new_frame();
 
         glUseProgram(program["3D"]);        // Use our shader
-
-        // Compute the MVP matrix from keyboard and mouse input
+//keys_controller::get_instance()->update_key_states(win.window);
+        // Compute the MVP matrix from keyboard/mouse input
         if (!gui.WantCaptureMouse())
-            cam.computeMatricesFromInputs((float)display_w / display_h);
+            cam.computeMatricesFromInputs((float)win.display_w /win. display_h);
 
         ProjectionMatrix = cam.getProjectionMatrix();
         ViewMatrix = cam.getViewMatrix();
@@ -204,7 +201,7 @@ int  plotter::main_loop_thread()
         MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
         // Individual layers modifiers
-        sqr_sel.send_selection_square(*layersSet, display_h, display_w);
+        sqr_sel.send_selection_square(*layersSet, win.display_h, win.display_w);
         pnt_sel.send_selected_points(*layersSet, ModelMatrix, ViewMatrix, ProjectionMatrix);
 
         //points_selection pnt_sel;
@@ -474,18 +471,38 @@ void plotter::send_uniforms()
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     glUniformMatrix4fv(unif["MVP"], 1, GL_FALSE, &MVP[0][0]);
     // Send the position of the camera. Useful for adjusting the size of each point
-    glUniform3fv(unif["Cam_pos"], 1, &cam.position[0]);
+    glUniform3fv(unif["Cam_pos"], 1, &cam.cam_position[0]);
     // Send the size of the points
     glUniform1fv(unif["Pnt_size"], 1, &point_siz);
 }
 
 void plotter::set_viewport_and_background()
 {
-    win.GetFramebufferSize(&display_w, &display_h);     // Get frame buffer size (window pixels)
-    glViewport(0, 0, display_w, display_h);             // Set viewport size: Lower left corner, top right corner
+    // Set viewport
+    win.GetFramebufferSize();                           // Get frame buffer size (window pixels)
+    glViewport(0, 0, win.display_w, win.display_h);     // Set viewport size: Lower left corner, top right corner
     //glGetIntegerv(GL_VIEWPORT, viewport);             // Get viewport size: int viewport[4]
 
+    // Set background
     glClearColor(backg_color[0], backg_color[1], backg_color[2], 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // Clear the screen and the depth test
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen and the depth test
 }
 
+void plotter::getCamPosition(float *position)
+{
+    position[0] = cam.cam_position[0];
+    position[1] = cam.cam_position[1];
+    position[2] = cam.cam_position[2];
+}
+
+void plotter::print_data()
+{
+    // ---Frame number---
+    //std::cout << "\rFrame " << frame_count;
+    //std::cout << "---------- " << frame_count << std::endl;
+
+    // ---Camera coordinates---
+    //float pos[3];
+    //getCamPosition(pos);
+    //std::cout << std::fixed << '\r' << pos[0] << ", " << pos[1] << ", " << pos[2];
+}
