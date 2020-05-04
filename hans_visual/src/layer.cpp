@@ -20,7 +20,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     layer::layer(const char *name, object_type type, unsigned int capacity) :
         layer_name(name), max_objs(capacity), layer_type(type)
     {
-        mut = new std::mutex;
+        layerMutex = new std::mutex;
 
         // Fill the palette with the default colors
         std::vector<std::vector<float>> temp = {
@@ -92,8 +92,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         checkbox_visible = obj.checkbox_visible;
         checkbox_value = obj.checkbox_value;
         dimensions = obj.dimensions;
-        delete mut;
-        mut = new std::mutex;
+        delete layerMutex;
+        layerMutex = new std::mutex;
 
         // Colors
         palette_size = obj.palette_size;
@@ -245,8 +245,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         checkbox_visible = obj.checkbox_visible;
         checkbox_value = obj.checkbox_value;
         dimensions = obj.dimensions;
-        delete mut;
-        mut = new std::mutex;
+        delete layerMutex;
+        layerMutex = new std::mutex;
 
         // Colors
         palette_size = obj.palette_size;
@@ -396,7 +396,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     layer::~layer()
     {
-        delete mut;
+        delete layerMutex;
 
         delete[] palette;
 
@@ -421,7 +421,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(points, number_points)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -449,7 +449,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(points, number_points)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
 
@@ -480,7 +480,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(points, number_points)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -507,7 +507,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(points, number_points)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
         float siz = max - min;
@@ -542,7 +542,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -574,7 +574,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
 
@@ -607,7 +607,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
 
@@ -640,7 +640,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -669,7 +669,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -698,7 +698,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
         float siz = max - min;
@@ -734,7 +734,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(lines, number_lines)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
         float siz = max - min;
@@ -772,7 +772,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -812,7 +812,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
 
@@ -860,7 +860,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
 
@@ -904,7 +904,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -944,7 +944,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         for (size_t i = 0; i < objs_to_print; i++)			// Main loop for filling the corresponding buffer
         {
@@ -984,7 +984,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
         float siz = max - min;
@@ -1039,7 +1039,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(triangles, number_triangles)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         int index;
         float siz = max - min;
@@ -1088,7 +1088,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
         fill_cube_vertex(arr);
@@ -1110,7 +1110,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
         fill_cube_vertex(arr);
@@ -1138,7 +1138,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
         fill_cube_vertex(arr);
@@ -1160,7 +1160,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if(first_checks(cubes, number_cubes)) return 1;
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
 
         // Vertex coordinates (3 per triangle * 12 triangles). This draws triangles anti-clockwise
         fill_cube_vertex(arr);
@@ -1311,7 +1311,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     {
         if (layer_type == none) { error_message(1); return; }
 
-        std::lock_guard<std::mutex> lock(*mut);
+        std::lock_guard<std::mutex> lock(*layerMutex);
         layer_name = new_name;
     }
 

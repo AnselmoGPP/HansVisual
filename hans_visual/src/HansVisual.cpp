@@ -1,11 +1,11 @@
 #include "HansVisual.hpp"
 
-HansVisual::HansVisual() : display(&layersSet, &mut)
+HansVisual::HansVisual() : display(&layersSet, &layerSetMutex)
 {
 
 }
 
-HansVisual::HansVisual(const HansVisual &obj) : layersSet(obj.layersSet), display(&layersSet, &mut)
+HansVisual::HansVisual(const HansVisual &obj) : layersSet(obj.layersSet), display(&layersSet, &layerSetMutex)
 {
 
 }
@@ -49,7 +49,7 @@ void HansVisual::add_layer(const char *name, object_type type, unsigned int capa
         if(layersSet[i].layer_name == name) { std::cout << "Layer \"" << name << "\" already exists" << std::endl; return; }
 
     // Add the layer to the set
-    std::lock_guard<std::mutex> lock(mut);
+    std::lock_guard<std::mutex> lock(layerSetMutex);
     display.resize_buffer_set(layersSet.size() + 1);        // Empty function
     layersSet.push_back(layer(name, type, capacity));
 }
@@ -59,7 +59,7 @@ int HansVisual::delete_layer(const char *layer_name)
     int layer_num = find_layer(layer_name);
     if(layer_num >= 0)
     {
-        std::lock_guard<std::mutex> lock(mut);
+        std::lock_guard<std::mutex> lock(layerSetMutex);
         display.resize_buffer_set(layersSet.size() - 1);
         layersSet.erase(layersSet.begin() + layer_num);
     }
@@ -72,7 +72,7 @@ int HansVisual::clear_layer(std::string layer_name)
 
     if(layer_num >= 0)
     {
-        std::lock_guard<std::mutex> lock(*layersSet[layer_num].mut);
+        std::lock_guard<std::mutex> lock(*layersSet[layer_num].layerMutex);
         layersSet[layer_num].objs_to_print = 0;
     }
     else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }
@@ -214,7 +214,7 @@ int HansVisual::set_layer_state(std::string layer_name, bool state)
 
     if(layer_num >= 0)
     {
-        std::lock_guard<std::mutex> lock(*layersSet[layer_num].mut);
+        std::lock_guard<std::mutex> lock(*layersSet[layer_num].layerMutex);
         layersSet[layer_num].checkbox_value = state;
     }
     else { std::cout << "Layer \"" << layer_name << "\" not found" << std::endl; return 1; }

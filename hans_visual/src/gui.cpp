@@ -116,7 +116,7 @@ void my_gui::create_gui_1(std::vector<layer> *layersSet, float *backg_color, flo
 
     if (show_data)
     {
-        std::lock_guard<std::mutex> lock(mut_fill_data);
+        std::lock_guard<std::mutex> lock(fillDataMutex);
 
         ImGui::Begin("Data window", &show_data);
             for (int i = 0; i < data_window_size; i++) {
@@ -199,7 +199,7 @@ void my_gui::create_demo_windows() {
 
 void my_gui::fill_data_window(const std::string *data_strings, int num_strings) {
 
-    std::lock_guard<std::mutex> lock(mut_fill_data);
+    std::lock_guard<std::mutex> lock(fillDataMutex);
 
     if (data_window_size != num_strings)
     {

@@ -26,15 +26,27 @@ using namespace glm;
 #include "gui.hpp"
 #include "controls.hpp"
 
+class std_timer
+{
+    bool first_call = true;
+    std::chrono::high_resolution_clock::time_point lastTime, currentTime;
+
+public:
+    long deltaTime;
+    void get_delta_time();                      // Get time increment between two consecutives calls to this function
+    void fps_control(unsigned int frequency);   // Argument: Desired FPS (a sleep will be activated to slow down the process)
+};
+
 class plotter
 {
     std::vector<layer> *layersSet;
-    std::mutex *layersSet_mut;
+    std::mutex *layersSetMutex;
 
     camera cam;
     my_gui gui;
     window_manager win;
     keys_controller *kc;
+    std_timer timer;
 
     int main_loop_thread();		// The thread where the visualizer is run
 
@@ -52,14 +64,10 @@ class plotter
     void load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
     void load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
 
-    // Frequency (FPS)
-    std::chrono::high_resolution_clock::time_point time_1, time_2;
-    void fps_control(unsigned int frequency);           // Tell how many fps you want. If they are higher, they will be reduced until the specified fps
-
     // ID buffers
     void create_VAOs(int amount);
     GLuint *VertexArraysID;
-    void create_VBOs(int amount, std::mutex *mut);
+    void create_VBOs(int amount, std::mutex *layerSet_mutex);
     GLuint *vertexbuffersIDs;
     GLuint *colorbuffersIDs;
 

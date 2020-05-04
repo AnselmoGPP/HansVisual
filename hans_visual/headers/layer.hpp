@@ -48,7 +48,7 @@ struct layer
     bool checkbox_visible = true;
     bool checkbox_value = true;
     unsigned int dimensions = 3;
-    std::mutex *mut = nullptr;
+    std::mutex *layerMutex = nullptr;
 
     // Colors
     float(*palette)[3] = nullptr;                   // Palette of colors of the layer

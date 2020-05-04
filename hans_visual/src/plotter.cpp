@@ -2,7 +2,39 @@
 
 // Main public members ---------------------------------------------------
 
-plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSet_mut(layers_set_mutex), kc(keys_controller::get_instance())
+void std_timer::get_delta_time()
+{
+    if(first_call)  // Executed only once (first call)
+    {
+        lastTime = std::chrono::high_resolution_clock::now();
+        first_call = false;
+    }
+
+    // Time difference between current and last frame
+    currentTime = std::chrono::high_resolution_clock::now();
+    deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime).count();
+
+    lastTime = currentTime;
+}
+
+void std_timer::fps_control(unsigned int frequency)
+{
+    get_delta_time();
+
+    long desired_time = 1000000/frequency;
+    if(deltaTime < desired_time)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(desired_time - deltaTime));
+        currentTime = std::chrono::high_resolution_clock::now();
+        deltaTime += std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime).count();
+        lastTime = currentTime;
+        //std::cout << "FPS: " << 1000000/deltaTime << '\r';
+    }
+}
+
+// -----------------------------------------------------------------------
+
+plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) : layersSet(layers_set), layersSetMutex(layers_set_mutex), kc(keys_controller::get_instance())
 {
     backg_color[0] = BACKG_R;  backg_color[1] = BACKG_G;  backg_color[2] = BACKG_B;
     point_siz = PNT_SIZE;
@@ -16,7 +48,7 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex) :
 plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
 {
     layersSet = obj.layersSet;
-    layersSet_mut = obj.layersSet_mut;
+    layersSetMutex = obj.layersSetMutex;
 
     //cam = obj.cam;
     gui = obj.gui;
@@ -29,7 +61,7 @@ plotter::plotter(const plotter &obj) : layersSet(obj.layersSet)
 plotter& plotter::operator=(const plotter &obj)
 {
     layersSet = obj.layersSet;
-    layersSet_mut = obj.layersSet_mut;
+    layersSetMutex = obj.layersSetMutex;
 
     //cam = obj.cam;
     gui = obj.gui;
@@ -167,14 +199,7 @@ int  plotter::main_loop_thread()
 
     //gl_static_draw_example();
 
-    create_VBOs(layersSet->size(), layersSet_mut);
-
-    /*
-    sel.selectionSquareID = new GLuint;
-    sel.selectionSquareColorID = new GLuint;
-    glGenBuffers(1, sel.selectionSquareID);
-    glGenBuffers(1, sel.selectionSquareColorID);
-    */
+    create_VBOs(layersSet->size(), layersSetMutex);
 
     // ------------------------------------
 
@@ -182,15 +207,12 @@ int  plotter::main_loop_thread()
     {
         print_data();
 
-        time_1 = std::chrono::high_resolution_clock::now();
-        //if(!win.window_open) break;
-
         set_viewport_and_background();
 
         gui.new_frame();
 
         glUseProgram(program["3D"]);        // Use our shader
-//keys_controller::get_instance()->update_key_states(win.window);
+
         // Compute the MVP matrix from keyboard/mouse input
         if (!gui.WantCaptureMouse())
             cam.computeMatricesFromInputs((float)win.display_w /win. display_h);
@@ -210,7 +232,7 @@ int  plotter::main_loop_thread()
 
         send_uniforms();
 
-        std::lock_guard<std::mutex> lock(*layersSet_mut);
+        std::lock_guard<std::mutex> lock(*layersSetMutex);
 
         load_buffers(program);
 
@@ -231,8 +253,7 @@ int  plotter::main_loop_thread()
 
         for(layer &lay : *layersSet) lay.state = open;
 
-        time_2 = std::chrono::high_resolution_clock::now();
-        fps_control(DESIRED_FPS);
+        timer.fps_control(DESIRED_FPS);
     }
     // Check if the ESC key was pressed or the window was closed
     while (win.scape_conditions());
@@ -328,7 +349,7 @@ void plotter::load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID
     }
 
     {
-        std::lock_guard<std::mutex> lock(*lay->mut);
+        std::lock_guard<std::mutex> lock(*lay->layerMutex);
         glBindBuffer(GL_ARRAY_BUFFER, vertexbuffID);
         glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 3 * sizeof(float), lay->get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
 
@@ -378,7 +399,7 @@ void plotter::load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID
     }
 
     {
-    std::lock_guard<std::mutex> lock(*lay->mut);
+    std::lock_guard<std::mutex> lock(*lay->layerMutex);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffID);
     glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 3 * sizeof(float), lay->get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
 
@@ -406,16 +427,6 @@ void plotter::load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID
 */
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-}
-
-void plotter::fps_control(unsigned int frequency)
-{
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(time_2 - time_1).count();
-    long desired_time = 1000000/frequency;
-    if(duration < desired_time) std::this_thread::sleep_for(std::chrono::microseconds(desired_time - duration));
-
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_1).count();
-    //std::cout << "FPS: " << 1000000/duration << '\r';
 }
 
 void plotter::gl_static_draw_example()
@@ -455,9 +466,9 @@ void plotter::create_uniforms(GLuint programID)
     unif["Pnt_size"] = glGetUniformLocation(programID, "Pnt_siz");
 }
 
-void plotter::create_VBOs(int amount, std::mutex *mut)
+void plotter::create_VBOs(int amount, std::mutex *layerSet_mutex)
 {
-    std::lock_guard<std::mutex> lock(*mut);
+    std::lock_guard<std::mutex> lock(*layerSet_mutex);
 
     vertexbuffersIDs = new GLuint[amount];    // The first buffer is for the selected points
     colorbuffersIDs = new GLuint[amount];

@@ -43,7 +43,7 @@ class my_gui
     // GUI 1 (visualizer)
     int data_window_size;
     std::string *data_window;
-    std::mutex mut_fill_data;
+    std::mutex fillDataMutex;
 
 public:
 

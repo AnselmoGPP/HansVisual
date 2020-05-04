@@ -13,76 +13,54 @@ Controls are managed (controls > handler)
 
 ---------------------------------------------------------------------------
 > Correct copy constructors and copy assignment operators overloading
-- Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
 - Check correcteness of mutexes. Check the std::mutex *mut members. Check mutex usage in layer class
 > Generalize VAO and VBO creation
-> plotter: add_layer y delete_layer podrían unirse a create_VBOsLeft click6
+> plotter: add_layer y delete_layer podrían unirse a create_VBOs Left click6
 > Check unused included standard libraries
 > por qué open_window tiene que estar en init_GLFW?
 - Replace glm by Eigen
 
-- Direct data loading onto layers
-- glfwSetCursorPosition() has fixed values for its arguments (display width and height)
-- Change camera type with P
+- fps camera & > More camera modes (plane...)
 - Sphere center signal
-- point_strings (layer class) optional (save space)
-- Get world camera position
-- Renombrar mutex
-- fps camera
-- Manual
-> glDisableVertexAttribArray(0) situation
-> Only open and close states have problems
-> Extra flags: checkboxes visible & Number of dimensions
-> load_selection_square() only if layer is open (avoid many loadings per loop)
-> Open, closed, half_closed for avoiding multiple sendings during a loop
-> HansVisualizer should be a wrapper around Basic visualizer: It builds 3D and 2D layers (2 different classes). Flags specify if includes checkboxes...
-> Plotter as parent class -> Sub-classes: 3d generation, 2D generation.
-> Selection problem
-> Extract class for selection, controls, shader...
-> More camera modes (plane)
-> Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
-- Functions: model( scale(), rotate(), translate() ), view(), proyection()
-- send_XXX divided in more functions
-- Move layer class members to private
-> Change camera type in execution time
+- Improve drag & drop camera-movement system so it works the same way with any display-size.
+- Direct data loading onto layers - Improve speed by passing directly arrays to OGL
 > Put selections in a ImGui window
-- Singleton
-> Function for pitch, roll, yaw - Improve cubes rotation
-> Center of the sphere (option of the visualizer)
+- glfwSetCursorPosition() has fixed values for its arguments (display width and height)
+- Change camera type with P (in execution time)
+- point_strings (layer class) optional (save space)
+- Manual
+> Only open and close states have problems
+> Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
+- Seleccionar mientras seleccionas -> Peta
+
+> Plotter as parent class -> Sub-classes: 3d generation, 2D generation.
+- Functions: model( scale(), rotate(), translate() ), view(), proyection() -/- Functions for pitch, roll, yaw -/- Improve cubes rotation
+- send_XXX divided in more functions
 > Crear un find_package() para no tener que linkar todas las librerías en el CMake
-> Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
-> Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
-
--Keep points selected after a new scan is drawn in that layer (send_pts())
 -CMake version (update) (add_package) add_compile_options, add Unix/Win32 flags
--Mutex for 2 flows: add_layer and main loop
--Save selected points from buffer > Load pts from buffer to GPU > repeat
--mut_fill_data (mutex)
--mut (vec<mutex*>)
--send_point/lines/triangles/cubes -> Put objects_to_print in mutex
--lock_points(mut[points][layer]), check_selection > lock_points(mut[pts][i]) (for), load_points > lock_points(mut[pts][i])
-- In check_ray(), don't check already selected points
--Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function
--Only one free function call per loop (main loop)
--Reorder surfaces (box planes and planes) so transparencies look right
--Optimizar selección. En lugar de chequear todos los puntos por cada píxel, averigüar la posición de cada punto en la pantalla. - Improve selection (see sciencesoftcode notes)
--Make sure you destroy all the news
--Are multiple windows possible? (1763) - Try many visualizer windows
-- OOP: Encapsulation, abstraction, inheritance, polymorphism
--http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
-- ImGui as static library
-- Improve speed by passing directly arrays to OGL
 
+Mutex:
+    - Mutex for 2 flows: add_layer and main loop
+    - mut_fill_data (mutex)
+    - mut (vec<mutex*>)
+    - send_point/lines/triangles/cubes -> Put objects_to_print in mutex
+    - lock_points(mut[points][layer]), check_selection > lock_points(mut[pts][i]) (for), load_points > lock_points(mut[pts][i])
+    -> Are mutexes covering every situation?
+
+
+- Una vez fuera del main loop (tras clicar esc), no debe poder llamarse a una free function
+- Only one free function call per loop (main loop)
+- Reorder surfaces (box planes and planes) so transparencies look right - Ordenar buffer para cubos para perfecta transparencia
+- Make sure you destroy all the news
+- Are multiple windows possible? (1763) - Try many visualizer windows
+- OOP: Encapsulation, abstraction, inheritance, polymorphism
+- http://csharphelper.com/blog/2015/12/build-a-geodesic-sphere-with-wpf-and-c/
+- ImGui as static library
 - Allow relative paths for calling LoadShaders()
 - Cubes complete rotation (rotation method for a point)
 - Parameters window (toolbar) (camera, transparency, axis...)
 - Shaper with loop and without it
-- Ordenar buffer para cubos para perfecta transparencia
 -> Optimizations... Vextex in cubes are written at least 3 times. Optimize this. Also circular points, point sizes, line thickness...
--> Selection (or small windows for showing info about objects)
--> Are mutexes covering every situation?
-- Seleccionar mientras seleccionas -> Peta
-
 
 for(;;)
 {
@@ -122,3 +100,20 @@ for(;;)
 - Set layer state
 > Take into account layers of type none when modifying any layer state
 - Correct grid position and camera position (x,y,z) >> Set new starting position for camera & correct camera movement
+- Compress timer in plotter class (like in camera class)
+> Extra flags: checkboxes visible & Number of dimensions
+> HansVisualizer should be a wrapper around Basic visualizer: It builds 3D and 2D layers (2 different classes). Flags specify if includes checkboxes...
+- Singleton
+> glDisableVertexAttribArray(0) situation
+- Por qué el primer punto de modified_rainbow[256][3] no está en x=0?
+> load_selection_square() only if layer is open (avoid many loadings per loop)
+> Open and closed (half_closed not necessary) for avoiding multiple sendings during a loop
+> Selection problem
+> Extract class for selection, controls, shader...
+> Argumentos como float(*buff)[3], en lugar de float * (asi se asegura que los argumentos se meten en el formato correcto y los índices dentro de la función se simplifican)
+> Use get_vertex_ptr o get_color_ptr instead of checking all the types in visualizerClass before taking a buffer.
+-Keep points selected after a new scan is drawn in that layer (send_pts())
+-Save selected points from buffer > Load pts from buffer to GPU > repeat
+- In check_ray(), don't check already selected points
+-Optimizar selección. En lugar de chequear todos los puntos por cada píxel, averigüar la posición de cada punto en la pantalla. - Improve selection (see sciencesoftcode notes)
+- Renombrar mutex

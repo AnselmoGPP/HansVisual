@@ -8,7 +8,7 @@
 class HansVisual
 {
     std::vector<layer> layersSet;
-    std::mutex mut;                    // Used in add_layer() and delete_layer() (and in plotter class, in main-loop and in create_VBO())
+    std::mutex layerSetMutex;                    // Used in add_layer() and delete_layer() (and in plotter class, in main-loop and in create_VBO())
 
     plotter display;
 

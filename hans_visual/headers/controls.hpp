@@ -25,7 +25,6 @@ public:
     static keys_controller *get_instance();
 
     void update_key_states(GLFWwindow *window);
-    //void SetCursorPos(GLFWwindow *window, int width, int height);
     bool setCursorPosInNextKeyUpdate(int width, int height);
     bool poll_events = false;
 

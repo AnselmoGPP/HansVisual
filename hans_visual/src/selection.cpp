@@ -106,7 +106,7 @@ void points_selection::send_selected_points(std::vector<layer> &layersSet, const
                     layersSet[i].checkbox_value &&
                     layersSet[i].layer_name != SELECTED_POINTS_LAYER_NAME)
                 {
-                    std::lock_guard<std::mutex> lock(*layersSet[i].mut);       // Second filther (after setting buffer_closed to closed). It avoids conflicts with buffers being currently edited (can only happen during the first iteration of this loop for each layer)
+                    std::lock_guard<std::mutex> lock(*layersSet[i].layerMutex);       // Second filther (after setting buffer_closed to closed). It avoids conflicts with buffers being currently edited (can only happen during the first iteration of this loop for each layer)
 
                     for(int j = 0; j < layersSet[i].objs_to_print; ++j)
                     {
@@ -200,7 +200,7 @@ void points_selection::send_selected_points_2(std::vector<layer> &layersSet, con
                     layersSet[i].checkbox_value &&
                     layersSet[i].layer_name != SELECTED_POINTS_LAYER_NAME)
                 {
-                    std::lock_guard<std::mutex> lock(*layersSet[i].mut);       // Second filther (after setting buffer_closed to closed). It avoids conflicts with buffers being currently edited (can only happen during the first iteration of this loop for each layer)
+                    std::lock_guard<std::mutex> lock(*layersSet[i].layerMutex);       // Second filther (after setting buffer_closed to closed). It avoids conflicts with buffers being currently edited (can only happen during the first iteration of this loop for each layer)
 
                     for(int j = 0; j < layersSet[i].objs_to_print; ++j)
                     {
