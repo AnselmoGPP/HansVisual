@@ -6,11 +6,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include <iostream>
-#include <cmath>
-//#include <iomanip>
-
-#include "_options.hpp"
 #include "controls.hpp"
 
 class glfw_timer
@@ -29,7 +24,7 @@ class camera
     GLFWwindow *window;
     keys_controller * kc;
 
-    double pi = 3.1415926536;
+    float pi = 3.1415926536;
 
     glfw_timer timer;
 
@@ -67,7 +62,6 @@ public:
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
 
-    void sticky_keys(bool sticky);
     void set_mouse_position_visibility();
     void hide_cursor(bool hide);
 };

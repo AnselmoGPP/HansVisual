@@ -2,6 +2,7 @@
 #define HANSVISUAL_HPP
 
 #include <vector>
+
 #include "layer.hpp"
 #include "plotter.hpp"
 

@@ -1,8 +1,11 @@
+#include <iostream>
+#include <thread>
+
 #include "HansVisual.hpp"
 
 HansVisual::HansVisual() : display(&layersSet, &layerSetMutex)
 {
-
+    //std::cout << "Path: " << get_library_path() << std::endl;
 }
 
 HansVisual::HansVisual(const HansVisual &obj) : layersSet(obj.layersSet), display(&layersSet, &layerSetMutex)

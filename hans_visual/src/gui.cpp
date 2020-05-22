@@ -1,7 +1,8 @@
-
-#include "gui.hpp"
-
 #include <iostream>
+#include <mutex>
+
+#include "_options.hpp"
+#include "gui.hpp"
 
 my_gui::my_gui()
 {

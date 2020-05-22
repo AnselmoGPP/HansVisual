@@ -1,10 +1,7 @@
 #ifndef LAYERS_HPP
 #define LAYERS_HPP
 
-#include <iostream>
-#include <vector>
 #include <mutex>
-#include <cmath>
 
 #include "_options.hpp"
 
@@ -113,7 +110,7 @@ private:
 
     void error_message(unsigned int code, unsigned int number_objs = 0);
     void rotation_H(float &x, float &y, float X, float Y, float rot);
-    void HSVtoRGB(double H, double S, double V, float output[3]);
+    void HSVtoRGB(float H, float S, float V, float output[3]);
     int first_checks(object_type func_type, unsigned int number_elements);
     void fill_cube_vertex(const cube3D *arr);
     std::string layer_type_str();

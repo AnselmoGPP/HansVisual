@@ -1,4 +1,26 @@
+//#include <iostream>
+#include <thread>
+
+#include "_options.hpp"
 #include "plotter.hpp"
+#include "shader.hpp"
+
+#if defined(__unix__)
+
+#include <dlfcn.h>
+std::string get_library_path()
+{
+    Dl_info dl_info;
+    if(0 != dladdr((void*)get_library_path, &dl_info))
+        return std::string(dl_info.dli_fname);
+    else
+        return std::string();
+}
+
+#elif _WIN32
+// GetModuleFileName()
+
+#endif
 
 // Main public members ---------------------------------------------------
 
@@ -165,6 +187,12 @@ void plotter::fill_data_window(const std::string *data_strings, int num_strings)
 
 int  plotter::main_loop_thread()
 {
+    /*
+        Set window (GLFW), OpenGL access (GLEW), camera,
+
+
+    */
+
     win.MakeContextCurrent();
 
     // Create the OpenGL context for the GLFW window
@@ -177,7 +205,7 @@ int  plotter::main_loop_thread()
         return -1;
     }
 
-    cam.sticky_keys(true);
+    kc->sticky_keys(win.window, true);
     cam.set_mouse_position_visibility();
 
     gui.init_gui();
@@ -192,10 +220,10 @@ int  plotter::main_loop_thread()
     // Create and compile our GLSL program from the shaders				    system("pwd"): /home/hank/dev/OGL/Shaper/_BUILD
     //GLuint programID = LoadShaders(	"//home//hank//src//TransformVertexShader.vertexshader", "//home//hank//src//ColorFragmentShader.fragmentshader");
     std::map<char*, unsigned int> program;
-    program["3D"] = LoadShaders(VertexShaderCode, FragmentShaderCode);
-    program["2D"] = LoadShaders(VertexShaderCode2D, FragmentShaderCode);
+    program["basic3D"] = LoadShaders(VS_basic_3D, FS_basic);
+    program["basic2D"] = LoadShaders(VS_basic_2D, FS_basic);
 
-    create_uniforms(program["3D"]);
+    create_uniforms(program["basic3D"]);
 
     //gl_static_draw_example();
 
@@ -211,7 +239,7 @@ int  plotter::main_loop_thread()
 
         gui.new_frame();
 
-        glUseProgram(program["3D"]);        // Use our shader
+        glUseProgram(program["basic3D"]);        // Use our shader
 
         // Compute the MVP matrix from keyboard/mouse input
         if (!gui.WantCaptureMouse())
@@ -236,13 +264,6 @@ int  plotter::main_loop_thread()
 
         load_buffers(program);
 
-        /*
-        load_buffers(vertexbuffersIDs, colorbuffersIDs);
-
-        glUseProgram(programID_3D);
-        load_selectionSquare(sel.selectionSquareID, sel.selectionSquareColorID);
-        */
-
         gui.create_gui_1(layersSet, backg_color, &point_siz);
         gui.render_gui();
 
@@ -266,8 +287,8 @@ int  plotter::main_loop_thread()
     glDeleteBuffers(layersSet->size(), vertexbuffersIDs);       delete[] vertexbuffersIDs;    vertexbuffersIDs = nullptr;
     glDeleteBuffers(layersSet->size(), colorbuffersIDs);        delete[] colorbuffersIDs;     colorbuffersIDs  = nullptr;
 
-    glDeleteProgram(program["3D"]);
-    glDeleteProgram(program["2D"]);
+    glDeleteProgram(program["basic3D"]);
+    glDeleteProgram(program["basic2D"]);
 
     glDeleteVertexArrays(1, VertexArraysID);
 
@@ -311,15 +332,15 @@ void plotter::load_buffers(std::map<char*, unsigned int> program)
     for(int i = 0; i < layersSet->size(); ++i)
     {
         if(layersSet->operator[](i).dimensions == 3)
-            load_buffer_3D(&layersSet->operator[](i), vertexbuffersIDs[i], colorbuffersIDs[i], program["3D"]);
+            load_buff(&layersSet->operator[](i), vertexbuffersIDs[i], colorbuffersIDs[i], program["basic3D"]);
         else
         if(layersSet->operator[](i).dimensions == 2)
-            load_buffer_2D(&layersSet->operator[](i), vertexbuffersIDs[i], colorbuffersIDs[i], program["2D"]);
+            load_buff(&layersSet->operator[](i), vertexbuffersIDs[i], colorbuffersIDs[i], program["basic2D"]);
     }
 }
 
-void plotter::load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program)
-{
+void plotter::load_buff(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program)
+{    
     if (!lay->checkbox_value || lay->objs_to_print == 0) return;
 
     glUseProgram(program);
@@ -369,62 +390,6 @@ void plotter::load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID
 
     glDrawArrays(GL_OBJS, 0, lay->objs_to_print * vertex_per_obj);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-}
-
-void plotter::load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program)
-{
-    if (!lay->checkbox_value || lay->objs_to_print == 0) return;
-
-    glUseProgram(program);
-
-    unsigned long vertex_per_obj;
-    GLenum GL_OBJS;
-
-    if     (lay->layer_type == points)
-    {
-        vertex_per_obj = 1;
-        GL_OBJS = GL_POINTS;
-    }
-    else if(lay->layer_type == lines)
-    {
-        vertex_per_obj = 2;
-        GL_OBJS = GL_LINES;
-    }
-    else if(lay->layer_type == triangles)
-    {
-        vertex_per_obj = 3;
-        GL_OBJS = GL_TRIANGLES;
-    }
-
-    {
-    std::lock_guard<std::mutex> lock(*lay->layerMutex);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffID);
-    glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 3 * sizeof(float), lay->get_vertex_ptr(), GL_DYNAMIC_DRAW);				// GL_STATIC_DRAW
-
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffID);
-    glBufferData(GL_ARRAY_BUFFER, lay->objs_to_print * vertex_per_obj * 4 * sizeof(float), lay->get_colors_ptr(), GL_DYNAMIC_DRAW);
-    }
-
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffID);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    // 2nd attribute buffer : colors
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffID);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glDrawArrays(GL_OBJS, 0, lay->objs_to_print * vertex_per_obj);
-/*
-    std::cout << lay->layer_name << ", " << lay->layer_type << ", " << lay->objs_to_print << std::endl;
-    for(int i = 0; i < lay->objs_to_print; i++)
-    {
-        std::cout << "     " << lay->lines_buffer[i][0][0] << ", " << lay->lines_buffer[i][0][1] << ", " << lay->lines_buffer[i][0][2] << ", " << lay->lines_buffer[i][1][0] << ", " << lay->lines_buffer[i][1][1] << ", " << lay->lines_buffer[i][1][2] << std::endl;
-    }
-*/
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }

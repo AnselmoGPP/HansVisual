@@ -1,9 +1,6 @@
+#include <thread>
+
 #include "header.hpp"
-
-//#define DELETE 1
-
-int test();
-int perlin_1();
 
 int main()
 {
@@ -167,3 +164,4 @@ int main()
 //std::cout << "END" << std::endl;
     display.wait();
 }
+

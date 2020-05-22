@@ -1,3 +1,8 @@
+
+#include <iostream>
+#include <vector>
+#include <cmath>
+
 #include "layer.hpp"
 
 pnt3D::pnt3D(float a, float b, float c) : x(a), y(b), z(c) { }
@@ -1227,7 +1232,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         return 0;
     }
 
-    // HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (double) in [0, 1.], V (double) in [0, 1.]
+    // HSV (Hue, Saturation, Value): H (int) is in [0, 360], S (float) in [0, 1.], V (float) in [0, 1.]
     int layer::send_palette_HSV(float (*new_palette)[3], int number_colors)
     {
         if(layer_type == none) { error_message(1); return 1; }
@@ -1358,13 +1363,13 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         y = -(hip * sin(beta)) + Y;
     }
 
-    void layer::HSVtoRGB(double H, double S, double V, float output[3])
+    void layer::HSVtoRGB(float H, float S, float V, float output[3])
     {
         // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
-        double C = S * V;
-        double X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
-        double m = V - C;
-        double Rs, Gs, Bs;
+        float C = S * V;
+        float X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
+        float m = V - C;
+        float Rs, Gs, Bs;
 
         if (H >= 0 && H < 60) {
             Rs = C;

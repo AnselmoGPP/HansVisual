@@ -20,6 +20,12 @@ Controls are managed (controls > handler)
 > por qué open_window tiene que estar en init_GLFW?
 - Replace glm by Eigen
 
+- Libs: Algebra, Noise, Timer
+
+- Copy constructor, etc.
+- Change camera system at run-time
+- Shadows
+- Camera orientation (fp) configuration doesn't work well
 - fps camera & > More camera modes (plane...)
 - Sphere center signal
 - Improve drag & drop camera-movement system so it works the same way with any display-size.
@@ -32,6 +38,7 @@ Controls are managed (controls > handler)
 > Only open and close states have problems
 > Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
 - Seleccionar mientras seleccionas -> Peta
+- Move cubes generation to toolkit
 
 > Plotter as parent class -> Sub-classes: 3d generation, 2D generation.
 - Functions: model( scale(), rotate(), translate() ), view(), proyection() -/- Functions for pitch, roll, yaw -/- Improve cubes rotation

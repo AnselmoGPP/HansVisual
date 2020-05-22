@@ -2,11 +2,13 @@
 #define SELECTION_HPP
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <vector>
+#include <string>
 
 #include "layer.hpp"
-#include "camera.hpp"
-#include "controls.hpp"
-
 
 class selection_square
 {
@@ -28,12 +30,12 @@ class points_selection
     void set_square_corners(int display_height);                    // Get the coordinates of the corners of the selection square
     void pass_points_to_selection_layer(layer *sel);                // Copy all the selected points to the selections layer
     bool is_inside_selection_square(float (*point)[3]);             // Send a ray for each pixel inside the selection square
-    bool check_ray(float (*point)[3], double xpos, double ypos);
+    bool check_ray(float (*point)[3], float xpos, float ypos);
     void pass_strings_to_window();
     void pass_strings_to_console();
 
     void normalize_vec(glm::vec3 &vec);                             // Get the unitary vector
-    double distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);      // Square distance between 2 points
+    float distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2);       // Square distance between 2 points
 
     // Temporary variables
     int x0, y0, x, y;
@@ -45,7 +47,7 @@ class points_selection
 
 public:
 
-    double MinDistance = MIN_DISTANCE;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
+    float MinDistance = MIN_DISTANCE;                      // Selection distance: Minimum distance between the unitary pixel ray and the unitary point ray (direction vectors)
     bool strings_extraction = STRINGS_EXTRACTION;
     int pixel_step = 1;
 

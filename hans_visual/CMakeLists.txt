@@ -24,6 +24,7 @@ add_definitions(
 ADD_COMPILE_DEFINITIONS(GLEW_STATIC=1)
 ADD_COMPILE_DEFINITIONS(IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
 
+
 ## visualizer_class -----------------------------------------------------------
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC
@@ -51,6 +52,12 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC
 	headers/window.hpp
 	headers/toolKit.hpp
 
+	shaders/VertexShader.vertexshader
+	shaders/VertexShader2D.vertexshader
+	shaders/FragmentShader.fragmentshader
+	shaders/StandardShading.vertexshader
+	shaders/StandardShading.fragmentshader
+
 	../files/notes
 
 	../extern/imgui/imgui-1.72b/imgui.cpp
@@ -69,5 +76,7 @@ target_include_directories( ${PROJECT_NAME} PUBLIC
 	../extern/glew/glew-2.1.0/include
 	../extern/imgui/imgui-1.72b
 )
+
+#target_compile_definitions(${PROJECT_NAME} PRIVATE LIB_DIR=${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CURRENT_CMAKE_DIR}/bin)

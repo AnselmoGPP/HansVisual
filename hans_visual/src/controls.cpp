@@ -1,4 +1,6 @@
+#include <iostream>
 
+#include "_options.hpp"
 #include "controls.hpp"
 
 keys_controller * keys_controller::controls = nullptr;
@@ -53,6 +55,14 @@ bool keys_controller::setCursorPosInNextKeyUpdate(int width, int height)
 {
     cursor_pos[0] = width;
     cursor_pos[1] = height;
+}
+
+void keys_controller::sticky_keys(GLFWwindow *window, bool sticky)
+{
+    if(sticky)
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);        // Sticky keys: Make sure that any pressed key is captured (such as the escape)
+    else
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_FALSE);
 }
 
 // Callback functions ----------------------------

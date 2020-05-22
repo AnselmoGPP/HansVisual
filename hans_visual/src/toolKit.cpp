@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "toolKit.hpp"
 
 namespace toolKit
@@ -68,7 +70,7 @@ void polynomial_segments(float (*result)[2][3], float min_x, float max_x, unsign
 void icosahedron(float side_length, float(*points)[3])
 {
     float S = side_length;
-    const double pi = 3.14159265359;
+    const float pi = 3.14159265359;
     float t1 = 2 * pi / 5;
     float t2 = (pi / 2) - t1;
     float t4 = t1 / 2;
@@ -170,6 +172,16 @@ void fill_polyline(float (*points)[3], size_t num_points, float (*destination)[2
     }
 }
 
+void get_set_triangles(unsigned int num_vertex_x, unsigned int num_vertex_y, float (*vertex)[3], float (*result)[3][3])
+{
+
+}
+
+void get_normals_from_surface(unsigned int vertex_per_side, unsigned int num_triangles, float (*triangles)[3], float *normals)
+{
+
+}
+
 // Auxiliary functions ---------------------------------------------------------------
 
 void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients)
@@ -184,13 +196,13 @@ void polynomial_x(float *results, float x, float *coefficients, float number_of_
     results[2] = 0;
 }
 
-void HSVtoRGB(double H, double S, double V, float output[3])
+void HSVtoRGB(float H, float S, float V, float output[3])
 {
     // https://gist.github.com/kuathadianto/200148f53616cbd226d993b400214a7f
-    double C = S * V;
-    double X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
-    double m = V - C;
-    double Rs, Gs, Bs;
+    float C = S * V;
+    float X = C * (1 - fabs(fmod(H / 60.0, 2) - 1));
+    float m = V - C;
+    float Rs, Gs, Bs;
 
     if (H >= 0 && H < 60) {
         Rs = C;

@@ -22,12 +22,7 @@
     Terminate();
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <GLFW/glfw3.h>
-
-#include "_options.hpp"
 
 class window_manager
 {

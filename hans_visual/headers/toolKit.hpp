@@ -1,7 +1,6 @@
 #ifndef TOOLKIT_HPP
 #define TOOLKIT_HPP
 
-#include <iostream>
 #include <cmath>
 
 namespace toolKit
@@ -11,7 +10,7 @@ namespace toolKit
 
     void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients);
 
-    void HSVtoRGB(double H, double S, double V, float output[3]);
+    void HSVtoRGB(float H, float S, float V, float output[3]);
 
     void invert_array(float (*arr)[3], size_t siz);
 
@@ -37,8 +36,11 @@ namespace toolKit
     // Create polyline: Given X number of points (arr[X][3]), fill an array (arr[X-1][2][3]) with a set of segments connecting those points, ready for sending to the visualizer
     void fill_polyline(float (*points)[3], size_t num_points, float (*result)[2][3]);
 
-    // Get a vector with the points
+    // Given a square surface of vertexes, get the buffer of triangles (n x m vertexes = 2*(n-1) x 2*(m-1))
+    void get_set_triangles(unsigned int num_vertex_x, unsigned int num_vertex_y, float (*vertex)[3], float (*result)[3][3]);
 
+    // Given a square surface of triangles, get the normal of each triangle
+    void get_normals_from_surface(unsigned int num_triangles, float (*triangles)[3], float *normals);
 }
 
 #endif

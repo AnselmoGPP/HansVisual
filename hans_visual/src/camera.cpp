@@ -1,5 +1,9 @@
-﻿#include "camera.hpp"
+﻿#include <iostream>
 #include <cmath>
+//#include <iomanip>
+
+#include "_options.hpp"
+#include "camera.hpp"
 
 void glfw_timer::get_delta_time()
 {
@@ -25,10 +29,10 @@ camera::camera(cam_system mode) : window(nullptr), kc(keys_controller::get_insta
     {
         // up_vec
         // cam_direction
-        cam_position = glm::vec3(0, 15, 0); // Initial position : on +Z use (0, 0, 5)
-        horMove = 3.14f;                    // Initial horizontal angle : toward -Z use 3.14f
-        vertMove = -3.14f / 2;              // Initial vertical angle : for none use 0
-        speed = 15.0f;						// 3 units / second
+        cam_position = glm::vec3(0, 0, 15); // Initial position : on +Z use (0, 0, 5)
+        horMove = 0;                   // Initial horizontal angle : toward -Z use 3.14f
+        vertMove = -3.14/2;                 // Initial vertical angle : for none use 0
+        speed = FP_SPEED;					// X units / second
         mouseSpeed = 0.001f;
 	}
     // Sphere
@@ -184,14 +188,6 @@ void camera::adjust_moves_to_range_2pi()
 }
 
 void camera::associate_window(GLFWwindow *window_in) { window = window_in; }
-
-void camera::sticky_keys(bool sticky)
-{
-    if(sticky)
-        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);        // Sticky keys: Make sure that any pressed key is captured (such as the escape)
-    else
-        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_FALSE);
-}
 
 void camera::set_mouse_position_visibility() {
 

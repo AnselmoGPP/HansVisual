@@ -38,6 +38,8 @@
 #define CAM_MODE        0
 #define NEAR_CLIP_PLANE 0.1f
 #define FAR_CLIP_PLANE  1000.0f
+    // FP
+    #define FP_SPEED 1.f
     // Sphere
     #define ENABLE_SCROLL_SPEEDUP   true
     #define SCROLL_SPEEDUP          0.1f

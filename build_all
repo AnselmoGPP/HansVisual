@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Build and compile the visualizer library and auxiliary libraries
+mkdir _BUILD
+cd _BUILD
+cmake -G"Unix Makefiles" ..
+make
+
+# Build and compile the example project
+cd ../example/_BUILD
+cmake -G"Unix Makefiles" ..
+make
+
+# Execute the example project
+./Shaper

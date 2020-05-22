@@ -1,7 +1,6 @@
 #ifndef HEADER_HPP
 #define HEADER_HPP
 
-#include "plotter.hpp"
 #include "HansVisual.hpp"
 #include "toolKit.hpp"
 

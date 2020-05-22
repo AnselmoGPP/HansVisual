@@ -1,5 +1,7 @@
+#include <string>
+#include <chrono>
+
 #include "header.hpp"
-#include<chrono>
 
 // Points buffers
 float pnts[12][3];

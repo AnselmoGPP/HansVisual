@@ -1,4 +1,9 @@
+#include <stdio.h>
+//#include <stdlib.h>
 
+#include <GLFW/glfw3.h>
+
+#include "_options.hpp"
 #include "window.hpp"
 
 window_manager::window_manager() : window(nullptr), window_open(false)

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Build and compile the HansVisual library
+cd _BUILD
+#rm CMakeCache.txt cmake_install.cmake Makefile
+#rm -r bin CMakeFiles lib hans_visual
+cmake -G"Unix Makefiles" ..
+make
+
+# Copy the shaders in _BUILD
+#mkdir shaders
+#cp -r ../hans_visual/shaders/. shaders
+
+# Build and compile the example project
+cd ../example/_BUILD
+#rm CMakeCache.txt cmake_install.cmake Makefile Shaper imgui.ini
+#rm -r CMakeFiles
+cmake -G"Unix Makefiles" ..
+make
+
+# Execute the example project
+./Shaper
+

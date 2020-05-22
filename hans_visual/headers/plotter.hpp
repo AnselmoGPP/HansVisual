@@ -1,10 +1,8 @@
 #ifndef PLOTTER_HPP
 #define PLOTTER_HPP
 
-#include <iostream>
 #include <vector>
 #include <string>
-#include <thread>
 #include <mutex>
 #include <chrono>
 #include <map>
@@ -17,14 +15,23 @@ using namespace glm;
 //#include "btBulletCollisionCommon.h"
 //#include "btBulletDynamicsCommon.h"
 
-#include "_options.hpp"
 #include "window.hpp"
-#include "layer.hpp"
-#include "shader.hpp"
 #include "selection.hpp"
-#include "camera.hpp"
 #include "gui.hpp"
+#include "layer.hpp"
+#include "camera.hpp"
 #include "controls.hpp"
+
+// Functions for getting the path to the library
+#if defined(__unix__)       //#ifdef __unix__   __unix   __USE_UNIX98
+
+    std::string get_library_path();
+
+#elif _WIN32               // #ifdef defined(_WIN32) || defined(_WIN64)
+
+    // GetModuleFileName()
+
+#endif
 
 class std_timer
 {
@@ -61,8 +68,7 @@ class plotter
 
     // In-main-loop functions for loading data to the GPU
     void load_buffers(std::map<char*, unsigned int> program);
-    void load_buffer_3D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
-    void load_buffer_2D(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
+    void load_buff(layer *lay, GLuint vertexbuffID, GLuint colorbuffID, unsigned int program);
 
     // ID buffers
     void create_VAOs(int amount);
@@ -91,6 +97,7 @@ public:
     plotter& operator=(const plotter &obj);
     ~plotter();
 
+    std::string lib_directory;          // HansVisual fills this. Used for searching the shader files
     unsigned int frame_count = 0;
 
     // Main methods ---------------------------------

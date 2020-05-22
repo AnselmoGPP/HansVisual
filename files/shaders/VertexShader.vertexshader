@@ -1,0 +1,18 @@
+#version 330
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec4 vertexColor;
+
+out vec4 fragmentColor;
+
+uniform mat4 MVP;
+uniform vec3 Cam_pos;
+uniform float Pnt_siz;
+
+void main()
+{
+    gl_Position = MVP * vec4(vertexPosition_modelspace, 1);
+    fragmentColor = vertexColor;
+    gl_PointSize = Pnt_siz / sqrt( (Cam_pos[0] - vertexPosition_modelspace[0]) * (Cam_pos[0] - vertexPosition_modelspace[0]) + (Cam_pos[1] - vertexPosition_modelspace[1]) * (Cam_pos[1] - vertexPosition_modelspace[1]) + (Cam_pos[2] - vertexPosition_modelspace[2]) * (Cam_pos[2] - vertexPosition_modelspace[2]) );
+}
+

@@ -18,13 +18,12 @@
     cleanup();
 */
 
-#include <mutex>
+#include <vector>
 
 #include "imgui.h"
 #include "examples/imgui_impl_glfw.h"
 #include "examples/imgui_impl_opengl3.h"
 
-#include "_options.hpp"
 #include "layer.hpp"
 
 //class plotter;      // Defined in "plotter.hpp"

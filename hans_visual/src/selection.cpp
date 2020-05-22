@@ -1,4 +1,7 @@
+#include <iostream>
+
 #include "selection.hpp"
+#include "controls.hpp"
 
 // selection_square class ----------------------------------
 
@@ -121,7 +124,7 @@ void points_selection::send_selected_points(std::vector<layer> &layersSet, const
                                         &winY,
                                         &winZ))
                         {
-                            if(x0 < winX && winX < x && y0 < winY && winY < y)
+                            if(x0<winX && winX<x && y0<winY && winY<y)
                             {
                                 selections_repo.push_back(glm::vec3(
                                         layersSet[i].points_buffer[j][0],
@@ -264,7 +267,7 @@ bool points_selection::is_inside_selection_square(float (*point)[3])
     return false;
 }
 
-bool points_selection::check_ray(float (*point)[3], double xray, double yray)
+bool points_selection::check_ray(float (*point)[3], float xray, float yray)
 {
     /*
      * 1. From the screen coordinates, get the 2 ray ends in world-space (they are in the near and far clip plane)
@@ -273,11 +276,11 @@ bool points_selection::check_ray(float (*point)[3], double xray, double yray)
      */
 
     double dX, dY, dZ;                      // Temporary variables
-    double dClickY, dClickX;                // OGL screen coordinates of the pixel
+    float dClickY, dClickX;                 // OGL screen coordinates of the pixel
     glm::vec3 ClickRayP1, ClickRayP2;       // OGL world coordinates of the pixel ray ends (in the near and far clip plane).
     glm::vec3 pointRayP1, pointRayP2;       // OGL world coordinates of the point ray ends (in the near clip plane and the point).
     glm::vec3 ClickSlope, pointSlope;       // Direction vectors: Directions (unitary vector) of the pixel ray and the point's ray
-    double sqrDist, minSqrDist = MinDistance * MinDistance;
+    float sqrDist, minSqrDist = MinDistance * MinDistance;
 
     // Get the display minimum and maximum coordinates (pixels)
     int viewport[4];
@@ -285,7 +288,7 @@ bool points_selection::check_ray(float (*point)[3], double xray, double yray)
 
     // From the screen coordinates, get the 2 ray ends in world-space (they are in the near and far clip plane)
     dClickX = xray;
-    dClickY = double(viewport[3] - yray);         // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top (viewport[3]: display height)
+    dClickY = float(viewport[3] - yray);         // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top (viewport[3]: display height)
 
     gluUnProject(dClickX, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);		// 0.0: Near clip plane
     ClickRayP1 = glm::vec3(dX, dY, dZ);
@@ -338,7 +341,7 @@ void points_selection::normalize_vec(glm::vec3 &vec)
     vec.z /= magnitude;
 }
 
-double points_selection::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2)
+float points_selection::distance_sqr_vec(glm::vec3 &vec1, glm::vec3 &vec2)
 {
     return	(vec1.x - vec2.x) * (vec1.x - vec2.x) +
             (vec1.y - vec2.y) * (vec1.y - vec2.y) +
