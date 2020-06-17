@@ -8,15 +8,6 @@
 
 class HansVisual
 {
-    std::vector<layer> layersSet;
-    std::mutex layerSetMutex;                    // Used in add_layer() and delete_layer() (and in plotter class, in main-loop and in create_VBO())
-
-    plotter display;
-
-    layer emptyLayer;
-
-    int find_layer(std::string layer_name);
-
 public:
     HansVisual();
     HansVisual(const HansVisual &obj);
@@ -43,7 +34,7 @@ public:
     // Create a layer with a grid (or modify it if already exists). Parameters: Size of one cell's side, number of cells per side, and HSV color.
     void draw_grid(float cell_size, unsigned int grid_size, float R, float G, float B);
 
-    // Draw axis XYZ. Two systems: OpenGL (true), automotive (false)
+    // Draw axis XYZ. Two coordinate systems: OpenGL (true), automotive (false)
     void draw_axis(float length, bool system);
 
     // Allow selections (draw selection squares and include a layer with the selected points)
@@ -71,6 +62,16 @@ public:
 
     // Get the camera position (X,Y,Z) in OpenGL coordinate system
     void get_cam_position(float *position);
+
+private:
+    std::vector<layer> layersSet;
+    std::mutex layerSetMutex;                    // Used in add_layer() and delete_layer() (and in plotter class, in main-loop and in create_VBO())
+
+    plotter display;
+
+    layer emptyLayer;
+
+    int find_layer(std::string layer_name);
 };
 
 #endif

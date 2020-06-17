@@ -30,22 +30,7 @@
 
 class my_gui
 {
-    ImGuiIO *io;        // Access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
-
-    // States
-    bool show_checkboxes = 1;
-    bool show_data = 0;
-    bool show_options = 0;
-
-    void create_demo_windows();    // Demo window for illustration purposes
-
-    // GUI 1 (visualizer)
-    int data_window_size;
-    std::string *data_window;
-    std::mutex fillDataMutex;
-
 public:
-
     my_gui();
     my_gui(const my_gui &obj);
     my_gui & operator=(const my_gui &obj);
@@ -62,6 +47,21 @@ public:
     // GUI 1 (visualizer)
     void create_gui_1(std::vector<layer> *layersSet, float *backg_color, float *point_siz);
     void fill_data_window(const std::string *data_strings, int num_strings);    // Publish data in the "data window". Send a pointer to an array of X std::strings. The empty strings (="") won't be published
+
+private:
+    ImGuiIO *io;        // Access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
+
+    // States
+    bool show_checkboxes;
+    bool show_data;
+    bool show_options;
+
+    void create_demo_windows();    // Demo window for illustration purposes
+
+    // GUI 1 (visualizer)
+    int data_window_size;          // Number of strings to send to the data window
+    std::string *data_window;
+    std::mutex fillDataMutex;
 };
 
 #endif

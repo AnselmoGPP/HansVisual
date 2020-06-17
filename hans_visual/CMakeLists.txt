@@ -52,12 +52,6 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC
 	headers/window.hpp
 	headers/toolKit.hpp
 
-	shaders/VertexShader.vertexshader
-	shaders/VertexShader2D.vertexshader
-	shaders/FragmentShader.fragmentshader
-	shaders/StandardShading.vertexshader
-	shaders/StandardShading.fragmentshader
-
 	../files/notes
 
 	../extern/imgui/imgui-1.72b/imgui.cpp

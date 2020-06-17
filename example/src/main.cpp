@@ -1,6 +1,8 @@
 #include <thread>
+#include <iostream>
 
 #include "header.hpp"
+
 
 int main()
 {
@@ -8,8 +10,8 @@ int main()
 
     HansVisual display;
     //HansVisual display_1;
-    //HansVisual display_2(display_1);
-    //display = display_2;
+    //HansVisual display_2(display_1);      // testing copy constructor
+    //display = display_2;                  // testing assignment operator overloading
 
     // Generate the layers you will see
     display.allow_points_selection();

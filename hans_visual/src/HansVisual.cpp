@@ -3,20 +3,16 @@
 
 #include "HansVisual.hpp"
 
-HansVisual::HansVisual() : display(&layersSet, &layerSetMutex)
-{
-    //std::cout << "Path: " << get_library_path() << std::endl;
-}
+HansVisual::HansVisual() : display(&layersSet, &layerSetMutex) { }
 
 HansVisual::HansVisual(const HansVisual &obj) : layersSet(obj.layersSet), display(&layersSet, &layerSetMutex)
 {
-
+    layersSet = obj.layersSet;
 }
 
 HansVisual& HansVisual::operator=(const HansVisual &obj)
 {
     layersSet = obj.layersSet;
-    display = obj.display;
 
     return *this;
 }
@@ -208,7 +204,8 @@ void HansVisual::allow_points_selection()
     layersSet.push_back(sel_sqr);
 
     // Add the selected points layer
-    layersSet.push_back(layer(SELECTED_POINTS_LAYER_NAME, points, 0));
+    layer selected_pnts(SELECTED_POINTS_LAYER_NAME, points, 0);
+    layersSet.push_back(selected_pnts);
 }
 
 int HansVisual::set_layer_state(std::string layer_name, bool state)

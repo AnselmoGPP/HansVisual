@@ -24,32 +24,56 @@ using namespace glm;
 
 // Functions for getting the path to the library
 #if defined(__unix__)       //#ifdef __unix__   __unix   __USE_UNIX98
-
-    std::string get_library_path();
-
+    // Do something OS-dependent
 #elif _WIN32               // #ifdef defined(_WIN32) || defined(_WIN64)
-
-    // GetModuleFileName()
-
+    // Do something OS-dependent
 #endif
 
 class std_timer
 {
-    bool first_call = true;
-    std::chrono::high_resolution_clock::time_point lastTime, currentTime;
-
 public:
     long deltaTime;
     void get_delta_time();                      // Get time increment between two consecutives calls to this function
     void fps_control(unsigned int frequency);   // Argument: Desired FPS (a sleep will be activated to slow down the process)
+
+private:
+    bool first_call = true;
+    std::chrono::high_resolution_clock::time_point lastTime, currentTime;
 };
 
 class plotter
 {
+public:
+    plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);
+    plotter(const plotter &obj);
+    plotter& operator=(const plotter &obj);
+    ~plotter();
+
+    unsigned int frame_count;
+
+    // Main methods ---------------------------------
+
+    // Create a window and open a new thread that runs the visualizer
+    int open_window();
+
+    // Resize the buffer set        (Call this just before resizing layersSet) (Use layersSet.mutex have thread under control)
+    void resize_buffer_set(size_t new_size);
+
+    // Check whether the window is open
+    bool window_is_open();
+
+    // Close the window
+    void close_window();
+
+    void fill_data_window(const std::string *data_strings, int num_strings);
+
+    void getCamPosition(float *position);
+
+private:
     std::vector<layer> *layersSet;
     std::mutex *layersSetMutex;
 
-    camera cam;
+    camera *cam;
     my_gui gui;
     window_manager win;
     keys_controller *kc;
@@ -77,7 +101,7 @@ class plotter
     GLuint *vertexbuffersIDs;
     GLuint *colorbuffersIDs;
 
-    std::map<std::string, GLuint> unif = { {"MVP", 0}, {"Cam_pos", 0}, {"Pnt_size", 0} };
+    std::map<std::string, GLuint> unif;
     void create_uniforms(GLuint programID);
     void send_uniforms();
 
@@ -90,33 +114,6 @@ class plotter
     // Individual layer modifiers
     selection_square sqr_sel;
     points_selection pnt_sel;
-
-public:
-    plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex);
-    plotter(const plotter &obj);
-    plotter& operator=(const plotter &obj);
-    ~plotter();
-
-    std::string lib_directory;          // HansVisual fills this. Used for searching the shader files
-    unsigned int frame_count = 0;
-
-    // Main methods ---------------------------------
-
-	// Create a window and open a new thread that runs the visualizer
-    int open_window();
-
-    // Resize the buffer set        (Call this just before resizing layersSet) (Use layersSet.mutex have thread under control)
-    void resize_buffer_set(size_t new_size);
-
-    // Check whether the window is open
-    bool window_is_open();
-
-    // Close the window
-    void close_window();
-
-    void fill_data_window(const std::string *data_strings, int num_strings);
-
-    void getCamPosition(float *position);
 };
 
 #endif

@@ -22,8 +22,11 @@ Controls are managed (controls > handler)
 
 - Libs: Algebra, Noise, Timer
 
+>> Rearrange the camera system. Then, finish copy const. and assingment overloading
+- Camera position parameters (horMove, vertMove) doesn't work well
 - Copy constructor, etc.
-- Change camera system at run-time
+- Move cubes generation to toolkit
+- Change camera system at run-time - Change camera type with P (in execution time)
 - Shadows
 - Camera orientation (fp) configuration doesn't work well
 - fps camera & > More camera modes (plane...)
@@ -32,13 +35,12 @@ Controls are managed (controls > handler)
 - Direct data loading onto layers - Improve speed by passing directly arrays to OGL
 > Put selections in a ImGui window
 - glfwSetCursorPosition() has fixed values for its arguments (display width and height)
-- Change camera type with P (in execution time)
 - point_strings (layer class) optional (save space)
 - Manual
 > Only open and close states have problems
 > Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
 - Seleccionar mientras seleccionas -> Peta
-- Move cubes generation to toolkit
+- layer.cpp line 93 (temp_2 variable)
 
 > Plotter as parent class -> Sub-classes: 3d generation, 2D generation.
 - Functions: model( scale(), rotate(), translate() ), view(), proyection() -/- Functions for pitch, roll, yaw -/- Improve cubes rotation

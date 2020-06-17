@@ -9,13 +9,6 @@ static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
 
 class keys_controller           // Singleton class
 {
-    static keys_controller *controls;
-
-    int cursor_pos[2] = {0, 0};
-protected:
-
-    keys_controller() = default;
-
 public:
 
     static keys_controller *get_instance();
@@ -34,9 +27,17 @@ public:
     bool R_first_press, R_just_released = false;
     float scroll_yOffset;                           // <<< should be int?
 
-    // Keys
+    // Keyboard
     bool up_press, down_press, right_press, left_press;
     bool w_press, s_press, d_press, a_press;
+
+protected:
+    keys_controller() = default;
+
+private:
+    static keys_controller *controls;
+
+    int cursor_pos[2] = {0, 0};
 };
 
 #endif

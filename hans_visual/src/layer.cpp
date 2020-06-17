@@ -20,15 +20,78 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
     // Public ------------------------------
 
-    layer::layer() : layer_name(""), max_objs(0), layer_type(none) { }
-
-    layer::layer(const char *name, object_type type, unsigned int capacity) :
-        layer_name(name), max_objs(capacity), layer_type(type)
+    layer::layer()
     {
-        layerMutex = new std::mutex;
+        layer_name              = "";
+        max_objs                = 0;
+        layer_type              = none;
+        objs_to_print           = 0;
+        state                   = open;
+        checkbox_visible        = true;
+        checkbox_value          = true;
+        dimensions              = 3;
+        layerMutex              = nullptr;
 
-        // Fill the palette with the default colors
-        std::vector<std::vector<float>> temp = {
+        // Colors
+        palette                 = nullptr;
+        palette_size            = 21;
+        alpha_channel           = 1.0f;
+
+        // Buffers
+        points_buffer           = nullptr;
+        points_color_buffer     = nullptr;
+        points_strings          = nullptr;
+        lines_buffer            = nullptr;
+        lines_color_buffer      = nullptr;
+        triangles_buffer        = nullptr;
+        triangles_color_buffer  = nullptr;
+        cubes_buffer            = nullptr;
+        cubes_color_buffer      = nullptr;
+    }
+
+    layer::layer(const char *name, object_type type, unsigned int capacity)
+    {
+        layer_name              = name;
+        max_objs                = capacity;
+        layer_type              = type;
+        objs_to_print           = 0;
+        state                   = open;
+        checkbox_visible        = true;
+        checkbox_value          = true;
+        dimensions              = 3;
+        layerMutex              = new std::mutex;
+
+        // Colors (fill the palette with the default colors)
+        palette_size            = 21;
+        palette                 = new float[palette_size][3];
+        alpha_channel           = 1.0f;
+
+        float temp[21][3] =
+        {
+            {1.0f,	0.0f,	0.00f},
+            {0.0f,	1.0f,	0.00f},
+            {0.0f,	0.0f,	1.00f},
+            {1.0f,	0.0f,	1.00f},
+            {1.0f,	1.0f,	0.00f},
+            {0.0f,	1.0f,	1.00f},
+            {0.5f,	0.0f,	0.00f},
+            {0.0f,	0.5f,	0.00f},
+            {0.0f,	0.0f,	0.50f},
+            {0.5f,	0.5f,	0.00f},
+            {0.5f,	0.0f,	0.50f},
+            {0.0f,	0.5f,	0.50f},
+            {0.75f, 0.25f,	0.25f},
+            {0.25f, 0.75f,	0.25f},
+            {0.25f, 0.25f,	0.75f},
+            {0.25f, 0.25f,	0.00f},
+            {0.25f, 0.0f,	0.25f},
+            {0.0f,	0.25f,	0.25f},
+            {0.75f, 0.75f,	0.00f},
+            {0.0f,	0.75f,	0.75f},
+            {0.75f, 0.0f,	0.75f}
+        };
+// <<<<<<<<<<<<<<<< Check whether temp_2 is necessary
+        std::vector<std::vector<float>> temp_2 = {
                           {1.0f,	0.0f,	0.00f},
                           {0.0f,	1.0f,	0.00f},
                           {0.0f,	0.0f,	1.00f},
@@ -50,7 +113,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
                           {0.75f,   0.75f,	0.00f},
                           {0.0f,	0.75f,	0.75f},
                           {0.75f,   0.0f,	0.75f} };
-        palette = new float[palette_size][3];
+
         for(size_t i = 0; i < palette_size; i++)
         {
             palette[i][0] = temp[i][0];
@@ -58,61 +121,59 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             palette[i][2] = temp[i][2];
         }
 
-        // Fill the buffers depending on the layer type (points, lines, triangles, cubes)
+        // Buffers (fill the buffers depending on the layer type: points, lines, triangles, cubes)
         if(layer_type == points)
         {
-            points_buffer = new float[max_objs][3];
-            points_color_buffer = new float[max_objs][4];
-            points_strings = new std::string[max_objs];
+            points_buffer           = new float[max_objs][3];
+            points_color_buffer     = new float[max_objs][4];
+            points_strings          = new std::string[max_objs];
         }
-        if(layer_type == lines)
+        else if(layer_type == lines)
         {
-            lines_buffer = new float[max_objs][2][3];
-            lines_color_buffer = new float[max_objs][2][4];
+            lines_buffer            = new float[max_objs][2][3];
+            lines_color_buffer      = new float[max_objs][2][4];
         }
-        if(layer_type == triangles)
+        else if(layer_type == triangles)
         {
-            triangles_buffer = new float[max_objs][3][3];
-            triangles_color_buffer = new float[max_objs][3][4];
+            triangles_buffer        = new float[max_objs][3][3];
+            triangles_color_buffer  = new float[max_objs][3][4];
         }
-        if(layer_type == cubes)
+        else if(layer_type == cubes)
         {
-            cubes_buffer = new float[max_objs][12*3][3];
-            cubes_color_buffer = new float[max_objs][12*3][4];
+            cubes_buffer            = new float[max_objs][12*3][3];
+            cubes_color_buffer      = new float[max_objs][12*3][4];
         }
     }
 
     // Copy constructor
     layer::layer(const layer &obj)
     {
-        dimensions = obj.dimensions;
-        checkbox_visible = obj.checkbox_visible;
-
-        // Main layer data
-        layer_name = obj.layer_name;
-        max_objs = obj.max_objs;
-        layer_type = obj.layer_type;
-        objs_to_print = obj.objs_to_print;
-        state = obj.state;
-        checkbox_visible = obj.checkbox_visible;
-        checkbox_value = obj.checkbox_value;
-        dimensions = obj.dimensions;
-        delete layerMutex;
-        layerMutex = new std::mutex;
+        layer_name              = obj.layer_name;
+        max_objs                = obj.max_objs;
+        layer_type              = obj.layer_type;
+        objs_to_print           = obj.objs_to_print;
+        state                   = obj.state;
+        checkbox_visible        = obj.checkbox_visible;
+        checkbox_value          = obj.checkbox_value;
+        dimensions              = obj.dimensions;
+        //delete layerMutex;
+        layerMutex              = new std::mutex;
 
         // Colors
-        palette_size = obj.palette_size;
-        delete[] palette;
-        palette = new float[palette_size][3];
+        palette_size            = obj.palette_size;
+        //delete[] palette;
+        palette                 = new float[palette_size][3];
+        alpha_channel           = obj.alpha_channel;
+
         for(size_t i = 0; i < palette_size; i++)
         {
             palette[i][0] = obj.palette[i][0];
             palette[i][1] = obj.palette[i][1];
             palette[i][2] = obj.palette[i][2];
         }
-        alpha_channel = obj.alpha_channel;
 
         // Buffers
+        /*
         delete[] points_buffer;
         delete[] points_color_buffer;
         delete[] points_strings;
@@ -122,6 +183,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         delete[] triangles_color_buffer;
         delete[] cubes_buffer;
         delete[] cubes_color_buffer;
+        */
 
         points_buffer           = nullptr;
         points_color_buffer     = nullptr;
@@ -135,11 +197,11 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         if(layer_type == points)
         {
-            points_buffer = new float[max_objs][3];
-            points_color_buffer = new float[max_objs][4];
-            points_strings = new std::string[max_objs];
+            points_buffer           = new float[max_objs][3];
+            points_color_buffer     = new float[max_objs][4];
+            points_strings          = new std::string[max_objs];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 points_buffer[i][0] = obj.points_buffer[i][0];
                 points_buffer[i][1] = obj.points_buffer[i][1];
@@ -155,10 +217,10 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         }
         if(layer_type == lines)
         {
-            lines_buffer = new float[max_objs][2][3];
-            lines_color_buffer = new float[max_objs][2][4];
+            lines_buffer            = new float[max_objs][2][3];
+            lines_color_buffer      = new float[max_objs][2][4];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 lines_buffer[i][0][0] = obj.lines_buffer[i][0][0];
                 lines_buffer[i][0][1] = obj.lines_buffer[i][0][1];
@@ -178,14 +240,13 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
                 lines_color_buffer[i][1][2] = obj.lines_color_buffer[i][1][2];
                 lines_color_buffer[i][1][3] = obj.lines_color_buffer[i][1][3];
             }
-
         }
         if(layer_type == triangles)
         {
-            triangles_buffer = new float[max_objs][3][3];
-            triangles_color_buffer = new float[max_objs][3][4];
+            triangles_buffer        = new float[max_objs][3][3];
+            triangles_color_buffer  = new float[max_objs][3][4];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 triangles_buffer[i][0][0] = obj.triangles_buffer[i][0][0];
                 triangles_buffer[i][0][1] = obj.triangles_buffer[i][0][1];
@@ -217,11 +278,11 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
         }
         if(layer_type == cubes)
         {
-            cubes_buffer = new float[max_objs][12*3][3];
-            cubes_color_buffer = new float[max_objs][12*3][4];
+            cubes_buffer            = new float[max_objs][12*3][3];
+            cubes_color_buffer      = new float[max_objs][12*3][4];
 
-            for(int i = 0; i < max_objs; i++)
-                for (int vert = 0; vert < 12*3; vert++)
+            for(size_t i = 0; i < max_objs; i++)
+                for (size_t vert = 0; vert < 12*3; vert++)
                 {
                     cubes_buffer[i][vert][0] = obj.cubes_buffer[i][vert][0];
                     cubes_buffer[i][vert][1] = obj.cubes_buffer[i][vert][1];
@@ -238,32 +299,29 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
     // Copy assignment operator
     layer& layer::operator=(const layer &obj)
     {
-        dimensions = obj.dimensions;
-        checkbox_visible = obj.checkbox_visible;
-
-        // Main layer data
-        layer_name = obj.layer_name;
-        max_objs = obj.max_objs;
-        layer_type = obj.layer_type;
-        objs_to_print = obj.objs_to_print;
-        state = obj.state;
-        checkbox_visible = obj.checkbox_visible;
-        checkbox_value = obj.checkbox_value;
-        dimensions = obj.dimensions;
+        layer_name              = obj.layer_name;
+        max_objs                = obj.max_objs;
+        layer_type              = obj.layer_type;
+        objs_to_print           = obj.objs_to_print;
+        state                   = obj.state;
+        checkbox_visible        = obj.checkbox_visible;
+        checkbox_value          = obj.checkbox_value;
+        dimensions              = obj.dimensions;
         delete layerMutex;
-        layerMutex = new std::mutex;
+        layerMutex              = new std::mutex;
 
         // Colors
-        palette_size = obj.palette_size;
+        palette_size            = obj.palette_size;
         delete[] palette;
-        palette = new float[palette_size][3];
+        palette                 = new float[palette_size][3];
+        alpha_channel           = obj.alpha_channel;
+
         for(size_t i = 0; i < palette_size; i++)
         {
             palette[i][0] = obj.palette[i][0];
             palette[i][1] = obj.palette[i][1];
             palette[i][2] = obj.palette[i][2];
         }
-        alpha_channel = obj.alpha_channel;
 
         // Buffers
         delete[] points_buffer;
@@ -295,7 +353,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             points_color_buffer = new float[max_objs][4];
             points_strings = new std::string[max_objs];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 points_buffer[i][0] = obj.points_buffer[i][0];
                 points_buffer[i][1] = obj.points_buffer[i][1];
@@ -316,7 +374,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             lines_buffer = new float[max_objs][2][3];
             lines_color_buffer = new float[max_objs][2][4];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 lines_buffer[i][0][0] = obj.lines_buffer[i][0][0];
                 lines_buffer[i][0][1] = obj.lines_buffer[i][0][1];
@@ -336,7 +394,6 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
                 lines_color_buffer[i][1][2] = obj.lines_color_buffer[i][1][2];
                 lines_color_buffer[i][1][3] = obj.lines_color_buffer[i][1][3];
             }
-
         }
         if(layer_type == triangles)
         {
@@ -345,7 +402,7 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             triangles_buffer = new float[max_objs][3][3];
             triangles_color_buffer = new float[max_objs][3][4];
 
-            for (int i = 0; i < max_objs; i++)
+            for (size_t i = 0; i < max_objs; i++)
             {
                 triangles_buffer[i][0][0] = obj.triangles_buffer[i][0][0];
                 triangles_buffer[i][0][1] = obj.triangles_buffer[i][0][1];
@@ -382,8 +439,8 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
             cubes_buffer = new float[max_objs][12*3][3];
             cubes_color_buffer = new float[max_objs][12*3][4];
 
-            for(int i = 0; i < max_objs; i++)
-                for (int vert = 0; vert < 12*3; vert++)
+            for(size_t i = 0; i < max_objs; i++)
+                for (size_t vert = 0; vert < 12*3; vert++)
                 {
                     cubes_buffer[i][vert][0] = obj.cubes_buffer[i][vert][0];
                     cubes_buffer[i][vert][1] = obj.cubes_buffer[i][vert][1];
@@ -405,18 +462,27 @@ cube3D::cube3D(float x, float y, float z, float w, float h, float l, float rh) :
 
         delete[] palette;
 
-        delete[] points_buffer;
-        delete[] points_color_buffer;
-        delete[] points_strings;
-
-        delete[] lines_buffer;
-        delete[] lines_color_buffer;
-
-        delete[] triangles_buffer;
-        delete[] triangles_color_buffer;
-
-        delete[] cubes_buffer;
-        delete[] cubes_color_buffer;
+        if      (layer_type == points)
+        {
+            delete[] points_buffer;
+            delete[] points_color_buffer;
+            delete[] points_strings;
+        }
+        else if (layer_type == lines)
+        {
+            delete[] lines_buffer;
+            delete[] lines_color_buffer;
+        }
+        else if (layer_type == triangles)
+        {
+            delete[] triangles_buffer;
+            delete[] triangles_color_buffer;
+        }
+        else if(layer_type == cubes)
+        {
+            delete[] cubes_buffer;
+            delete[] cubes_color_buffer;
+        }
     }
 
     // Points ----------

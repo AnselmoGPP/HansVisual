@@ -182,6 +182,12 @@ void get_normals_from_surface(unsigned int vertex_per_side, unsigned int num_tri
 
 }
 
+bool is_inside(float x, float y, float bx, float by, float bx2, float by2)
+{
+    if( x > bx  &&  x < bx2  &&  y > by  &&  y < by2 ) return true;
+    else return false;
+}
+
 // Auxiliary functions ---------------------------------------------------------------
 
 void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients)

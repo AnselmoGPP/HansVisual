@@ -6,14 +6,6 @@
 namespace toolKit
 {
 
-// Auxiliar functions -----------------------------------------------------------
-
-    void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients);
-
-    void HSVtoRGB(float H, float S, float V, float output[3]);
-
-    void invert_array(float (*arr)[3], size_t siz);
-
 // Main functions ---------------------------------------------------------------
 
     void convert_HSVtoRGB(float (*colors)[3], int num_colors);
@@ -41,6 +33,18 @@ namespace toolKit
 
     // Given a square surface of triangles, get the normal of each triangle
     void get_normals_from_surface(unsigned int num_triangles, float (*triangles)[3], float *normals);
+
+    // Check whether one point (x,y) is inside a box (bx, by, bx2, by2) (bx, by: lowest left,  bx2, by2: top right corner)
+    bool inside_sqr(float x, float y, float bx, float by, float bx2, float by2);
+
+// Auxiliar functions -----------------------------------------------------------
+
+    void polynomial_x(float *results, float x, float *coefficients, float number_of_coefficients);
+
+    void HSVtoRGB(float H, float S, float V, float output[3]);
+
+    void invert_array(float (*arr)[3], size_t siz);
+
 }
 
 #endif

@@ -6,15 +6,36 @@
 #include "_options.hpp"
 #include "window.hpp"
 
-window_manager::window_manager() : window(nullptr), window_open(false)
+window_manager::window_manager()
 {
+    window = nullptr;
+    window_open = false;
+    display_w = WINDOW_WIDTH;   display_h = WINDOW_HEIGHT;
+
     char test2[21] = { 0x3c, 0x3c, 0x3c, 0x20, 0x20, 0x48, 0x61,
                        0x6e, 0x73, 0x56, 0x69, 0x73, 0x75, 0x61,
                        0x6c, 0x20, 0x20, 0x3e, 0x3e, 0x3e, 0x00 };
     for(int i = 0; i < 21; i++) test[i] = test2[i];
+}
 
-    display_w = WINDOW_WIDTH;
-    display_h = WINDOW_HEIGHT;
+window_manager::window_manager(const window_manager &obj)
+{
+    window = nullptr;
+    window_open = false;
+    display_w = obj.display_w;
+    display_h = obj.display_h;
+
+    for(size_t i = 0; i < 21; ++i) test[i] = obj.test[i];
+}
+
+window_manager & window_manager::operator=(const window_manager &obj)
+{
+    //window = nullptr;
+    //window_open = false;
+    display_w = obj.display_w;
+    display_h = obj.display_h;
+
+    for(size_t i = 0; i < 21; ++i) test[i] = obj.test[i];
 }
 
 window_manager::~window_manager() = default;
