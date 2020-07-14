@@ -22,6 +22,9 @@ Controls are managed (controls > handler)
 
 - Libs: Algebra, Noise, Timer
 
+- camera.cpp 292
+- Cameras factory class
+- Keys_controller members aren't initialized in the constructor (maybe initial position is changed)
 >> Rearrange the camera system. Then, finish copy const. and assingment overloading
 - Camera position parameters (horMove, vertMove) doesn't work well
 - Copy constructor, etc.
@@ -40,6 +43,7 @@ Controls are managed (controls > handler)
 > Only open and close states have problems
 > Permitir continuidad entre camera modes, scenarios... Cambiar estas cosas sin cerrar la ventana (close_scenario())
 - Seleccionar mientras seleccionas -> Peta
+- Stop computing scenario if camera's position doesn't change (for game mode)
 - layer.cpp line 93 (temp_2 variable)
 
 > Plotter as parent class -> Sub-classes: 3d generation, 2D generation.

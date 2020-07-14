@@ -9,6 +9,8 @@ using namespace glm;
 #include "_options.hpp"
 #include "controls.hpp"
 
+#include <string>
+
 class glfw_timer
 {
     float lastTime = 0.0;
@@ -23,23 +25,31 @@ public:
 class camera
 {
 public:
-    camera(glm::vec3 cam_pos, glm::vec3 cam_dir, glm::vec3 up_vec, float FV);
+    //camera(glm::vec3 cam_pos, glm::vec3 cam_dir, glm::vec3 up_vec, float FV);
+    camera(float FV = 45.0f);
+    camera(glm::vec3 cam_pos, glm::vec3 cam_dir, glm::vec3 up_vec, float FV = 45.0f);
+    camera(const camera &obj);
+    camera & operator=(const camera &obj);
     virtual ~camera() = default;
 
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
 
+    virtual std::string get_type() = 0;                                 // Types: "sphere", "fp"
     virtual void computeMatricesFromInputs(float aspect_ratio) = 0;
-    virtual void set_mouse_position_visibility() = 0;
-    void hide_cursor(bool hide);
+    virtual void set_mouse_position_and_visibility() = 0;
+    virtual void set_base_from_derived() = 0;
+    virtual void set_derived_from_base(const camera & cam) = 0;
+
+    //void hide_cursor(bool hide);
     void associate_window(GLFWwindow *window_in);
 
     glm::vec3 cam_position;
-protected:
     glm::vec3 cam_direction;
     glm::vec3 up_vector;
     float FoV;
 
+protected:
     GLFWwindow *window;
     keys_controller * kc;
 
@@ -57,13 +67,18 @@ protected:
 class sphere : public camera
 {
 public:
-    sphere();
+    sphere(glm::vec3 center, float rad, float min_rad, float latitude, float longitude, float FV = 45.0f);
+    //sphere(const sphere &obj);
+    sphere(const sphere &obj);
+    sphere & operator=(const sphere &obj);
     ~sphere() override = default;
 
+    std::string get_type() override;
     void computeMatricesFromInputs(float aspect_ratio) override;
-    void set_mouse_position_visibility() override;
+    void set_mouse_position_and_visibility() override;
+    void set_base_from_derived() override;
+    void set_derived_from_base(const camera & cam) override;
     void get_cursor_pos_increment();
-    //void change_cam(float x, float y, float z, glm::vec3 direction);
 
     glm::vec3 sphere_center;
     float radius;
@@ -80,17 +95,34 @@ public:
 class firstPerson : public camera
 {
 public:
-    firstPerson();
+    firstPerson(glm::vec3 cam_pos, float latitude, float longitude, float FV = 45.0f);
+    firstPerson(const firstPerson &obj);
+    firstPerson & operator=(const firstPerson &obj);
     ~firstPerson() override = default;
 
+    std::string get_type() override;
     void computeMatricesFromInputs(float aspect_ratio) override;
-    void set_mouse_position_visibility() override;
-    //void change_cam(float x, float y, float z, glm::vec3 direction);
+    void set_mouse_position_and_visibility() override;
+    void set_base_from_derived() override;
+    void set_derived_from_base(const camera & cam) override;
 
     float lon;
     float lat;
     float walk_speed;                     // X units / second
     float mouse_speed;
+    int two_first_calls;
+};
+
+class cam_factory
+{
+public:
+    cam_factory();
+    cam_factory(const cam_factory &obj);
+    cam_factory &operator=(const cam_factory &obj);
+    ~cam_factory();
+
+    camera *cam;
+    void camera_change();
 };
 
 #endif

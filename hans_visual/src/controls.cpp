@@ -41,6 +41,12 @@ void keys_controller::update_key_states(GLFWwindow *window)
     (glfwGetKey(window, GLFW_KEY_D)     == GLFW_PRESS)  ? d_press = true        : d_press = false;
     (glfwGetKey(window, GLFW_KEY_A)     == GLFW_PRESS)  ? a_press = true        : a_press = false;
 
+    if(glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)        // p_press is true only when it has been just pressed
+        if(p_still_press == true) p_press = false;
+        else { p_press = true; p_still_press = true; }
+    else { p_press = false; p_still_press = false; }
+
+    // Modify cursor position if setCursorPosInNextKeyUpdate() was called in this iteration
     if(cursor_pos[0] != 0 || cursor_pos[1] != 0)
     {
         glfwSetCursorPos(window, cursor_pos[0], cursor_pos[1]);

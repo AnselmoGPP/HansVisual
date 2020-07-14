@@ -30,6 +30,7 @@ public:
     // Keyboard
     bool up_press, down_press, right_press, left_press;
     bool w_press, s_press, d_press, a_press;
+    bool p_press = false, p_still_press = false;
 
 protected:
     keys_controller() = default;

@@ -41,6 +41,8 @@
     // Sphere
     #define ENABLE_SCROLL_SPEEDUP   true
     #define SCROLL_SPEEDUP          0.1f
+    #define RADIUS                  15
+    #define MIN_RADIUS              1
 
 //Window options ---------------------------
 

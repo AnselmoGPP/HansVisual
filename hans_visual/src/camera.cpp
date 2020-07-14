@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <cmath>
 //#include <iomanip>
 
@@ -18,7 +18,77 @@ void glfw_timer::get_delta_time()
     lastTime = currentTime;
 }
 
+// Camera factory class ----------------------------------------------
+
+cam_factory::cam_factory()
+{
+    cam = nullptr;
+    //cam = new sphere(glm::vec3(0, 0, 0), RADIUS, MIN_RADIUS, 3.14f/2, 3.14f/2, 45.0f);
+}
+
+cam_factory::cam_factory(const cam_factory &obj)
+{
+    // if(cam) delete cam;
+
+    if     (obj.cam->get_type() == "sphere" )
+    {
+        cam = new sphere(glm::vec3(0,0,0), 0, 0, 0, 0, 0);
+        *cam = *obj.cam;
+    }
+    else if(obj.cam->get_type() == "fp" )
+    {
+        cam = new firstPerson(glm::vec3(0,0,0), 0, 0, 0);
+        *cam = *obj.cam;
+    }
+}
+
+cam_factory & cam_factory::operator=(const cam_factory &obj)
+{
+    if(cam) delete cam;
+
+    if     (obj.cam->get_type() == "sphere" )
+    {
+        cam = new sphere(glm::vec3(0,0,0), 0, 0, 0, 0, 0);
+        *cam = *obj.cam;
+    }
+    else if(obj.cam->get_type() == "fp" )
+    {
+        cam = new firstPerson(glm::vec3(0,0,0), 0, 0, 0);
+        *cam = *obj.cam;
+    }
+}
+
+cam_factory::~cam_factory()
+{
+    if(cam) delete cam;
+}
+
+void cam_factory::camera_change()
+{
+    keys_controller *kc = keys_controller::get_instance();
+
+    if(kc->p_press)
+    {
+        camera *new_cam;
+
+        if      (cam->get_type() == "sphere")   new_cam = new firstPerson(glm::vec3(0,0,0), 0, 0);
+        else if (cam->get_type() == "fp")       new_cam = new sphere(glm::vec3(0,0,0), 10, 1, 0, 0);
+
+        *new_cam = *cam;
+        new_cam->set_derived_from_base(*cam);
+        delete cam;
+        cam = new_cam;
+    }
+}
+
+
 // Camera class ------------------------------------------------------
+
+camera::camera(float FV)
+    : window(nullptr),
+      kc(keys_controller::get_instance()),
+      FoV(FV),
+      pi(3.1415926536f) { }
 
 camera::camera(glm::vec3 cam_pos, glm::vec3 cam_dir, glm::vec3 up_vec, float FV)
     : window(nullptr),
@@ -28,6 +98,28 @@ camera::camera(glm::vec3 cam_pos, glm::vec3 cam_dir, glm::vec3 up_vec, float FV)
       up_vector(up_vec),
       FoV(FV),
       pi(3.1415926536f) { }
+
+camera::camera(const camera &obj)
+    : window(obj.window),
+      kc(keys_controller::get_instance()),
+      cam_position(obj.cam_position),
+      cam_direction(obj.cam_direction),
+      up_vector(obj.up_vector),
+      FoV(obj.FoV),
+      pi(3.1415926536f) { }
+
+camera & camera::operator=(const camera &obj)
+{
+    window = obj.window;
+    kc = keys_controller::get_instance();
+    cam_position = obj.cam_position;
+    cam_direction = obj.cam_direction;
+    up_vector = obj.up_vector;
+    FoV = obj.FoV;
+    pi = 3.1415926536f;
+
+    return *this;
+}
 
 glm::mat4 camera::getViewMatrix() { return ViewMatrix; }
 glm::mat4 camera::getProjectionMatrix() { return ProjectionMatrix; }
@@ -43,30 +135,65 @@ void camera::adjust_moves_to_range_2pi(float &lat, float &lon)
 
 void camera::associate_window(GLFWwindow *window_in) { window = window_in; }
 
+/*
 void camera::hide_cursor(bool hide)
 {
     // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
     if(hide) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);     //GLFW_CURSOR_DISABLED: Hide the mouse and enable unlimited movement
     else     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
+*/
 
 // Sphere class ------------------------------------------------------
 
-sphere::sphere() : camera(glm::vec3(0,0,0), glm::vec3(0,0,0), glm::vec3(0,0,0), 45.0f)
+sphere::sphere(glm::vec3 center, float rad, float min_rad, float latitude, float longitude, float FV)
+    : camera(FV)
 {
-    sphere_center = glm::vec3(0, 0, 0);
-    radius = 15;
-    minimum_radius = 1;
-    lat = 3.14f/2; lon = 3.14f/2;           // Initial position   <<<<<<<<<<<<< Test and take notes about how orientation works
+    sphere_center = center;
+    radius = rad;
+    minimum_radius = min_rad;
+    lat = latitude; lon = longitude;        // Initial position   <<<<<<<<<<<<< Test and take notes about how orientation works
 
     mouse_speed = 0.008f;
     scroll_speed = 1;
     right_speed = 0.001f;
+
+    set_base_from_derived();         // Set base class (camera) members values (dependent of derived class members values)
 }
 
-// Spherical controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_NORMAL
+sphere::sphere(const sphere &obj)
+    : camera(obj)
+{
+    sphere_center = obj.sphere_center;
+    radius = obj.radius;
+    minimum_radius = obj.minimum_radius;
+    lat = obj.lat; lon = obj.lon;
+
+    mouse_speed = obj.mouse_speed;
+    scroll_speed = obj.scroll_speed;
+    right_speed = obj.right_speed;
+}
+
+sphere & sphere::operator=(const sphere &obj)
+{
+    camera::operator=(obj);
+
+    sphere_center = obj.sphere_center;
+    radius = obj.radius;
+    minimum_radius = obj.minimum_radius;
+    lat = obj.lat; lon = obj.lon;
+
+    mouse_speed = obj.mouse_speed;
+    scroll_speed = obj.scroll_speed;
+    right_speed = obj.right_speed;
+}
+
+std::string sphere::get_type() { return "sphere"; }
+
 void sphere::computeMatricesFromInputs(float aspect_ratio)
 {
+// Spherical controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_NORMAL
+
     // Left click: Rotate around a sphere
     // Scroll roll: Get closer or further
     // Scroll click: Normal translation
@@ -90,13 +217,13 @@ void sphere::computeMatricesFromInputs(float aspect_ratio)
     {
         if(lat > (pi/2.f) && lat < (3*pi/2.f))      // Range (pi/2, 3pi/2)
         {
-            lon -= mouse_speed * xIncrem;
-            lat += mouse_speed * yIncrem;
+            lon += mouse_speed * xIncrem;
+            lat -= mouse_speed * yIncrem;
         }
         else
         {
-            lon += mouse_speed * xIncrem;
-            lat += mouse_speed * yIncrem;
+            lon -= mouse_speed * xIncrem;
+            lat -= mouse_speed * yIncrem;
         }
 
         adjust_moves_to_range_2pi(lat, lon);
@@ -113,8 +240,8 @@ void sphere::computeMatricesFromInputs(float aspect_ratio)
 
     // Right vector (z=0)
     glm::vec3 right = glm::vec3(
-                cos(lon - 3.14f / 2.0f),
-                sin(lon - 3.14f / 2.0f),
+                cos((lon+pi) - pi/2),
+                sin((lon+pi) - pi/2),
                 0 );
 
     // Up vector
@@ -130,13 +257,13 @@ void sphere::computeMatricesFromInputs(float aspect_ratio)
         sphere_center += right_speed * radius * ((-right * xIncrem) + (-up_vector * yIncrem));
 }
 
-void sphere::set_mouse_position_visibility() {
+void sphere::set_mouse_position_and_visibility() {
 
     // Mouse visibility
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);      // GLFW_CURSOR_DISABLED/HIDDEN/NORMAL (DISABLED: Hide the mouse and enable unlimited movement)
 
     // Set the mouse at the center of the screen
-    glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    //glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     glfwPollEvents();
 }
 
@@ -146,20 +273,81 @@ void sphere::get_cursor_pos_increment()
     yIncrem = kc->ypos0 - kc->ypos;         // Correction done so Y go upwards (not downwards)
 }
 
+void sphere::set_base_from_derived()
+{
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+}
+
+void sphere::set_derived_from_base(const camera & cam)
+{
+    sphere_center = cam.cam_position + cam.cam_direction * radius;
+
+    glm::vec3 pos(
+                cam.cam_position.x - sphere_center.x,
+                cam.cam_position.y - sphere_center.y,
+                cam.cam_position.z - sphere_center.z );     // Position referred to the sphere's center
+
+    lat = atan(pos.z / sqrt(pos.x*pos.x + pos.y*pos.y));
+    lon = atan(pos.y / pos.x);
+
+    if(pos.x < 0)
+        if(pos.y < 0) lon -= pi;
+        else lon += pi;             // Cuadrants check
+
+    set_mouse_position_and_visibility();
+}
+
+
 // FirstPerson class ------------------------------------------------------
 
-firstPerson::firstPerson() : camera(glm::vec3(0, -15, 15), glm::vec3(0, 15, -15), glm::vec3(0, -15, 15), 45.0f)
+firstPerson::firstPerson(glm::vec3 cam_pos, float latitude, float longitude, float FV)
+    : camera(cam_pos, glm::vec3(0,0,0), glm::vec3(0,0,0), FV)
 {
-    lon = 0;
-    lat = 0;
+    lat = latitude;             // For camera rotation
+    lon = longitude;
 
     walk_speed = 1.f;           // X units / second
     mouse_speed = 0.001f;
+
+    two_first_calls = 2;
+
+    set_base_from_derived();
 }
 
-// FP controls - Reads the keyboard and mouse and computes the Projection and View matrices. Use GLFW_CURSOR_DISABLED
+firstPerson::firstPerson(const firstPerson &obj)
+    : camera(obj)
+{
+    camera::operator=(obj);
+
+    lon = obj.lon;
+    lat = obj.lat;
+
+    walk_speed = obj.walk_speed;
+    mouse_speed = obj.mouse_speed;
+
+    two_first_calls = obj.two_first_calls;
+}
+
+firstPerson & firstPerson::operator=(const firstPerson &obj)
+{
+    camera::operator=(obj);
+
+    lon = obj.lon;
+    lat = obj.lat;
+
+    walk_speed = obj.walk_speed;
+    mouse_speed = obj.mouse_speed;
+
+    two_first_calls = obj.two_first_calls;
+}
+
+std::string firstPerson::get_type() { return "fp"; }
+
 void firstPerson::computeMatricesFromInputs(float aspect_ratio)
 {
+// FP controls: Reads the keyboard and mouse and computes the Projection and View matrices. Uses GLFW_CURSOR_DISABLED
+
     ProjectionMatrix = glm::perspective(glm::radians(FoV), aspect_ratio, NEAR_CLIP_PLANE, FAR_CLIP_PLANE);
 
     // Directional keys: Move camera forward, backwards, to the right, to the left
@@ -172,10 +360,11 @@ void firstPerson::computeMatricesFromInputs(float aspect_ratio)
 
     // >>> Mouse movement <<<
 
-    // Compute new orientation
-    lon +=  mouse_speed * float(WINDOW_WIDTH  / 2 - kc->xpos);
-    lat +=  mouse_speed * float(WINDOW_HEIGHT / 2 - kc->ypos);
+    if(two_first_calls) { kc->xpos = WINDOW_WIDTH /2; kc->ypos = WINDOW_HEIGHT/2; --two_first_calls; }
 
+    // Compute new orientation
+    lon +=  mouse_speed * float(WINDOW_WIDTH /2 - kc->xpos);
+    lat +=  mouse_speed * float(WINDOW_HEIGHT/2 - kc->ypos);
     adjust_moves_to_range_2pi(lat, lon);
 
     // Direction : Spherical coordinates to Cartesian coordinates conversion
@@ -186,8 +375,8 @@ void firstPerson::computeMatricesFromInputs(float aspect_ratio)
 
     // Right vector (y = 0)
     glm::vec3 right = glm::vec3(
-                cos(lon - 3.14f / 2.0f),
-                sin(lon - 3.14f / 2.0f),
+                cos(lon - pi/2),
+                sin(lon - pi/2),
                 0 );
 
     // Up vector
@@ -205,7 +394,7 @@ void firstPerson::computeMatricesFromInputs(float aspect_ratio)
     ViewMatrix = glm::lookAt( cam_position, cam_position + cam_direction, up_vector );      // Head is up (set to 0,-1,0 to look upside-down)
 }
 
-void firstPerson::set_mouse_position_visibility() {
+void firstPerson::set_mouse_position_and_visibility() {
 
     // Mouse visibility
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);      // GLFW_CURSOR_DISABLED/HIDDEN/NORMAL (DISABLED: Hide the mouse and enable unlimited movement)
@@ -214,3 +403,32 @@ void firstPerson::set_mouse_position_visibility() {
     glfwSetCursorPos(window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     glfwPollEvents();
 }
+
+void firstPerson::set_base_from_derived()
+{
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+}
+
+void firstPerson::set_derived_from_base(const camera & cam)
+{
+    lat = atan(cam.cam_direction.z / sqrt(cam.cam_direction.x * cam.cam_direction.x + cam.cam_direction.y * cam.cam_direction.y));
+    lon = atan(cam.cam_direction.y / cam.cam_direction.x);
+
+    if(cam.cam_direction.x < 0)
+        if(cam.cam_direction.y < 0) lon -= pi;
+        else lon += pi;                         // Cuadrants check
+
+    set_mouse_position_and_visibility();
+    two_first_calls = 2;
+}
+
+
+
+
+
+
+
+
+
+
+

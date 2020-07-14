@@ -73,7 +73,7 @@ private:
     std::vector<layer> *layersSet;
     std::mutex *layersSetMutex;
 
-    camera *cam;
+    cam_factory camF;
     my_gui gui;
     window_manager win;
     keys_controller *kc;

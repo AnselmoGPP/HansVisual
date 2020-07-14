@@ -52,11 +52,10 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex)
     layersSet       = layers_set;
     layersSetMutex  = layers_set_mutex;
 
-    //camera cam;
     //my_gui gui;
     //window_manager win;
     kc              = keys_controller::get_instance();
-    cam             = new sphere();
+    camF.cam        = new sphere(glm::vec3(0, 0, 0), RADIUS, MIN_RADIUS, 3.14f/2, -3.14f/2, 45.0f);
     //std_timer timer;
 
     backg_color[0] = BACKG_R;  backg_color[1] = BACKG_G;  backg_color[2] = BACKG_B;
@@ -67,9 +66,9 @@ plotter::plotter(std::vector<layer> *layers_set, std::mutex *layers_set_mutex)
     //glm::mat4 ModelMatrix;
     //glm::mat4 MVP;
 
-    VertexArraysID = nullptr;
+    VertexArraysID   = nullptr;
     vertexbuffersIDs = nullptr;
-    colorbuffersIDs = nullptr;
+    colorbuffersIDs  = nullptr;
 
     unif = std::map<std::string, GLuint> ({ {"MVP", 0}, {"Cam_pos", 0}, {"Pnt_size", 0} });
 
@@ -83,11 +82,10 @@ plotter::plotter(const plotter &obj)
     layersSet       = obj.layersSet;
     layersSetMutex  = obj.layersSetMutex;
 
-    //camera cam;
     gui = obj.gui;
     //window_manager win;
     kc              = keys_controller::get_instance();
-    cam             = new sphere;
+    camF.cam        = new sphere(glm::vec3(0, 0, 0), RADIUS, MIN_RADIUS, 3.14f/2, 3.14f/2, 45.0f);
     //std_timer timer;
 
     backg_color[0] = obj.backg_color[0];  backg_color[1] = obj.backg_color[1];  backg_color[2] = obj.backg_color[2];
@@ -114,7 +112,6 @@ plotter& plotter::operator=(const plotter &obj)
     layersSet       = obj.layersSet;
     layersSetMutex  = obj.layersSetMutex;
 
-    //camera cam;
     gui = obj.gui;
     //window_manager win;
     //kc              = keys_controller::get_instance();
@@ -139,15 +136,12 @@ plotter& plotter::operator=(const plotter &obj)
     return *this;
 }
 
-plotter::~plotter()
-{
-    delete cam;
-}
+plotter::~plotter() { }
 
 int  plotter::open_window()
 {
     win.open_GLFW_window();
-    cam->associate_window(win.window);
+    camF.cam->associate_window(win.window);
 
     std::thread running(&plotter::main_loop_thread, this);
     running.detach();
@@ -249,7 +243,7 @@ int  plotter::main_loop_thread()
     }
 
     kc->sticky_keys(win.window, true);
-    cam->set_mouse_position_visibility();
+    camF.cam->set_mouse_position_and_visibility();
 
     gui.init_gui();
     ImGui_ImplGlfw_InitForOpenGL(win.window, true);
@@ -286,10 +280,12 @@ int  plotter::main_loop_thread()
 
         // Compute the MVP matrix from keyboard/mouse input
         if (!gui.WantCaptureMouse())
-            cam->computeMatricesFromInputs((float)win.display_w /win. display_h);
+            camF.cam->computeMatricesFromInputs((float)win.display_w /win. display_h);
 
-        ProjectionMatrix = cam->getProjectionMatrix();
-        ViewMatrix = cam->getViewMatrix();
+        camF.camera_change();
+
+        ProjectionMatrix = camF.cam->getProjectionMatrix();
+        ViewMatrix = camF.cam->getViewMatrix();
         ModelMatrix = glm::mat4(1.0);                     // Identity matrix
         MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
@@ -493,7 +489,7 @@ void plotter::send_uniforms()
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     glUniformMatrix4fv(unif["MVP"], 1, GL_FALSE, &MVP[0][0]);
     // Send the position of the camera. Useful for adjusting the size of each point
-    glUniform3fv(unif["Cam_pos"], 1, &cam->cam_position[0]);
+    glUniform3fv(unif["Cam_pos"], 1, &camF.cam->cam_position[0]);
     // Send the size of the points
     glUniform1fv(unif["Pnt_size"], 1, &point_siz);
 }
@@ -512,9 +508,9 @@ void plotter::set_viewport_and_background()
 
 void plotter::getCamPosition(float *position)
 {
-    position[0] = cam->cam_position[0];
-    position[1] = cam->cam_position[1];
-    position[2] = cam->cam_position[2];
+    position[0] = camF.cam->cam_position[0];
+    position[1] = camF.cam->cam_position[1];
+    position[2] = camF.cam->cam_position[2];
 }
 
 void plotter::print_data()
